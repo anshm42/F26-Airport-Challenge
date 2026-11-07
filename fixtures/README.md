@@ -28,9 +28,13 @@ ten spares for later equipment swaps. Each parked record includes its initial
 `gate`; the full `gateState` contains those occupants and `null` at all other
 positions. Future flights have no initial gate. The matcher returns future
 assignments separately, and they take effect at arrival time.
+The map contains 110 positions matched to IFATC and respects its size classes.
+Every flight leg and reference includes `trafficType` (`Domestic`, `Transborder`,
+or `International`).
 
 After initial allocation, apply `events[1:]` in order at each event's UTC
-`timestamp`. Each event's `message` is the webhook body. Later flight modifications
+`timestamp`. The stream adds current `gateState` and `unassignedAircraft` to each
+event's `message` before delivering it as the webhook body. Later flight modifications
 reference the same flight identities as the baseline; the baseline flights are
 not sent again as separate creation events. Retain the initial snapshot separately
 if comparing the original plan with the final result.

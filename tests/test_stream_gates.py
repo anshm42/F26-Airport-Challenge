@@ -2,7 +2,7 @@ import copy
 import unittest
 
 from smartgate_stream.gates import GateState
-from smartgate_stream.inventory import canonical_gate, initial_gate_state, passenger_aircraft
+from smartgate_stream.inventory import canonical_gate, catalog, gate_fits, initial_gate_state, passenger_aircraft, traffic_type
 from smartgate_stream.validation import parse_utc, validate_message
 
 
@@ -15,6 +15,7 @@ def flight(number, origin, destination, departure, arrival, aircraft=INBOUND):
     return {"action": "CreateFlight", "flight": aircraft.copy(), "legs": [{
         "legType": "Originating", "flightNumber": number, "flightSuffix": None,
         "originatingDate": "2026-11-07", "departureStation": origin, "arrivalStation": destination,
+        "trafficType": traffic_type(origin, destination),
         "scheduledDepartureTime": departure, "scheduledArrivalTime": arrival}]}
 
 
@@ -42,7 +43,7 @@ class GateStateTests(unittest.TestCase):
 
     def test_only_grounded_aircraft_occupy_initial_positions(self):
         state = self.initialized()
-        self.assertEqual(len(state.gates), 121)
+        self.assertEqual(len(state.gates), 110)
         self.assertEqual([plane for plane in state.gates.values() if plane], [PARKED])
         self.assertEqual(canonical_gate("F32"), "D32")
         self.assertNotIn("F32", state.gates)
@@ -52,6 +53,67 @@ class GateStateTests(unittest.TestCase):
         self.assertEqual(request["unassignedAircraft"], [])
         request["gateState"]["D20"] = None
         self.assertEqual(state.gates["D20"], PARKED)
+
+    def test_removed_gates_are_unavailable_and_every_swing_pair_shares_occupancy(self):
+        for gate in ("D30", "F82", "F83", "E82", "E85", "B2a", "B2c", "B3", "B4", "B5", "B23"):
+            with self.subTest(gate=gate), self.assertRaises(ValueError):
+                canonical_gate(gate)
+        pairs = [(alias, gate) for alias, gate in catalog()["aliases"].items() if alias != gate]
+        self.assertEqual(len(pairs), 15)
+        for alias, gate in pairs:
+            with self.subTest(alias=alias):
+                self.assertEqual(canonical_gate(alias), gate)
+                with self.assertRaisesRegex(ValueError, "occupied more than once"):
+                    initial_gate_state([{**PARKED, "gate": gate}, {**INBOUND, "gate": alias}])
+
+    def test_ifatc_capacity_applies_to_initial_positions_and_atomic_decisions(self):
+        wide = {**INBOUND, "aircraftType": "789"}
+        self.assertFalse(gate_fits("D22", wide))
+        self.assertTrue(gate_fits("D41", wide))
+        self.assertFalse(gate_fits("Remote Stand H01A", wide))
+        self.assertTrue(gate_fits("Remote Stand H01", wide))
+        self.assertTrue(gate_fits("E71", {**wide, "aircraftType": "388"}))
+        with self.assertRaisesRegex(ValueError, "IFATC capacity"):
+            initial_gate_state([{**wide, "gate": "D22"}])
+        inbound = flight("300", "LHR", "YYZ", "07:00", "10:00", wide)
+        state = self.initialized([inbound])
+        before = state.snapshot()
+        with self.assertRaisesRegex(ValueError, "IFATC capacity"):
+            state.apply_decisions({"assignments": [assignment(inbound, "D22")]})
+        self.assertEqual(state.snapshot(), before)
+        state = self.initialized([], [{**PARKED, "gate": "D20"}, {**wide, "gate": "D41"}])
+        before = state.snapshot()
+        with self.assertRaisesRegex(ValueError, "IFATC capacity"):
+            state.apply_decisions({"moves": [{"registration": PARKED["registration"], "gate": "D31"},
+                                              {"registration": wide["registration"], "gate": "D22"}]})
+        self.assertEqual(state.snapshot(), before)
+
+    def test_equipment_change_rechecks_planned_gate_capacity_at_arrival(self):
+        state = self.initialized([self.arrival], [])
+        state.apply_decisions({"assignments": [assignment(self.arrival, "D31")]})
+        wide = {**SPARE, "aircraftType": "789"}
+        state.apply_message({"action": "UpdateEquipment", "flight": wide,
+                             "legs": [assignment(self.arrival, None)["leg"]],
+                             "equipmentUpdate": {"scope": "AllLegs"}}, "2026-11-07T12:00:00Z")
+        state.advance(parse_utc("2026-11-07T13:00:00Z"))
+        self.assertIsNone(state.gates["D31"])
+        self.assertEqual(state.snapshot()["unassigned_aircraft"], [wide])
+        state.apply_decisions({"assignments": [assignment(self.arrival, "D41")]})
+        self.assertEqual(state.gates["D41"], wide)
+
+    def test_reference_updates_receive_stored_traffic_type(self):
+        arrival = flight("300", "LHR", "YYZ", "07:00", "10:00")
+        state = self.initialized([arrival], [])
+        message = {"action": "CancelFlight", "flight": INBOUND.copy(),
+                   "legs": [assignment(arrival, None)["leg"]], "cancelScope": {"type": "SpecificLeg"}}
+        state.apply_message(message, "2026-11-07T06:00:00Z")
+        self.assertEqual(state.request(message)["legs"][0]["trafficType"], "International")
+        self.assertNotIn("trafficType", message["legs"][0])
+        turnback = flight("301", "YYZ", "YYZ", "06:00", "07:00", SPARE)
+        turnback.update(action="DivertFlight", emergencyState="Turnback")
+        turnback["legs"][0]["trafficType"] = "International"
+        state.apply_message(turnback, "2026-11-07T10:30:00Z")
+        self.assertEqual(state.request(turnback)["legs"][0]["trafficType"], "International")
 
     def test_future_choices_apply_at_arrival_and_departure_frees_gate(self):
         state = self.initialized()
@@ -189,6 +251,22 @@ class GateStateTests(unittest.TestCase):
         state.apply_message(replacement, "2026-11-07T13:15:00Z")
         state.advance(parse_utc("2026-11-07T13:20:00Z"))
         self.assertEqual(state.gates["D31"], INBOUND)
+
+    def test_replacement_preserves_each_completed_leg_in_a_connected_route(self):
+        route = copy.deepcopy(self.departure)
+        returning = flight("100", "YUL", "YYZ", "08:00", "09:00", PARKED)["legs"][0]
+        returning["legType"] = "Through"
+        route["legs"].append(returning)
+        state = self.initialized([route])
+        state.apply_decisions({"assignments": [assignment({"flight": route["flight"], "legs": [returning]}, "D22")]})
+        state.advance(parse_utc("2026-11-07T11:00:00Z"))
+        self.assertIsNone(state.gates["D20"])
+        replacement = copy.deepcopy(route)
+        replacement["action"] = "ReplaceFlight"
+        replacement["legs"][1]["scheduledArrivalTime"] = "09:15"
+        state.apply_message(replacement, "2026-11-07T11:30:00Z")
+        state.advance(parse_utc("2026-11-07T14:15:00Z"))
+        self.assertEqual(state.gates["D22"], PARKED)
 
     def test_nonpassenger_types_duplicate_positions_and_future_initial_gates_are_rejected(self):
         for code in ("73Y", "73L", "K35", "C08", "H25"):

@@ -2,7 +2,7 @@ import copy
 import unittest
 from pathlib import Path
 
-from smartgate_stream.validation import ACTIONS, load_scenario, read_json, validate_scenario
+from smartgate_stream.validation import ACTIONS, load_scenario, read_json, validate_message, validate_scenario
 
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "scripted.json"
@@ -63,7 +63,7 @@ class ValidationTests(unittest.TestCase):
     def test_utc_offsets_equal_times_and_indefinite_outage(self):
         self.scenario["events"][0]["timestamp"] = "2026-11-07T12:30:00.000001+00:00"
         outage = self.scenario["events"][2]["message"]
-        outage.update(gate="B2a", scheduledStartTime="23:30", scheduledEndTime="00:30")
+        outage.update(gate="Remote Stand H01A", scheduledStartTime="23:30", scheduledEndTime="00:30")
         validate_scenario(self.scenario)
         del outage["scheduledEndTime"]
         validate_scenario(self.scenario)
@@ -175,6 +175,24 @@ class ValidationTests(unittest.TestCase):
                 scenario["events"][0]["message"]["legs"][0][key] = value
                 with self.assertRaises(ValueError):
                     validate_scenario(scenario)
+
+    def test_traffic_types_cover_both_directions_and_reject_invalid_or_inconsistent_values(self):
+        for origin, destination, category in (("YYZ", "YUL", "Domestic"), ("YUL", "YYZ", "Domestic"),
+                                               ("YYZ", "JFK", "Transborder"), ("JFK", "YYZ", "Transborder"),
+                                               ("YYZ", "LHR", "International"), ("CDG", "YYZ", "International"),
+                                               ("YYZ", "CUN", "International")):
+            with self.subTest(origin=origin, destination=destination):
+                message = copy.deepcopy(self.scenario["events"][0]["message"])
+                leg = message["legs"][0]
+                leg.update(departureStation=origin, arrivalStation=destination, trafficType=category)
+                validate_message(message)
+                for invalid in (None, [], "international", "Other", "Domestic" if category != "Domestic" else "International"):
+                    leg["trafficType"] = invalid
+                    with self.assertRaisesRegex(ValueError, "trafficType"):
+                        validate_message(message)
+                del leg["trafficType"]
+                with self.assertRaisesRegex(ValueError, "require trafficType"):
+                    validate_message(message)
 
     def test_invalid_action_requirements(self):
         cases = [(0, "flight", None), (0, "legs", []), (0, "legs", [None]),

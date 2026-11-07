@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo
 from smartgate_stream.__main__ import main
 from smartgate_stream.generate import generate
 from smartgate_stream.gates import GateState
+from smartgate_stream.inventory import gate_fits
 from smartgate_stream.validation import ACTIONS, load_scenario, parse_utc
 
 
@@ -82,6 +83,7 @@ class GeneratorTests(unittest.TestCase):
                 for aircraft in initial["parkedAircraft"]:
                     self.assertIn((aircraft["carrier"], aircraft["aircraftType"], aircraft["registration"]), known)
                     self.assertIn(aircraft["gate"], initial["gateState"])
+                    self.assertTrue(gate_fits(aircraft["gate"], aircraft))
                     self.assertEqual(initial["gateState"][aircraft["gate"]],
                                      {key: aircraft[key] for key in ("carrier", "registration", "aircraftType")})
                     self.assertNotIn("stand", aircraft)
@@ -103,7 +105,7 @@ class GeneratorTests(unittest.TestCase):
                 self.assertGreater(idle, 0)
                 self.assertGreater(departing, 0)
                 self.assertEqual(sum(plane is not None for plane in initial["gateState"].values()), len(initial["parkedAircraft"]))
-                self.assertEqual(len(initial["gateState"]), 121)
+                self.assertEqual(len(initial["gateState"]), 110)
                 parked = {a["registration"] for a in initial["parkedAircraft"]}
                 for event in scenario["events"][1:]:
                     if event["message"]["action"] == "UpdateEquipment":
@@ -161,8 +163,7 @@ class GeneratorTests(unittest.TestCase):
         self.assertLess(types["321"], 300)
         self.assertGreater(carriers["AC"], carriers["WS"])
         self.assertEqual(carriers["EK"], 2)
-        known_gates = {gate for terminal in self.pearson["passengerGateGroups"]["terminals"].values()
-                       for group in terminal["groups"] for gate in group}
+        known_gates = {row["gate"] for row in self.pearson["passengerStandMapping"]["records"]}
         for message in messages:
             if message["action"] == "GateOutage":
                 self.assertIn(message["gate"], known_gates)
@@ -173,6 +174,20 @@ class GeneratorTests(unittest.TestCase):
                 for leg in message["legs"]:
                     self.assertNotIn("gate", leg)
                     self.assertIn("YYZ", (leg["departureStation"], leg["arrivalStation"]))
+
+    def test_every_generated_flight_leg_has_a_country_based_traffic_type(self):
+        expected = {"YUL": "Domestic", "YVR": "Domestic", "EWR": "Transborder",
+                    "ORD": "Transborder", "LHR": "International", "CDG": "International",
+                    "FRA": "International", "MUC": "International", "CUN": "International",
+                    "DXB": "International"}
+        observed = set()
+        for event in announcements(self.scenario):
+            for leg in event["message"].get("legs", []):
+                observed.add(leg["trafficType"])
+                other = leg["arrivalStation"] if leg["departureStation"] == "YYZ" else leg["departureStation"]
+                if other in expected:
+                    self.assertEqual(leg["trafficType"], expected[other])
+        self.assertEqual(observed, {"Domestic", "Transborder", "International"})
 
     def test_registration_country_fleet_and_tail_consistency(self):
         patterns = {"AC": r"C-[FG][A-Z]{3}", "WS": r"C-[FG][A-Z]{3}", "PD": r"C-[FG][A-Z]{3}",

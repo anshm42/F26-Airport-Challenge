@@ -12,131 +12,163 @@
   "airports": {
     "YYZ": {
       "timeZone": "America/Toronto",
-      "minutes": 0
+      "minutes": 0,
+      "countryCode": "CA"
     },
     "YUL": {
       "timeZone": "America/Toronto",
-      "minutes": 80
+      "minutes": 80,
+      "countryCode": "CA"
     },
     "YOW": {
       "timeZone": "America/Toronto",
-      "minutes": 65
+      "minutes": 65,
+      "countryCode": "CA"
     },
     "YVR": {
       "timeZone": "America/Vancouver",
-      "minutes": 300
+      "minutes": 300,
+      "countryCode": "CA"
     },
     "YYC": {
       "timeZone": "America/Edmonton",
-      "minutes": 250
+      "minutes": 250,
+      "countryCode": "CA"
     },
     "YEG": {
       "timeZone": "America/Edmonton",
-      "minutes": 255
+      "minutes": 255,
+      "countryCode": "CA"
     },
     "YWG": {
       "timeZone": "America/Winnipeg",
-      "minutes": 160
+      "minutes": 160,
+      "countryCode": "CA"
     },
     "YHZ": {
       "timeZone": "America/Halifax",
-      "minutes": 130
+      "minutes": 130,
+      "countryCode": "CA"
     },
     "YQB": {
       "timeZone": "America/Toronto",
-      "minutes": 90
+      "minutes": 90,
+      "countryCode": "CA"
     },
     "YQT": {
       "timeZone": "America/Toronto",
-      "minutes": 110
+      "minutes": 110,
+      "countryCode": "CA"
     },
     "JFK": {
       "timeZone": "America/New_York",
-      "minutes": 100
+      "minutes": 100,
+      "countryCode": "US"
     },
     "EWR": {
       "timeZone": "America/New_York",
-      "minutes": 100
+      "minutes": 100,
+      "countryCode": "US"
     },
     "ORD": {
       "timeZone": "America/Chicago",
-      "minutes": 115
+      "minutes": 115,
+      "countryCode": "US"
     },
     "IAD": {
       "timeZone": "America/New_York",
-      "minutes": 95
+      "minutes": 95,
+      "countryCode": "US"
     },
     "BOS": {
       "timeZone": "America/New_York",
-      "minutes": 100
+      "minutes": 100,
+      "countryCode": "US"
     },
     "ATL": {
       "timeZone": "America/New_York",
-      "minutes": 150
+      "minutes": 150,
+      "countryCode": "US"
     },
     "DTW": {
       "timeZone": "America/Detroit",
-      "minutes": 80
+      "minutes": 80,
+      "countryCode": "US"
     },
     "MSP": {
       "timeZone": "America/Chicago",
-      "minutes": 140
+      "minutes": 140,
+      "countryCode": "US"
     },
     "DFW": {
       "timeZone": "America/Chicago",
-      "minutes": 210
+      "minutes": 210,
+      "countryCode": "US"
     },
     "MIA": {
       "timeZone": "America/New_York",
-      "minutes": 200
+      "minutes": 200,
+      "countryCode": "US"
     },
     "MCO": {
       "timeZone": "America/New_York",
-      "minutes": 185
+      "minutes": 185,
+      "countryCode": "US"
     },
     "PHL": {
       "timeZone": "America/New_York",
-      "minutes": 95
+      "minutes": 95,
+      "countryCode": "US"
     },
     "LAX": {
       "timeZone": "America/Los_Angeles",
-      "minutes": 320
+      "minutes": 320,
+      "countryCode": "US"
     },
     "SFO": {
       "timeZone": "America/Los_Angeles",
-      "minutes": 325
+      "minutes": 325,
+      "countryCode": "US"
     },
     "DEN": {
       "timeZone": "America/Denver",
-      "minutes": 240
+      "minutes": 240,
+      "countryCode": "US"
     },
     "CUN": {
       "timeZone": "America/Cancun",
-      "minutes": 255
+      "minutes": 255,
+      "countryCode": "MX"
     },
     "LHR": {
       "timeZone": "Europe/London",
-      "minutes": 450
+      "minutes": 450,
+      "countryCode": "GB"
     },
     "LGW": {
       "timeZone": "Europe/London",
-      "minutes": 450
+      "minutes": 450,
+      "countryCode": "GB"
     },
     "CDG": {
       "timeZone": "Europe/Paris",
-      "minutes": 450
+      "minutes": 450,
+      "countryCode": "FR"
     },
     "FRA": {
       "timeZone": "Europe/Berlin",
-      "minutes": 480
+      "minutes": 480,
+      "countryCode": "DE"
     },
     "MUC": {
       "timeZone": "Europe/Berlin",
-      "minutes": 480
+      "minutes": 480,
+      "countryCode": "DE"
     },
     "DXB": {
       "timeZone": "Asia/Dubai",
-      "minutes": 820
+      "minutes": 820,
+      "countryCode": "AE"
     }
   },
   "carriers": [

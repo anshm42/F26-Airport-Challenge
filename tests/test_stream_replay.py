@@ -60,7 +60,7 @@ class ReplayTests(unittest.TestCase):
         run.execute(clock=self.clock, wait=self.clock.wait, send=send)
         self.assertEqual([s[0] for s in sent], [100, 105, 105])
         self.assertEqual([message_fields(s[1]) for s in sent], [e["message"] for e in self.scenario["events"]])
-        self.assertTrue(all(len(s[1]["gateState"]) == 121 for s in sent))
+        self.assertTrue(all(len(s[1]["gateState"]) == 110 for s in sent))
         for index, (_, _, headers) in enumerate(sent):
             self.assertEqual(headers, {"X-Stream-Run-Id": run.id,
                                       "X-Stream-Event-Id": f"{run.id}:{index}",

@@ -25,6 +25,8 @@ including early arrivals, delays, equipment changes, outages, and diversions.
 Only initially parked aircraft receive initial `gate` values. Future flights do
 not occupy initial gates. The `gateState` object covers terminal passenger gates
 and the H remote positions included for this simulation.
+The 110 positions use the explicit IFATC crosswalk and size classes. Each flight
+leg includes `trafficType`: `Domestic`, `Transborder`, or `International`.
 
 To skip generation, use the checked-in
 [seeded daily scenario](fixtures/pearson-2026-11-07-seed42.json) as `scenario_path`.

@@ -46,8 +46,10 @@ equipment swaps also start parked; they come from each affected carrier's fleet
 and are reserved exclusively for that swap. Every initially parked aircraft has a
 `gate`; the initial `gateState` contains those occupants and `null` at all other
 positions. Aircraft scheduled to arrive later have no initial gate. Placements
-use the carrier's terminal defaults, then H parking if needed; they are synthetic,
-not a verified aircraft/stand capability matrix.
+use IFATC capacity classes and the carrier's terminal defaults, then compatible H
+parking if needed. The explicit crosswalk contains 78 terminal groups and 32 H
+positions; 11 unresolved passenger labels have been removed. These are simulation
+placements, not a verified operational aircraft/stand capability matrix.
 
 The generator then sends timing changes, replacement schedules, equipment swaps,
 cancellations/reinstatements, gate outages, and occasional diversions, including
@@ -78,6 +80,14 @@ with a 45-minute remote turnaround and delay headroom reserved between uses.
 When a carrier's pool cannot fit another rotation, generation tries other
 Pearson carriers; if no placement is found, it fails with a capacity error rather
 than inventing registrations. High flight counts may exceed this historical pool.
+Every generated flight leg and reference includes `trafficType`, based on explicit
+station `countryCode` values in the profiles: Canada/Canada is `Domestic`,
+Canada/US is `Transborder` in either direction, and Canada/Europe, Canada/Mexico,
+and other cross-border pairs are `International`. Complete incoming leg objects
+require this field. The stream fills it from the known schedule when an incoming
+leg reference omits it. An explicit turnback retains the intended flight category;
+generated turnbacks use domestic service profiles.
+
 Local station times use IANA time zones; event announcements are UTC, including on
 Toronto daylight-saving transitions. Scheduled flight/leg objects contain no
 initial gate; only the `parkedAircraft` records do. Equipment swaps use the tail's

@@ -9,7 +9,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from .validation import DEFAULT_RATE, positive_number, require, validate_scenario
-from .inventory import initial_gate_state, passenger_aircraft
+from .inventory import catalog, initial_gate_state, passenger_aircraft, traffic_type
 
 
 DATA = Path(__file__).resolve().parents[1] / "data"
@@ -73,6 +73,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         leg = {"legType": "Originating", "flightNumber": str(number), "flightSuffix": None,
                "originatingDate": local_departure.date().isoformat(),
                "departureStation": origin, "arrivalStation": destination,
+               "trafficType": traffic_type(origin, destination),
                "scheduledDepartureTime": local_departure.strftime("%H:%M"),
                "scheduledArrivalTime": arrival.astimezone(zones[destination]).strftime("%H:%M")}
         if carrier in PARTNERS and rng.random() < 0.35:
@@ -179,7 +180,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
             leg["scheduledArrivalTime"] = (arrival + delay).astimezone(zones[leg["arrivalStation"]]).strftime("%H:%M")
         else:
             update["legs"] = [{k: v for k, v in message["legs"][0].items()
-                               if k in ("flightNumber", "flightSuffix", "originatingDate", "departureStation", "arrivalStation")}]
+                               if k in ("flightNumber", "flightSuffix", "originatingDate", "departureStation", "arrivalStation", "trafficType")}]
             if action == "UpdateEquipment":
                 if departure != last_departure[message["flight"]["registration"]]:
                     continue
@@ -197,9 +198,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
             del update["cancelScope"]
             add(when + timedelta(seconds=rng.randint(5 * 60, 20 * 60)), update)
 
-    pearson = json.loads((DATA / "pearson.json").read_text(encoding="utf-8"))
-    gates = [group[0] for terminal in pearson["passengerGateGroups"]["terminals"].values()
-             for group in terminal["groups"]]
+    gates = [gate for gate, terminal in catalog()["gates"].items() if terminal is not None]
     for _ in range(max(1, flight_count // 120)):
         outage_start = datetime.combine(day, time(rng.randint(6, 20), rng.randrange(60)), TORONTO)
         outage = {"action": "GateOutage", "gate": rng.choice(gates),

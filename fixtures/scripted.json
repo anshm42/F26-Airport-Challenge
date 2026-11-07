@@ -23,7 +23,8 @@
                 "carrier": "UA",
                 "flightNumber": "8456"
               }
-            ]
+            ],
+            "trafficType": "Domestic"
           }
         ]
       }
@@ -51,7 +52,8 @@
                 "carrier": "UA",
                 "flightNumber": "8456"
               }
-            ]
+            ],
+            "trafficType": "Domestic"
           }
         ]
       }
@@ -82,7 +84,8 @@
             "departureStation": "YYZ",
             "arrivalStation": "YUL",
             "scheduledDepartureTime": "09:30",
-            "scheduledArrivalTime": "10:45"
+            "scheduledArrivalTime": "10:45",
+            "trafficType": "Domestic"
           }
         ]
       }
@@ -101,7 +104,8 @@
             "flightNumber": "456",
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YUL"
+            "arrivalStation": "YUL",
+            "trafficType": "Domestic"
           }
         ],
         "equipmentUpdate": {
@@ -123,7 +127,8 @@
             "flightNumber": "456",
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YUL"
+            "arrivalStation": "YUL",
+            "trafficType": "Domestic"
           }
         ],
         "cancelScope": {
@@ -145,7 +150,8 @@
             "flightNumber": "456",
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YUL"
+            "arrivalStation": "YUL",
+            "trafficType": "Domestic"
           }
         ]
       }
@@ -170,7 +176,8 @@
             "departureStation": "YUL",
             "arrivalStation": "YYZ",
             "scheduledDepartureTime": "07:00",
-            "scheduledArrivalTime": "08:00"
+            "scheduledArrivalTime": "08:00",
+            "trafficType": "Domestic"
           }
         ]
       }
@@ -195,7 +202,8 @@
             "departureStation": "YYZ",
             "arrivalStation": "YYZ",
             "scheduledDepartureTime": "07:00",
-            "scheduledArrivalTime": "08:10"
+            "scheduledArrivalTime": "08:10",
+            "trafficType": "Domestic"
           }
         ]
       }

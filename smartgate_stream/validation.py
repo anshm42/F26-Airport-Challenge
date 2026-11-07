@@ -6,7 +6,8 @@ import re
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-from .inventory import AIRCRAFT_FIELDS, canonical_gate, catalog, initial_gate_state, passenger_aircraft
+from .inventory import (AIRCRAFT_FIELDS, canonical_gate, catalog, gate_fits,
+                        initial_gate_state, passenger_aircraft, traffic_type)
 
 
 ACTIONS = {
@@ -69,6 +70,12 @@ def validate_leg_reference(leg):
     date.fromisoformat(string_field(leg, "originatingDate", r"[0-9]{4}-[0-9]{2}-[0-9]{2}"))
     string_field(leg, "departureStation", r"[A-Z]{3}")
     string_field(leg, "arrivalStation", r"[A-Z]{3}")
+    if "trafficType" in leg:
+        require(isinstance(leg["trafficType"], str)
+                and leg["trafficType"] in ("Domestic", "Transborder", "International"), "invalid trafficType")
+        origin, destination = leg["departureStation"], leg["arrivalStation"]
+        if origin in catalog()["countries"] and destination in catalog()["countries"] and (origin, destination) != ("YYZ", "YYZ"):
+            require(leg["trafficType"] == traffic_type(origin, destination), "trafficType contradicts station countries")
 
 
 def flight_key(carrier, leg):
@@ -84,6 +91,7 @@ def validate_gate_state(gates):
         if aircraft is None:
             continue
         validate_aircraft(aircraft)
+        require(gate_fits(gate, aircraft), "gateState occupant exceeds matched IFATC capacity or gate is unresolved")
         require(set(aircraft) == set(AIRCRAFT_FIELDS), "gateState occupants contain only aircraft identity fields")
         require(aircraft["registration"] not in registrations, "aircraft occupies more than one gate")
         registrations.add(aircraft["registration"])
@@ -137,7 +145,7 @@ def validate_message(message):
         require("flight" not in message and "legs" not in message,
                 "GateOutage must not contain flight or legs")
         require("emergencyState" not in message, "GateOutage must not contain emergencyState")
-        string_field(message, "gate", r"\S+")
+        canonical_gate(message.get("gate"))
         string_field(message, "scheduledStartTime", r"(?:[01][0-9]|2[0-3]):[0-5][0-9]")
         if "scheduledEndTime" in message:
             string_field(message, "scheduledEndTime", r"(?:[01][0-9]|2[0-3]):[0-5][0-9]")
@@ -160,6 +168,7 @@ def validate_message(message):
         validate_leg_reference(leg)
         require("gate" not in leg, "scheduled legs cannot carry an initial gate")
         if complete:
+            require("trafficType" in leg, "complete legs require trafficType")
             require(leg.get("legType") == ("Originating" if index == 0 else "Through"),
                     "complete legs must start with Originating, followed by Through")
             for key in ("scheduledDepartureTime", "scheduledArrivalTime"):

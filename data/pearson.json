@@ -71,6 +71,27 @@
       "kind": "AirportAuthority",
       "publishedOn": "2024-04-25",
       "note": "Historical evidence that IFC can serve carriers checking in at either terminal; 2024 seasonal airline/flight assignments are not current defaults."
+    },
+    "providedPassengerMap": {
+      "title": "User-provided Toronto Pearson (YYZ) International Airport Map",
+      "file": "sources/pearson-passenger-terminal-map.png",
+      "kind": "UserProvided",
+      "providedOn": "2026-11-07",
+      "note": "Publisher and map date were not supplied. Used for relative passenger walking-distance estimates, not measured routes or current gate-inventory verification."
+    },
+    "pearsonT1AirsideMap": {
+      "title": "Pearson T1 Bridge Gates Vehicle Corridors, Taxilane and Lead-in Lines (April 2026)",
+      "url": "https://cdn.torontopearson.com/-/media/project/pearson/content/airport-employees/passes-and-permits/avop/2026/T1%20Bridge%20Gates%20Vehicle%20Corridors%20April2026",
+      "kind": "AirportAuthority",
+      "publishedOn": "2026-04-15",
+      "note": "Airside layout compared visually with the passenger map; crosswalk is an editorial simulation interpretation, not a published GTAA gate-approval matrix."
+    },
+    "pearsonT3AirsideMap": {
+      "title": "Pearson T3 Bridge Gates Vehicle Corridors, Taxilane and Lead-in Lines (April 2026)",
+      "url": "https://cdn.torontopearson.com/-/media/project/pearson/content/airport-employees/passes-and-permits/avop/2026/T3%20Bridge%20Gates%20Vehicle%20Corridors%20April2026",
+      "kind": "AirportAuthority",
+      "publishedOn": "2026-04-15",
+      "note": "Airside layout compared visually with the passenger map; crosswalk is an editorial simulation interpretation, not a published GTAA gate-approval matrix."
     }
   },
   "trafficTypes": {
@@ -284,7 +305,71 @@
             "E69",
             "F69"
           ]
-        ]
+        ],
+        "walkingDistanceClassByGate": {
+          "D20": 1,
+          "D22": 2,
+          "D24": 3,
+          "D26": 4,
+          "D28": 5,
+          "D30": 1,
+          "D31": 1,
+          "D33": 2,
+          "D35": 3,
+          "D37": 4,
+          "D38": 6,
+          "D39": 5,
+          "D40": 6,
+          "D41": 7,
+          "D42": 8,
+          "D43": 9,
+          "D44": 9,
+          "D45": 8,
+          "F60": 4,
+          "F61": 5,
+          "F62": 5,
+          "F63": 6,
+          "F64": 6,
+          "F65": 7,
+          "F82": 2,
+          "F83": 3,
+          "E70": 8,
+          "E71": 8,
+          "E72": 9,
+          "E73": 9,
+          "E74": 9,
+          "E75": 9,
+          "E76": 9,
+          "E77": 9,
+          "E78": 9,
+          "E79": 9,
+          "E80": 8,
+          "E81": 8,
+          "E82": 8,
+          "E85": 2,
+          "D32": 3,
+          "F32": 3,
+          "D34": 4,
+          "F34": 4,
+          "D36": 5,
+          "F36": 5,
+          "D51": 2,
+          "F51": 2,
+          "D53": 3,
+          "F53": 3,
+          "D55": 4,
+          "F55": 4,
+          "D57": 5,
+          "F57": 5,
+          "E66": 7,
+          "F66": 7,
+          "E67": 7,
+          "F67": 7,
+          "E68": 8,
+          "F68": 8,
+          "E69": 8,
+          "F69": 8
+        }
       },
       "T3": {
         "sourceIds": [
@@ -409,8 +494,70 @@
             "A20",
             "B20"
           ]
-        ]
+        ],
+        "walkingDistanceClassByGate": {
+          "A7": 4,
+          "A8": 3,
+          "A10": 1,
+          "A11": 1,
+          "A12": 2,
+          "A13": 3,
+          "A14": 4,
+          "A15": 5,
+          "A16": 6,
+          "B2a": 9,
+          "B2c": 9,
+          "B3": 9,
+          "B4": 9,
+          "B5": 9,
+          "B22": 3,
+          "B23": 2,
+          "B24": 2,
+          "B25": 1,
+          "B26": 2,
+          "B27": 3,
+          "B28": 4,
+          "B29": 5,
+          "C30": 6,
+          "C31": 7,
+          "C32": 8,
+          "C33": 9,
+          "C34": 9,
+          "C35": 8,
+          "C36": 7,
+          "B37": 6,
+          "B38": 5,
+          "B39": 4,
+          "B40": 3,
+          "B41": 2,
+          "A17": 7,
+          "B17": 7,
+          "A18": 8,
+          "B18": 8,
+          "A19": 8,
+          "B19": 8,
+          "A20": 6,
+          "B20": 6
+        }
       }
+    },
+    "walkingDistanceScale": {
+      "sourceIds": [
+        "providedPassengerMap",
+        "pearsonT1Map"
+      ],
+      "basis": "VisualEstimate",
+      "description": "Passenger-only ordinal walking effort along the concourse from the nearest applicable security checkpoint: 1 is closest, 2-8 are progressively farther, 9 is the farthest terminal/satellite area, and 10 is a remote stand used for passenger service. Values are not metres or walking minutes.",
+      "remoteStandClass": 10,
+      "inferredGateLabels": [
+        "D30",
+        "E82",
+        "E85",
+        "F64",
+        "B23",
+        "C30"
+      ],
+      "note": "Shared swing aliases receive the same physical-access score. Labels not shown exactly on the supplied image use approximate concourse/neighbor placement; they are listed in inferredGateLabels. The existing passenger gate inventory is preserved. Remote-stand class 10 applies only when passenger use is established separately; it does not classify cargo, maintenance, or GA positions or establish passenger suitability of raw IFATC stands."
     }
   },
   "airlineTerminals": {
@@ -2197,11 +2344,1063 @@
   "limitations": [
     "Retrieved-on is the research date, not a guarantee that each source is effective on that date. The official linked PDF maps have 2019 filenames.",
     "No complete authoritative per-stand aircraft acceptance, arrival customs routing, adjacency/blocking, or current operating-status matrix was found in the consulted public sources.",
-    "IFATC airside stand names and passenger gate labels must not be joined by stripping prefixes or leading digits. In particular, older T3 A/B/C labels differ from the passenger maps.",
+    "Use passengerStandMapping for the explicit simulation crosswalk; do not infer unlisted matches by stripping prefixes or leading digits. Unresolved passenger labels remain unavailable for allocation.",
     "Zone membership is a label classification. It does not mean every B/C gate individually supports both domestic and international flights, or that every shared zone gate is a swing gate.",
     "Mapped swing aliases are mutually exclusive modes of the same resource. Active mode, sterility and mode-change time are operational state, not provided by this static snapshot.",
     "Airline lookups use the operating carrier in flight.carrier, not marketing codeshares. Regional operators and brands not separately listed in the directory require a verified mapping; no terminal is inferred for them.",
     "Terminal defaults describe airline/check-in assignment; IFC and remote-stand use can differ. No exclusive terminal is assigned here to IFC stands.",
     "Stand variants and adjacent positions can overlap. The IFATC list does not establish that all listed positions can be occupied simultaneously."
-  ]
+  ],
+  "passengerStandMapping": {
+    "sourceIds": [
+      "ifatcGates",
+      "pearsonT1Map",
+      "pearsonT3Map",
+      "pearsonT1AirsideMap",
+      "pearsonT3AirsideMap"
+    ],
+    "scope": "Explicit simulation crosswalk for 78 canonical terminal passenger groups and 32 H positions. MapComparison rows are editorial spatial/label reconciliations, not certified operational approvals. The 11 excluded passenger labels have no unambiguous IFATC match and are absent from the simulation inventory.",
+    "capacityRule": "widthClass is the largest IFATC class among the listed alternative stand positions; only one aircraft may occupy a passenger group. Aircraft class must be known and no larger.",
+    "blockingRule": "Rows with the same conflictGroup cannot be occupied simultaneously, including H A/B subpositions. Alternative stands within a passenger group are not extra gate capacity. Neighbouring groups may have additional operational restrictions not modeled here.",
+    "records": [
+      {
+        "gate": "D20",
+        "ifatcStandNames": [
+          "Gate 120",
+          "Gate 120A"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "D20",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D22",
+        "ifatcStandNames": [
+          "Gate 122"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "D22",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D24",
+        "ifatcStandNames": [
+          "Gate 124"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "D24",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D26",
+        "ifatcStandNames": [
+          "Gate 126"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "D26",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D28",
+        "ifatcStandNames": [
+          "Gate 128"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "D28",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D31",
+        "ifatcStandNames": [
+          "Gate 131"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "D31",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D33",
+        "ifatcStandNames": [
+          "Gate 133"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "D33",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D35",
+        "ifatcStandNames": [
+          "Gate 135"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "D35",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D37",
+        "ifatcStandNames": [
+          "Gate 137"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "D37",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D38",
+        "ifatcStandNames": [
+          "Gate 138",
+          "Gate 138A"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "D38",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D39",
+        "ifatcStandNames": [
+          "Gate 139"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "D39",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D40",
+        "ifatcStandNames": [
+          "Gate 140"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "D40",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D41",
+        "ifatcStandNames": [
+          "Gate 141",
+          "Gate 141A"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "D41",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D42",
+        "ifatcStandNames": [
+          "Gate 142"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "D42",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D43",
+        "ifatcStandNames": [
+          "Gate 143",
+          "Gate 143A"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "D43",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D44",
+        "ifatcStandNames": [
+          "Gate 144"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "D44",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D45",
+        "ifatcStandNames": [
+          "Gate 145",
+          "Gate 145A"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "D45",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "F60",
+        "ifatcStandNames": [
+          "Gate 160"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "F60",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "F61",
+        "ifatcStandNames": [
+          "Gate 161"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "F61",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "F62",
+        "ifatcStandNames": [
+          "Gate 162"
+        ],
+        "widthClass": "B",
+        "conflictGroup": "F62",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "F63",
+        "ifatcStandNames": [
+          "Gate 163"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "F63",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "F64",
+        "ifatcStandNames": [
+          "Gate 164A",
+          "Gate 164B"
+        ],
+        "widthClass": "B",
+        "conflictGroup": "F64",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "F65",
+        "ifatcStandNames": [
+          "Gate 165"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "F65",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E70",
+        "ifatcStandNames": [
+          "Gate 170",
+          "Gate 170A"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "E70",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E71",
+        "ifatcStandNames": [
+          "Gate 171",
+          "Gate 171A"
+        ],
+        "widthClass": "F",
+        "conflictGroup": "E71",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E72",
+        "ifatcStandNames": [
+          "Gate 172"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "E72",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E73",
+        "ifatcStandNames": [
+          "Gate 173",
+          "Gate 173A"
+        ],
+        "widthClass": "F",
+        "conflictGroup": "E73",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E74",
+        "ifatcStandNames": [
+          "Gate 174"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "E74",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E75",
+        "ifatcStandNames": [
+          "Gate 175",
+          "Gate 175A"
+        ],
+        "widthClass": "F",
+        "conflictGroup": "E75",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E76",
+        "ifatcStandNames": [
+          "Gate 176"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "E76",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E77",
+        "ifatcStandNames": [
+          "Gate 177"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "E77",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E78",
+        "ifatcStandNames": [
+          "Gate 178"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "E78",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E79",
+        "ifatcStandNames": [
+          "Gate 179"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "E79",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E80",
+        "ifatcStandNames": [
+          "Gate 180",
+          "Gate 180A"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "E80",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E81",
+        "ifatcStandNames": [
+          "Gate 181",
+          "Gate 181A"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "E81",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D32",
+        "ifatcStandNames": [
+          "Gate 132"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "D32",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D34",
+        "ifatcStandNames": [
+          "Gate 134",
+          "Gate 134A"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "D34",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D36",
+        "ifatcStandNames": [
+          "Gate 136"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "D36",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D51",
+        "ifatcStandNames": [
+          "Gate 151"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "D51",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D53",
+        "ifatcStandNames": [
+          "Gate 153"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "D53",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D55",
+        "ifatcStandNames": [
+          "Gate 155"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "D55",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "D57",
+        "ifatcStandNames": [
+          "Gate 157"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "D57",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E66",
+        "ifatcStandNames": [
+          "Gate 166",
+          "Gate 166B"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "E66",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E67",
+        "ifatcStandNames": [
+          "Gate 167",
+          "Gate 167A"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "E67",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E68",
+        "ifatcStandNames": [
+          "Gate 168",
+          "Gate 168A",
+          "Gate 168B"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "E68",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "E69",
+        "ifatcStandNames": [
+          "Gate 169",
+          "Gate 169A"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "E69",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "A7",
+        "ifatcStandNames": [
+          "Gate B07D",
+          "Gate B07E",
+          "Gate B07F"
+        ],
+        "widthClass": "B",
+        "conflictGroup": "A7",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "A8",
+        "ifatcStandNames": [
+          "Gate B08",
+          "Gate B08A"
+        ],
+        "widthClass": "B",
+        "conflictGroup": "A8",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "A10",
+        "ifatcStandNames": [
+          "Gate B10A",
+          "Gate B10B"
+        ],
+        "widthClass": "B",
+        "conflictGroup": "A10",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "A11",
+        "ifatcStandNames": [
+          "Gate B11",
+          "Gate B11A"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "A11",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "A12",
+        "ifatcStandNames": [
+          "Gate B12",
+          "Gate B12A",
+          "Gate B12B"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "A12",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "A13",
+        "ifatcStandNames": [
+          "Gate B13"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "A13",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "A14",
+        "ifatcStandNames": [
+          "Gate B14",
+          "Gate B14A"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "A14",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "A15",
+        "ifatcStandNames": [
+          "Gate B15",
+          "Gate B15A"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "A15",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "A16",
+        "ifatcStandNames": [
+          "Gate B16"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "A16",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "B22",
+        "ifatcStandNames": [
+          "Gate B22"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "B22",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "B24",
+        "ifatcStandNames": [
+          "Gate C24"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "B24",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "B25",
+        "ifatcStandNames": [
+          "Gate C25"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "B25",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "B26",
+        "ifatcStandNames": [
+          "Gate C26"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "B26",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "B27",
+        "ifatcStandNames": [
+          "Gate C27",
+          "Gate C27A"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "B27",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "B28",
+        "ifatcStandNames": [
+          "Gate C28"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "B28",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "B29",
+        "ifatcStandNames": [
+          "Gate C29",
+          "Gate C29A"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "B29",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "C30",
+        "ifatcStandNames": [
+          "Gate C30",
+          "Gate C30A"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "C30",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "C31",
+        "ifatcStandNames": [
+          "Gate C31"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "C31",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "C32",
+        "ifatcStandNames": [
+          "Gate C32"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "C32",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "C33",
+        "ifatcStandNames": [
+          "Gate C33",
+          "Gate C33A"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "C33",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "C34",
+        "ifatcStandNames": [
+          "Gate C34",
+          "Gate C34A"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "C34",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "C35",
+        "ifatcStandNames": [
+          "Gate C35"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "C35",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "C36",
+        "ifatcStandNames": [
+          "Gate C36"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "C36",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "B37",
+        "ifatcStandNames": [
+          "Gate C37",
+          "Gate C37A"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "B37",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "B38",
+        "ifatcStandNames": [
+          "Gate C38"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "B38",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "B39",
+        "ifatcStandNames": [
+          "Gate C39",
+          "Gate C39A"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "B39",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "B40",
+        "ifatcStandNames": [
+          "Gate C40",
+          "Gate C40A"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "B40",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "B41",
+        "ifatcStandNames": [
+          "Gate C41"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "B41",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "A17",
+        "ifatcStandNames": [
+          "Gate B17"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "A17",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "A18",
+        "ifatcStandNames": [
+          "Gate B18"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "A18",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "A19",
+        "ifatcStandNames": [
+          "Gate B19"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "A19",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "A20",
+        "ifatcStandNames": [
+          "Gate B20"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "A20",
+        "basis": "MapComparison"
+      },
+      {
+        "gate": "Remote Stand H01",
+        "ifatcStandNames": [
+          "Remote Stand H01"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "Remote Stand H01",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H01A",
+        "ifatcStandNames": [
+          "Remote Stand H01A"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H01",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H01B",
+        "ifatcStandNames": [
+          "Remote Stand H01B"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H01",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H02",
+        "ifatcStandNames": [
+          "Remote Stand H02"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "Remote Stand H02",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H02A",
+        "ifatcStandNames": [
+          "Remote Stand H02A"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H02",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H02B",
+        "ifatcStandNames": [
+          "Remote Stand H02B"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H02",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H03",
+        "ifatcStandNames": [
+          "Remote Stand H03"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "Remote Stand H03",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H03A",
+        "ifatcStandNames": [
+          "Remote Stand H03A"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H03",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H03B",
+        "ifatcStandNames": [
+          "Remote Stand H03B"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H03",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H04",
+        "ifatcStandNames": [
+          "Remote Stand H04"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "Remote Stand H04",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H04A",
+        "ifatcStandNames": [
+          "Remote Stand H04A"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H04",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H04B",
+        "ifatcStandNames": [
+          "Remote Stand H04B"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H04",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H05",
+        "ifatcStandNames": [
+          "Remote Stand H05"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "Remote Stand H05",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H05A",
+        "ifatcStandNames": [
+          "Remote Stand H05A"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H05",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H05B",
+        "ifatcStandNames": [
+          "Remote Stand H05B"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H05",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H06",
+        "ifatcStandNames": [
+          "Remote Stand H06"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "Remote Stand H06",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H06A",
+        "ifatcStandNames": [
+          "Remote Stand H06A"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H06",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H06B",
+        "ifatcStandNames": [
+          "Remote Stand H06B"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H06",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H07",
+        "ifatcStandNames": [
+          "Remote Stand H07"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H07",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H08",
+        "ifatcStandNames": [
+          "Remote Stand H08"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H08",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H09",
+        "ifatcStandNames": [
+          "Remote Stand H09"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H09",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H10",
+        "ifatcStandNames": [
+          "Remote Stand H10"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H10",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H11",
+        "ifatcStandNames": [
+          "Remote Stand H11"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "Remote Stand H11",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H11A",
+        "ifatcStandNames": [
+          "Remote Stand H11A"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H11",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H11B",
+        "ifatcStandNames": [
+          "Remote Stand H11B"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H11",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H12",
+        "ifatcStandNames": [
+          "Remote Stand H12"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "Remote Stand H12",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H12A",
+        "ifatcStandNames": [
+          "Remote Stand H12A"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H12",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H12B",
+        "ifatcStandNames": [
+          "Remote Stand H12B"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H12",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H13",
+        "ifatcStandNames": [
+          "Remote Stand H13"
+        ],
+        "widthClass": "E",
+        "conflictGroup": "Remote Stand H13",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H13A",
+        "ifatcStandNames": [
+          "Remote Stand H13A"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H13",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H13B",
+        "ifatcStandNames": [
+          "Remote Stand H13B"
+        ],
+        "widthClass": "C",
+        "conflictGroup": "Remote Stand H13",
+        "basis": "ExactStandName"
+      },
+      {
+        "gate": "Remote Stand H14",
+        "ifatcStandNames": [
+          "Remote Stand H14"
+        ],
+        "widthClass": "D",
+        "conflictGroup": "Remote Stand H14",
+        "basis": "ExactStandName"
+      }
+    ],
+    "excludedPassengerGates": [
+      "D30",
+      "F82",
+      "F83",
+      "E82",
+      "E85",
+      "B2a",
+      "B2c",
+      "B3",
+      "B4",
+      "B5",
+      "B23"
+    ]
+  }
 }

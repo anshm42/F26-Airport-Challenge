@@ -3,7 +3,7 @@
 import copy
 from datetime import datetime, time, timedelta, timezone
 
-from .inventory import AIRCRAFT_FIELDS, canonical_gate, catalog, gate_blocker, initial_gate_state
+from .inventory import AIRCRAFT_FIELDS, canonical_gate, catalog, gate_blocker, gate_fits, initial_gate_state
 from .validation import (flight_key, parse_utc, require, string_field,
                          validate_leg_reference, validate_message)
 
@@ -54,8 +54,7 @@ class GateState:
     def _add_route(self, message, *, replace=False):
         aircraft = self._aircraft(message["flight"])
         route = self._route(aircraft["carrier"], message["legs"][0])
-        previous = {self._route(key[0], record["leg"]): record
-                    for key, record in self.flights.items() if record["route"] == route}
+        previous = {key: record for key, record in self.flights.items() if record["route"] == route}
         previous_plans = {key: self.assignments[key] for key, record in self.flights.items()
                           if record["route"] == route and key in self.assignments}
         require(replace or not previous, "flight route already exists")
@@ -68,7 +67,7 @@ class GateState:
             departure, arrival = leg_times(leg)
             key = flight_key(aircraft["carrier"], leg)
             require(key not in self.flights, "duplicate flight leg")
-            old = previous.get(self._route(aircraft["carrier"], leg), {})
+            old = previous.get(key, {})
             self.flights[key] = {
                 "leg": copy.deepcopy(leg), "aircraft": aircraft.copy(), "route": route,
                 "departure": departure, "arrival": arrival, "cancelled": False,
@@ -189,7 +188,8 @@ class GateState:
                 require(tail not in self.grounded, "aircraft cannot arrive while already on the ground at YYZ")
                 self.grounded[tail] = plane.copy()
                 gate = self.assignments.get(key) or self.assignments.get(self._next_outbound(record))
-                if gate is not None and gate_blocker(self.gates, gate) is None and not self._out_of_service(gate, self.now):
+                if (gate is not None and gate_fits(gate, plane) and gate_blocker(self.gates, gate) is None
+                        and not self._out_of_service(gate, self.now)):
                     self.gates[gate] = plane.copy()
             record[movement] = True
         self.now = timestamp
@@ -229,7 +229,7 @@ class GateState:
             string_field(decision, "carrier", r"[A-Z0-9]{2}")
             leg = decision["leg"]
             validate_leg_reference(leg)
-            require(set(leg) <= set(LEG_FIELDS), "assignment requires a leg reference, not a complete leg")
+            require(set(leg) <= set(LEG_FIELDS) | {"trafficType"}, "assignment requires a leg reference, not a complete leg")
             key = flight_key(decision["carrier"], leg)
             require(key in self.flights and key not in references, "unknown or duplicate assignment reference")
             references.add(key)
@@ -239,6 +239,8 @@ class GateState:
             if gate is None:
                 self.assignments.pop(key, None)
             else:
+                require(gate_fits(gate, record["aircraft"]),
+                        "matcher chose a gate without matched IFATC capacity for this aircraft")
                 self.assignments[key] = gate
                 if not initializing and self._current_visit(record):
                     tail = record["aircraft"]["registration"]
@@ -274,6 +276,8 @@ class GateState:
         remaining = {gate: None if plane is not None and plane["registration"] in targets else plane
                      for gate, plane in self.gates.items()}
         for tail, gate in targets.items():
+            require(gate_fits(gate, self.grounded[tail]),
+                    "matcher chose a gate without matched IFATC capacity for this aircraft")
             require(gate_blocker(remaining, gate) is None, "matcher chose an occupied or overlapping position")
             require(not self._out_of_service(gate, self.now), "matcher chose an out-of-service position")
             # shortcut: moves are instantaneous; add tow durations when movement scheduling is required.
@@ -294,6 +298,9 @@ class GateState:
 
     def request(self, message):
         request = copy.deepcopy(message)
+        for leg in request.get("legs", []):
+            key = flight_key(request["flight"]["carrier"], leg)
+            leg["trafficType"] = self.flights[key]["leg"]["trafficType"]
         state = self.snapshot()
         request["gateState"] = state["gate_state"]
         request["unassignedAircraft"] = state["unassigned_aircraft"]

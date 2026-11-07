@@ -216,7 +216,7 @@ class HttpTests(unittest.TestCase):
         initial, arrival = self.gate_scenario()
         leg = arrival["legs"][0]
         choice = {"carrier": arrival["flight"]["carrier"], "leg": {key: leg.get(key) for key in (
-            "flightNumber", "flightSuffix", "originatingDate", "departureStation", "arrivalStation")}, "gate": "D22"}
+            "flightNumber", "flightSuffix", "originatingDate", "departureStation", "arrivalStation")}, "gate": "D41"}
         self.webhook.response_body = lambda message: {
             "assignments": [choice] if message["action"] == "InitializeAirport" else []}
         code, created = self.request("POST", "/runs", self.options)
@@ -224,13 +224,13 @@ class HttpTests(unittest.TestCase):
         state = self.terminal(created["run_id"])
         self.assertEqual((state["status"], state["delivered"]), ("completed", 3))
         received = [message for message, _ in self.webhook.received]
-        self.assertTrue(all(len(message["gateState"]) == 121 for message in received))
+        self.assertTrue(all(len(message["gateState"]) == 110 for message in received))
         self.assertEqual(received[0]["gateState"]["D20"], initial["flights"][0]["flight"])
-        self.assertIsNone(received[0]["gateState"]["D22"])
-        self.assertIsNone(received[1]["gateState"]["D22"])
-        self.assertEqual(received[2]["gateState"]["D22"], arrival["flight"])
+        self.assertIsNone(received[0]["gateState"]["D41"])
+        self.assertIsNone(received[1]["gateState"]["D41"])
+        self.assertEqual(received[2]["gateState"]["D41"], arrival["flight"])
         self.assertIsNone(state["gate_state"]["D20"])
-        self.assertEqual(state["gate_state"]["D22"], arrival["flight"])
+        self.assertEqual(state["gate_state"]["D41"], arrival["flight"])
         self.assertEqual(state["gate_state_time"], "2026-11-07T14:00:00Z")
         saved = Path(state["records_directory"]) / "gate-state.json"
         self.assertEqual(json.loads(saved.read_text()), state["gate_state"])
