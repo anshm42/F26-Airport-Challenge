@@ -47,7 +47,11 @@ initialization, so allocation time does not consume the simulated day's gaps.
   "flights": [
     {
       "action": "CreateFlight",
-      "flight": {"carrier": "AC", "registration": "C-FCEU", "aircraftType": "321"},
+      "flight": {
+        "carrier": "AC",
+        "registration": "C-FCEU",
+        "aircraftType": "321"
+      },
       "legs": [
         {
           "legType": "Originating",
@@ -57,13 +61,19 @@ initialization, so allocation time does not consume the simulated day's gaps.
           "departureStation": "YYZ",
           "arrivalStation": "YUL",
           "scheduledDepartureTime": "07:00",
-          "scheduledArrivalTime": "08:15"
+          "scheduledArrivalTime": "08:15",
+          "trafficType": "Domestic"
         }
       ]
     }
   ],
   "parkedAircraft": [
-    {"carrier": "AC", "registration": "C-FCEU", "aircraftType": "321", "gate": "D20"}
+    {
+      "carrier": "AC",
+      "registration": "C-FCEU",
+      "aircraftType": "321",
+      "gate": "D20"
+    }
   ],
   "gateOutages": []
 }
@@ -136,7 +146,8 @@ matcher. Generated days are independent; cross-day state transfer is not provide
       "departureStation": "YYZ",
       "arrivalStation": "YVR",
       "scheduledDepartureTime": "12:00",
-      "scheduledArrivalTime": "14:30"
+      "scheduledArrivalTime": "14:30",
+      "trafficType": "Domestic"
     }
   ]
 }
@@ -166,7 +177,8 @@ matcher. Generated days are independent; cross-day state transfer is not provide
       "departureStation": "YYZ",
       "arrivalStation": "YUL",
       "scheduledDepartureTime": "08:00",
-      "scheduledArrivalTime": "10:00"
+      "scheduledArrivalTime": "10:00",
+      "trafficType": "Domestic"
     },
     {
       "legType": "Through",
@@ -176,7 +188,8 @@ matcher. Generated days are independent; cross-day state transfer is not provide
       "departureStation": "YUL",
       "arrivalStation": "YYZ",
       "scheduledDepartureTime": "11:00",
-      "scheduledArrivalTime": "13:00"
+      "scheduledArrivalTime": "13:00",
+      "trafficType": "Domestic"
     }
   ]
 }
@@ -218,7 +231,8 @@ matcher. Generated days are independent; cross-day state transfer is not provide
       "departureStation": "YYZ",
       "arrivalStation": "LHR",
       "scheduledDepartureTime": "18:30",
-      "scheduledArrivalTime": "06:25"
+      "scheduledArrivalTime": "06:25",
+      "trafficType": "International"
     }
   ]
 }
@@ -332,6 +346,18 @@ For other modifications, the operating carrier plus the referenced leg's flight 
 - Three-character airport code (e.g., "YVR", "LHR", "AMS")
 - Where this leg arrives
 
+**`trafficType`** (string, required for complete leg objects)
+- `"Domestic"`: both stations are in the same country; for a Pearson leg, both are in Canada.
+- `"Transborder"`: a Canada–United States leg, in either direction.
+- `"International"`: any other cross-border leg, including Canada–Mexico.
+- Classify each leg separately using station countries, not carrier nationality,
+  aircraft type, or time zone. A turnback retains its intended flight's category;
+  `YYZ`–`YYZ` alone does not identify the intended destination.
+- Generated messages and all delivered flight updates include this field. Leg
+  references may omit it on input; the stream supplies the stored category before
+  delivery. It is metadata, not part of flight identity. Matcher decision leg
+  references may include it or omit it.
+
 **`scheduledDepartureTime`** (string, required for complete leg objects)
 - 24-hour time format: "HH:MM" (e.g., "08:00", "14:30", "23:45")
 - Local time at the departure station
@@ -364,7 +390,8 @@ For other modifications, the operating carrier plus the referenced leg's flight 
       "departureStation": "JFK",
       "arrivalStation": "LAX",
       "scheduledDepartureTime": "09:00",
-      "scheduledArrivalTime": "12:00"
+      "scheduledArrivalTime": "12:00",
+      "trafficType": "Domestic"
     },
     {
       "legType": "Through",
@@ -374,7 +401,8 @@ For other modifications, the operating carrier plus the referenced leg's flight 
       "departureStation": "LAX",
       "arrivalStation": "SFO",
       "scheduledDepartureTime": "13:30",
-      "scheduledArrivalTime": "15:00"
+      "scheduledArrivalTime": "15:00",
+      "trafficType": "Domestic"
     },
     {
       "legType": "Through",
@@ -384,7 +412,8 @@ For other modifications, the operating carrier plus the referenced leg's flight 
       "departureStation": "SFO",
       "arrivalStation": "JFK",
       "scheduledDepartureTime": "16:30",
-      "scheduledArrivalTime": "00:45"
+      "scheduledArrivalTime": "00:45",
+      "trafficType": "Domestic"
     }
   ]
 }
@@ -417,7 +446,8 @@ For other modifications, the operating carrier plus the referenced leg's flight 
       "departureStation": "YYZ",
       "arrivalStation": "YUL",
       "scheduledDepartureTime": "16:00",
-      "scheduledArrivalTime": "18:00"
+      "scheduledArrivalTime": "18:00",
+      "trafficType": "Domestic"
     }
   ]
 }
@@ -447,7 +477,8 @@ For other modifications, the operating carrier plus the referenced leg's flight 
       "departureStation": "YYZ",
       "arrivalStation": "YUL",
       "scheduledDepartureTime": "08:15",
-      "scheduledArrivalTime": "10:15"
+      "scheduledArrivalTime": "10:15",
+      "trafficType": "Domestic"
     }
   ]
 }
@@ -486,7 +517,8 @@ it will arrive at 12:10, twenty minutes early. It sends this message with
       "departureStation": "YUL",
       "arrivalStation": "YYZ",
       "scheduledDepartureTime": "11:00",
-      "scheduledArrivalTime": "12:10"
+      "scheduledArrivalTime": "12:10",
+      "trafficType": "Domestic"
     }
   ]
 }
@@ -519,7 +551,8 @@ to react before the aircraft arrives.
       "flightSuffix": null,
       "originatingDate": "2025-06-15",
       "departureStation": "YYZ",
-      "arrivalStation": "YUL"
+      "arrivalStation": "YUL",
+      "trafficType": "Domestic"
     }
   ],
   "cancelScope": {
@@ -549,7 +582,8 @@ to react before the aircraft arrives.
       "flightSuffix": null,
       "originatingDate": "2025-08-20",
       "departureStation": "YUL",
-      "arrivalStation": "YYZ"
+      "arrivalStation": "YYZ",
+      "trafficType": "Domestic"
     }
   ],
   "cancelScope": {
@@ -579,7 +613,8 @@ to react before the aircraft arrives.
       "flightSuffix": null,
       "originatingDate": "2025-06-15",
       "departureStation": "YYZ",
-      "arrivalStation": "YUL"
+      "arrivalStation": "YUL",
+      "trafficType": "Domestic"
     }
   ]
 }
@@ -608,7 +643,8 @@ to react before the aircraft arrives.
       "flightSuffix": null,
       "originatingDate": "2025-06-15",
       "departureStation": "YYZ",
-      "arrivalStation": "YUL"
+      "arrivalStation": "YUL",
+      "trafficType": "Domestic"
     }
   ],
   "equipmentUpdate": {
@@ -638,7 +674,8 @@ to react before the aircraft arrives.
       "flightSuffix": null,
       "originatingDate": "2025-08-20",
       "departureStation": "YYZ",
-      "arrivalStation": "YUL"
+      "arrivalStation": "YUL",
+      "trafficType": "Domestic"
     }
   ],
   "equipmentUpdate": {
@@ -710,7 +747,8 @@ for a terminal gate; other emergencies and diversions can use remote stands.
       "departureStation": "YQB",
       "arrivalStation": "YYZ",
       "scheduledDepartureTime": "10:00",
-      "scheduledArrivalTime": "11:15"
+      "scheduledArrivalTime": "11:15",
+      "trafficType": "Domestic"
     }
   ]
 }
@@ -772,7 +810,7 @@ the gate or stand.
 - `InitializeAirport` uses `flights`, `parkedAircraft`, and `gateOutages` arrays instead of a top-level `flight` or `legs`
 
 **Conditionally Required:**
-- Complete leg objects with `legType` and scheduled times - Required for `CreateFlight`, `ReplaceFlight`, `UpdateTiming`, and `DivertFlight`
+- Complete leg objects with `legType`, `trafficType`, and scheduled times - Required for `CreateFlight`, `ReplaceFlight`, `UpdateTiming`, and `DivertFlight`
 - Exactly one leg reference - Required for `CancelFlight`, `ReinstateFlight`, and `UpdateEquipment`
 - `cancelScope` - Required for `CancelFlight` action
 - `equipmentUpdate` - Required for `UpdateEquipment` action

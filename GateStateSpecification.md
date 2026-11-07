@@ -6,14 +6,19 @@ The dynamic update stream owns current passenger-gate occupancy. The matcher own
 the choice of gates and returns decisions to the stream. The stream validates and
 applies those decisions before the next request. Both services use simulated time.
 
-The tracked inventory is `passengerGateGroups.terminals` in
-[data/pearson.json](data/pearson.json). There is one key per physical gate group:
-use the first label in each group as its canonical ID. For example, `D32` and `F32`
-are aliases of one resource, represented by the single key `D32`. Accept an alias
-in a decision and normalize it to the canonical ID. The 89 terminal resources are supplemented by all 32 `Remote Stand H...`
-positions from `ifatcStands.records`, explicitly treated as passenger parking for
-this simulation. Use those exact stand names as IDs. The complete object has
-121 keys. Cargo, maintenance, and GA positions remain outside this profile.
+The tracked inventory is `passengerStandMapping.records` in
+[data/pearson.json](data/pearson.json): **78 terminal gate groups and 32 H remote
+positions, for 110 keys**. Each terminal gate uses the first passenger label from
+its `passengerGateGroups` group. `D32` and `F32`, for example, normalize to the
+single key `D32` and map to IFATC `Gate 132`. Swing aliases always share one
+occupant. Use exact `Remote Stand H...` names for H positions, included as
+passenger parking for this simulation. Cargo, maintenance, and GA positions are
+outside this inventory.
+
+The passenger map's `D30`, `F82`, `F83`, `E82`, `E85`, `B2a`, `B2c`, `B3`, `B4`,
+`B5`, and `B23` have no unambiguous IFATC match. They are removed from the simulation
+inventory and rejected in assignments, moves, initial parking, and outages.
+The raw map transcription remains in the reference data for provenance.
 
 H positions sharing the same base number are mutually exclusive: occupying
 `Remote Stand H01A` blocks `Remote Stand H01` and `Remote Stand H01B`, even though
@@ -47,7 +52,7 @@ Excerpt showing the value format (real requests contain the full inventory):
 ```
 
 See the [complete request example](docs/examples/gate-state-request.json) for all
-121 entries. Aircraft already at YYZ but waiting for a gate appear in the
+110 entries. Aircraft already at YYZ but waiting for a gate appear in the
 request's `unassignedAircraft` array using the same three aircraft fields. They
 do not occupy an invented gate or displace an existing occupant.
 
@@ -77,10 +82,18 @@ return explicit moves before acknowledging readiness with `200` or `204`.
 Initialization failure must not activate partial state. Each new initialized day
 replaces the previous day's state; historical records remain available for audit.
 
-Initial positions are synthetic simulation placements within the passenger
-inventory. The public data lacks a complete passenger-label/stand-capability
-crosswalk. The stream enforces passenger eligibility and unique occupancy; the
-matcher remains responsible for its aircraft compatibility and operational rules.
+Initial positions are synthetic placements constrained by the explicit IFATC
+crosswalk. `ifatcStandNames` lists alternative stand positions for a passenger
+group, and `widthClass` is their largest IFATC capacity. A single group still
+holds at most one aircraft; the alternatives are not additional slots. Compare
+known aircraft/stand classes in ascending A–F order. Unknown or oversized aircraft
+are rejected for initial parking, assignments, and immediate moves. Recheck at
+arrival after equipment changes; an incompatible aircraft waits unassigned.
+
+`conflictGroup` identifies positions that cannot be occupied simultaneously.
+The map comparisons are an editorial simulation crosswalk, not GTAA operational
+approvals. The matcher remains responsible for traffic-zone capability, sterility,
+bridge suitability, and other operational constraints.
 
 ## Requests to the matcher
 
@@ -153,7 +166,7 @@ modeled. A move cannot introduce an unknown aircraft or delete one.
 
 Validate the entire response before changing any occupancy or plan. Reject unknown
 fields, malformed references, duplicate/conflicting decisions, unknown gates,
-excluded aircraft, and occupied/unavailable immediate destinations. Atomic swaps
+excluded or oversized aircraft, and occupied/unavailable immediate destinations. Atomic swaps
 are allowed when every aircraft being moved vacates its source in the same batch.
 On failure, retain the last valid state, fail the run, and send no further updates.
 Responses are limited to 1 MiB and the existing 10-second socket timeout. There
