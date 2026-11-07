@@ -23,3 +23,8 @@
 	- Unknown plane type (Russian refugee, emergency landing, other error case)
 	- Outgoing plane type changes (requires changing gate, passengers can move but shouldn't have to move far?)
 
+# New feature
+
+- Passenger gate view
+	- We're already assigning gates, why not also display them to passengers?
+	- This is the "do everything and just win, lol" angle
