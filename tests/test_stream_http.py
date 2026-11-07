@@ -84,24 +84,24 @@ class HttpTests(unittest.TestCase):
         self.fail("run did not finish")
 
     def test_end_to_end_unchanged_messages_headers_and_records(self):
+        expected = load_scenario(FIXTURE)["events"]
         code, created = self.request("POST", "/runs", self.options)
         self.assertEqual(code, 201)
         state = self.terminal(created["run_id"])
-        self.assertEqual((state["status"], state["delivered"]), ("completed", 8))
-        expected = load_scenario(FIXTURE)["events"]
+        self.assertEqual((state["status"], state["delivered"]), ("completed", len(expected)))
         self.assertEqual([r[0] for r in self.webhook.received], [e["message"] for e in expected])
         for index, (_, headers) in enumerate(self.webhook.received):
             headers = {k.lower(): v for k, v in headers.items()}
             self.assertEqual(headers["x-stream-event-id"], f"{state['run_id']}:{index}")
             self.assertEqual(headers["x-stream-simulated-time"], expected[index]["timestamp"])
         records = Path(state["records_directory"]) / "deliveries.jsonl"
-        self.assertEqual(len(records.read_text().splitlines()), 8)
+        self.assertEqual(len(records.read_text().splitlines()), len(expected))
         self.assertEqual(self.request("POST", f"/runs/{state['run_id']}/stop")[0], 409)
         code, second = self.request("POST", "/runs", self.options)
         self.assertEqual(code, 201)
         self.assertNotEqual(second["run_id"], state["run_id"])
         self.terminal(second["run_id"])
-        self.assertEqual(self.request("GET", f"/runs/{state['run_id']}")[1]["delivered"], 8)
+        self.assertEqual(self.request("GET", f"/runs/{state['run_id']}")[1]["delivered"], len(expected))
 
     def test_overlap_and_stop_inflight(self):
         self.webhook.release.clear()

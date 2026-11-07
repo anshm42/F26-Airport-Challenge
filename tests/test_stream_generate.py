@@ -126,8 +126,28 @@ class GeneratorTests(unittest.TestCase):
             self.assertIn((carrier, aircraft, tail), known)
             self.assertEqual(tails.setdefault(tail, (carrier, aircraft)), (carrier, aircraft))
             station = leg["arrivalStation"] if leg["departureStation"] == "YYZ" else leg["departureStation"]
-            services = [s for s in profiles[carrier]["services"] if station in s["stations"]]
+            services = [s for s in profiles[carrier]["services"]
+                        if station in s["stations"] or message.get("emergencyState") == "Turnback"]
             self.assertTrue(any(aircraft in s["aircraft"] for s in services))
+
+    def test_diversions_cover_turnbacks_and_remote_stand_eligible_reasons(self):
+        diversions = [event for scenario in (self.scenario, generate(0, "2026-11-07"),
+                                             generate(1, "2026-11-07"))
+                      for event in scenario["events"] if event["message"]["action"] == "DivertFlight"]
+        self.assertEqual({e["message"]["reason"] for e in diversions}, {"turnback", "medical", "diversion"})
+        self.assertEqual({e["message"]["emergencyState"] for e in diversions}, {"Turnback", "Emergency"})
+        for event in diversions:
+            message = event["message"]
+            leg = message["legs"][0]
+            self.assertEqual(leg["arrivalStation"], "YYZ")
+            self.assertEqual(leg["departureStation"], "YYZ" if message["emergencyState"] == "Turnback" else "YUL")
+            self.assertEqual(message["emergencyState"], "Turnback" if message["reason"] == "turnback" else "Emergency")
+            if message["emergencyState"] == "Turnback":
+                self.assertEqual(leg["flightSuffix"], "R")
+            arrival = datetime.fromisoformat(leg["originatingDate"] + "T" + leg["scheduledArrivalTime"]).replace(tzinfo=TORONTO)
+            notice = (arrival - parse_utc(event["timestamp"])).total_seconds()
+            self.assertGreaterEqual(notice, 15 * 60)
+            self.assertLessEqual(notice, 30 * 60)
 
     def test_created_rotations_have_valid_local_dates_block_times_and_turnaround(self):
         rotations = defaultdict(list)

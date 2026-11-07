@@ -16,6 +16,7 @@ Prototype ignores security and compliance.
 ### Dynamic updates
 Standalone server, separate from the matching algorithm.
 Pushes updates to the matching algorithm via webhook, so the algorithm doesn't have to poll and can respond faster.
+The updater owns the webhook API: message format, headers, delivery order, and acknowledgment behavior. The matching algorithm implements a receiver conforming to that contract. The receiver URL is deployment configuration.
 Uses a subset of the ASM spec (https://xwiki.avinor.no/spaces/ADDMIFTM/pages/45711511/ASM+-+Adhoc+Scheduled+Message), with our own extensions.
 Reads from a locally hosted data pipe, which doesn't respond to changes and is out of our control.
 Should be able to run either deterministic scripts (for smaller cases) or stochastic simulations of high traffic.

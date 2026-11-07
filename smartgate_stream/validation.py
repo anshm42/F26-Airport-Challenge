@@ -58,12 +58,17 @@ def validate_message(message):
     if action == "GateOutage":
         require("flight" not in message and "legs" not in message,
                 "GateOutage must not contain flight or legs")
+        require("emergencyState" not in message, "GateOutage must not contain emergencyState")
         string_field(message, "gate", r"\S+")
         string_field(message, "scheduledStartTime", r"(?:[01][0-9]|2[0-3]):[0-5][0-9]")
         if "scheduledEndTime" in message:
             string_field(message, "scheduledEndTime", r"(?:[01][0-9]|2[0-3]):[0-5][0-9]")
         return
 
+    emergency_state = message.get("emergencyState")
+    if "emergencyState" in message:
+        require(isinstance(emergency_state, str) and emergency_state in ("Turnback", "Emergency"),
+                "invalid emergencyState")
     flight = object_field(message, "flight")
     string_field(flight, "carrier", r"[A-Z0-9]{2}")
     string_field(flight, "registration", r"[A-Z0-9]+(?:-[A-Z0-9]+)*")
@@ -111,6 +116,8 @@ def validate_message(message):
         require(legs[0]["arrivalStation"] == "YYZ", "diverted flight must arrive at YYZ")
         if "reason" in message:
             require(isinstance(message["reason"], str), "reason must be a string")
+        if emergency_state == "Turnback" or ("emergencyState" not in message and message.get("reason") == "turnback"):
+            require(legs[0]["departureStation"] == "YYZ", "turnback must depart from YYZ")
 
 
 def reject_constant(value):

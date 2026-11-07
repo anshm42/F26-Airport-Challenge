@@ -154,6 +154,7 @@
       "timestamp": "2026-11-07T12:40:00Z",
       "message": {
         "action": "DivertFlight",
+        "emergencyState": "Emergency",
         "reason": "medical",
         "flight": {
           "carrier": "AC",
@@ -170,6 +171,31 @@
             "arrivalStation": "YYZ",
             "scheduledDepartureTime": "07:00",
             "scheduledArrivalTime": "08:00"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-11-07T12:41:00Z",
+      "message": {
+        "action": "DivertFlight",
+        "emergencyState": "Turnback",
+        "reason": "technical",
+        "flight": {
+          "carrier": "AC",
+          "registration": "C-FGKN",
+          "aircraftType": "321"
+        },
+        "legs": [
+          {
+            "legType": "Originating",
+            "flightNumber": "502",
+            "flightSuffix": "R",
+            "originatingDate": "2026-11-07",
+            "departureStation": "YYZ",
+            "arrivalStation": "YYZ",
+            "scheduledDepartureTime": "07:00",
+            "scheduledArrivalTime": "08:10"
           }
         ]
       }

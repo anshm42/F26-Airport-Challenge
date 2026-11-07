@@ -35,6 +35,63 @@ class ValidationTests(unittest.TestCase):
         del outage["scheduledEndTime"]
         validate_scenario(self.scenario)
 
+    def test_diversion_reasons_and_legacy_messages_are_preserved(self):
+        for reason in ("turnback", "medical", "diversion", "other", None):
+            with self.subTest(reason=reason):
+                scenario = copy.deepcopy(self.scenario)
+                message = scenario["events"][7]["message"]
+                del message["emergencyState"]
+                if reason is None:
+                    del message["reason"]
+                else:
+                    message["reason"] = reason
+                message["legs"][0]["departureStation"] = "YYZ" if reason == "turnback" else "YUL"
+                original = copy.deepcopy(scenario)
+                validate_scenario(scenario)
+                self.assertEqual(scenario, original)
+
+    def test_turnback_must_return_to_its_departure_airport(self):
+        del self.scenario["events"][7]["message"]["emergencyState"]
+        self.scenario["events"][7]["message"]["reason"] = "turnback"
+        with self.assertRaisesRegex(ValueError, "turnback must depart from YYZ"):
+            validate_scenario(self.scenario)
+
+    def test_optional_emergency_state_on_flight_messages_is_preserved(self):
+        for state in ("Turnback", "Emergency"):
+            for index, event in enumerate(self.scenario["events"]):
+                if event["message"]["action"] == "GateOutage":
+                    continue
+                with self.subTest(state=state, action=event["message"]["action"]):
+                    scenario = copy.deepcopy(self.scenario)
+                    message = scenario["events"][index]["message"]
+                    message["emergencyState"] = state
+                    if state == "Turnback" and message["action"] == "DivertFlight":
+                        message["legs"][0]["departureStation"] = "YYZ"
+                    original = copy.deepcopy(scenario)
+                    validate_scenario(scenario)
+                    self.assertEqual(scenario, original)
+
+    def test_emergency_state_rejects_invalid_values_and_resource_messages(self):
+        for state in (None, True, 1, "", "turnback", "Unknown", [], {}):
+            with self.subTest(state=state):
+                scenario = copy.deepcopy(self.scenario)
+                scenario["events"][0]["message"]["emergencyState"] = state
+                with self.assertRaisesRegex(ValueError, "invalid emergencyState"):
+                    validate_scenario(scenario)
+        self.scenario["events"][2]["message"]["emergencyState"] = "Emergency"
+        with self.assertRaisesRegex(ValueError, "GateOutage must not contain emergencyState"):
+            validate_scenario(self.scenario)
+
+    def test_explicit_emergency_state_takes_precedence_over_reason(self):
+        message = self.scenario["events"][7]["message"]
+        message.update(emergencyState="Emergency", reason="turnback")
+        validate_scenario(self.scenario)
+        message.update(emergencyState="Turnback", reason="technical")
+        with self.assertRaisesRegex(ValueError, "turnback must depart from YYZ"):
+            validate_scenario(self.scenario)
+        message["legs"][0]["departureStation"] = "YYZ"
+        validate_scenario(self.scenario)
+
     def test_invalid_boundaries(self):
         mutations = [
             lambda s: s.update(events=[]),

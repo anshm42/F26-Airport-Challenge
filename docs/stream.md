@@ -6,8 +6,9 @@ Requires Python 3.11+ with no third-party dependencies. Run from the repository 
 python3 -m smartgate_stream serve --port 8080
 ```
 
-The control API listens on `127.0.0.1` only. It delivers flight messages to a
-separate matcher webhook. The stream never assigns gates, tracks matcher flight
+The control API listens on `127.0.0.1` only. The updater owns the
+[webhook API](#webhook-api); the matcher implements its receiving endpoint. The
+stream never assigns gates, tracks matcher flight
 state, or evaluates operational feasibility. `GateOutage` announces an unavailable
 resource; choosing gates remains entirely the matcher's responsibility.
 
@@ -34,8 +35,8 @@ and bursts remain intact. There is no fixed update heartbeat.
 
 The count specifies single-leg `CreateFlight` messages. The generator adds timing
 changes, replacement schedules, equipment swaps, cancellations/reinstatements,
-gate outages, and occasional diversions. A 1,200-flight scenario has 600 paired
-arrivals/departures, plus those extra events. Odd counts leave one unpaired inbound.
+gate outages, and occasional diversions, including turnbacks. A 1,200-flight scenario
+has 600 paired arrivals/departures, plus those extra events. Odd counts leave one unpaired inbound.
 Creates announce the initial schedule during the first three hours of the day;
 perturbations announce later, before affected departures. Some long-haul inbound
 legs depart their origin on the preceding local date.
@@ -57,6 +58,13 @@ Pearson carriers; if no placement is found, it fails with a capacity error rathe
 than inventing registrations. High flight counts may exceed this historical pool.
 Local station times use IANA time zones; event announcements are UTC, including on
 Toronto daylight-saving transitions. No flight contains a gate assignment.
+
+Diversions carry the optional top-level `emergencyState` field: `"Turnback"` gets
+terminal-gate priority, while `"Emergency"` allows compatible remote stands. `reason`
+is separate explanatory text. Generated turnbacks depart and return to YYZ and carry
+the suffix `R`. The [flight-message contract](../JsonFlightMessageSpecification.md#gate-priority-and-remote-stands)
+retains the legacy reason-based policy when the field is omitted. The stream validates
+and preserves the state; the matcher applies the policy and checks resource feasibility.
 
 This is synthetic traffic inspired by the Pearson arrival/departure boards.
 Registrations and aircraft types retain their association from the 2025 snapshot;
@@ -95,7 +103,8 @@ source metadata and profiles.
 
 ## Start and inspect a run
 
-Start a matcher (or a test webhook) accepting JSON POSTs, then:
+Start a matcher (or a test receiver) implementing the updater's
+[webhook API](#webhook-api), then:
 
 ```sh
 curl -X POST http://127.0.0.1:8080/runs \
@@ -106,7 +115,8 @@ curl -X POST http://127.0.0.1:8080/runs \
 The `201` response includes `run_id`, status, counters, and `records_directory`.
 Paths are resolved by the server, relative to its working directory. Fixtures are
 fully loaded and validated before the worker starts. Use `fixtures/scripted.json`
-as the path for a small fixed scenario covering all eight actions and equal-time events.
+as the path for a small fixed scenario covering all eight actions, equal-time events,
+a medical diversion, and a turnback.
 
 ```sh
 curl http://127.0.0.1:8080/runs/RUN_ID
@@ -126,7 +136,7 @@ Stopping interrupts scheduled waits. An in-flight request can still affect the
 matcher and must finish or time out before the run stops. A delivery error takes
 precedence over a pending stop. Ctrl-C stops further delivery and closes the server.
 
-## Fixture and webhook contract
+## Scenario fixture
 
 ```json
 {
@@ -154,15 +164,32 @@ belong to the matcher. Flight times are local to their stations; outage times ar
 local to Toronto. For undated outage windows, the matcher uses the announcement's
 Toronto date; an earlier end time crosses midnight.
 
-Each event sends one JSON POST containing its `message` unchanged in value (JSON
-formatting may differ). The envelope stays outside the body, in headers:
+## Webhook API
+
+This contract is owned by the updater. The matching algorithm must implement a
+receiver that accepts these requests and maps them into its own flight state.
+The run's `webhook_url` supplies the receiver's HTTP(S) address and path; examples
+use `POST /updates`. Changing that URL does not change the API's payload or semantics.
+
+Each event sends one `POST` with `Content-Type: application/json`, containing its
+`message` unchanged in value (JSON formatting may differ). The body follows the
+[JSON Flight Message Specification](../JsonFlightMessageSpecification.md); it has no
+`events`, `timestamp`, or `message` wrapper. The envelope stays outside the body, in
+required headers:
 
 - `X-Stream-Run-Id`: random run identifier.
 - `X-Stream-Event-Id`: `RUN_ID:INDEX`, with a zero-based file index.
 - `X-Stream-Simulated-Time`: the event's exact timestamp string.
 
-The matcher must use simulated time for schedule evaluation. A 2xx response only
-acknowledges receipt; it does not prove matching computation finished. Measure
+The receiver must accept all eight defined actions and use the supplied simulated
+time for schedule evaluation. Requests arrive sequentially in fixture order,
+including events with equal timestamps; the updater waits for each acknowledgment
+before sending the next event. An asynchronous matcher must preserve that order
+when applying updates.
+
+The receiver returns a 2xx status to acknowledge receipt (for example, `204 No
+Content` or `202 Accepted`). The updater ignores the response body. An acknowledgment
+does not prove matching computation finished. Measure
 matcher computation in matcher logs, correlated by event ID. Redirects, non-2xx
 responses, connection failures, and a 10-second socket timeout fail the run at the
 first affected event. There are no retries.

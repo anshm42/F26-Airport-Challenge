@@ -5,7 +5,9 @@ Pearson static reference data: [dataset](data/pearson.json) and
 
 Aircraft static reference data: [IATA types, size classes, and service roles](data/aircraft.json).
 
-Flight-message format: [JSON Flight Message Specification](JsonFlightMessageSpecification.md).
+Updater-owned webhook API: [HTTP delivery contract](docs/stream.md#webhook-api) and
+[JSON Flight Message Specification](JsonFlightMessageSpecification.md).
+The matching algorithm implements the receiver against this API.
 
 Run the dynamic update server with `python3 -m smartgate_stream serve`.
 See [scenario generation, replay controls, and the simulation clock](docs/stream.md).

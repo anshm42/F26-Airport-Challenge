@@ -86,12 +86,17 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         profile = carriers[0]
         service = profile["services"][0]
         arrival = datetime.combine(day, time(rng.randint(8, 20), rng.randrange(60)), TORONTO).astimezone(timezone.utc)
-        equipment = allocate(profile["carrier"], service, arrival - timedelta(minutes=80), next_day, "YUL")
+        reason = rng.choice(["turnback", "medical", "diversion"])
+        emergency_state = "Turnback" if reason == "turnback" else "Emergency"
+        origin = "YYZ" if emergency_state == "Turnback" else "YUL"
+        equipment = allocate(profile["carrier"], service, arrival - timedelta(minutes=80), next_day, origin)
         require(equipment is not None, "snapshot has no available aircraft for diversions")
         aircraft, tail = equipment
-        divert = message_for(profile, aircraft, tail, "YUL", "YYZ",
+        divert = message_for(profile, aircraft, tail, origin, "YYZ",
                              arrival - timedelta(minutes=80), arrival)
-        divert.update(action="DivertFlight", reason=rng.choice(["medical", "diversion"]))
+        divert.update(action="DivertFlight", emergencyState=emergency_state, reason=reason)
+        if emergency_state == "Turnback":
+            divert["legs"][0]["flightSuffix"] = "R"
         add(arrival - timedelta(seconds=rng.randint(15 * 60, 30 * 60)), divert)
 
     rotations = (flight_count + 1) // 2
