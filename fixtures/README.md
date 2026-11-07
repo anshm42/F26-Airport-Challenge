@@ -1,5 +1,10 @@
 # Matching test scenario
 
+This checked-in sample predates the [gate-state contract](../GateStateSpecification.md)
+and has no initial gate IDs. Regenerate it on the current `stream` branch for the
+new occupancy protocol. The original sample and counts below are retained for
+legacy comparisons; it must not be interpreted as an empty physical airport.
+
 [pearson-400-flights-seed42.json](pearson-400-flights-seed42.json) is a synthetic,
 seeded Pearson day for **2026-11-07**, using seed **42** and a default replay rate
 of **60**. It contains **400 scheduled flight legs**, **25 initially parked

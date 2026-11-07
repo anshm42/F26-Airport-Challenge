@@ -7,6 +7,8 @@ updates. The matching algorithm must consume this format. The updater defines th
 API independently of the matcher's internal data model; any mapping into that model
 belongs in the matcher. See the [webhook API](docs/webhook-api.md) for HTTP
 delivery, required headers, ordering, and acknowledgments.
+Current occupancy and matcher decision responses follow the
+[Passenger Gate State Specification](GateStateSpecification.md).
 
 The `flight` object holds the shared aircraft details: operating carrier, registration, and aircraft type. The `legs` array holds the details that can change between flights: flight number, suffix, departure date, codeshares, stations, and times. All legs grouped under one `flight` use the same aircraft.
 
@@ -20,16 +22,17 @@ The message contains three required arrays:
 
 - `flights`: the complete known schedule, using existing `CreateFlight` messages.
 - `parkedAircraft`: aircraft already on the ground at YYZ, each containing the
-  same `carrier`, `registration`, and `aircraftType` fields as a `flight` object.
-  A parked aircraft may have no departure scheduled. No gate or stand is supplied.
+  same `carrier`, `registration`, and `aircraftType` fields as a `flight` object,
+  plus its required initial `gate`. A parked aircraft may have no departure
+  scheduled. Future flights have no initial gate and do not occupy initial positions.
 - `gateOutages`: already known restrictions, using existing `GateOutage` messages.
   Outage windows use the snapshot's Toronto date and the usual midnight rules.
 
-The matcher loads static airport/aircraft references, replaces its previous
-dynamic state with this snapshot, and allocates compatible gates or stands for
-parked aircraft. Those placements become occupied positions; idle aircraft remain
-parked until a later movement. The matcher also builds its initial plan for the
-known flights. Prior run records remain available for audit.
+The stream owns occupancy and initializes its gate map from these parked aircraft.
+The matcher loads static references, replaces its previous dynamic state with this
+snapshot, and preserves the supplied initial positions while planning known
+flights. Idle aircraft remain parked until moved. Future assignments remain
+separate from current occupancy. Prior run records remain available for audit.
 
 Only after initialization and allocation finish successfully may the receiver
 return `200 OK` or `204 No Content`. It must reject an invalid or infeasible
@@ -60,11 +63,14 @@ initialization, so allocation time does not consume the simulated day's gaps.
     }
   ],
   "parkedAircraft": [
-    {"carrier": "AC", "registration": "C-FCEU", "aircraftType": "321"}
+    {"carrier": "AC", "registration": "C-FCEU", "aircraftType": "321", "gate": "D20"}
   ],
   "gateOutages": []
 }
 ```
+
+This is the scenario initialization message. On delivery, the updater also sends
+the complete `gateState` and `unassignedAircraft` defined by the gate-state contract.
 
 Subsequent updates refer to baseline flights. `CreateFlight` can add a newly
 announced schedule, and `DivertFlight` can introduce an unscheduled inbound.
@@ -97,7 +103,7 @@ matcher. Generated days are independent; cross-day state transfer is not provide
 
 ## Message Actions
 
-- **InitializeAirport** = Load the initial schedule and parked aircraft, then allocate their starting positions
+- **InitializeAirport** = Load the known schedule and supplied initial passenger-gate occupancy
 - **CreateFlight** = Create a new flight schedule
 - **ReplaceFlight** = Replace an existing flight schedule
 - **UpdateTiming** = Update only timing information
@@ -725,8 +731,11 @@ for a terminal gate; other emergencies and diversions can use remote stands.
 
 ### Gate priority and remote stands
 
-The matcher derives gate priority from `emergencyState`. No gate or stand assignment
-is sent in the message. These rules apply whenever a flight message supplies the field.
+The matcher derives gate priority from `emergencyState`. A future gate assignment
+is returned by the matcher; the request's `gateState` describes current occupancy.
+These rules apply whenever a flight message supplies the field. The current
+passenger-terminal profile tracks only the resources in the gate-state contract;
+only the H remote positions explicitly included by that contract can be returned as tracked remote destinations.
 
 | `emergencyState` | Gate priority | Remote stand use |
 | --- | --- | --- |
