@@ -10,6 +10,28 @@ delivery, required headers, ordering, and acknowledgments.
 
 The `flight` object holds the shared aircraft details: operating carrier, registration, and aircraft type. The `legs` array holds the details that can change between flights: flight number, suffix, departure date, codeshares, stations, and times. All legs grouped under one `flight` use the same aircraft.
 
+## Daily Initialization
+
+Each day is an independent simulation. During modeled overnight downtime, the
+matcher is reinitialized before the next day's replay. Its initial state consists
+of the static gate, stand, and aircraft reference data, with an empty flight
+schedule and no dynamic aircraft occupancy or gate/stand assignments.
+
+The reset clears the previous day's flights, timing/equipment changes,
+cancellations, and dynamic gate outages. Static restrictions remain in effect,
+and prior run records are retained for audit. Aircraft and assignments are not
+carried between days.
+
+`CreateFlight` messages establish that day's baseline schedule. Subsequent update
+messages refer to flights already created; `DivertFlight` can introduce an
+unscheduled inbound. The generated baseline is announced during the first three
+simulated hours of the day.
+
+The matcher or test harness performs initialization before starting delivery.
+Starting an updater run does not reset the receiver, and `X-Stream-Run-Id` is a
+correlation identifier, not a reset instruction. Overnight downtime is a simulation
+assumption; it does not represent an airport-wide closure at Pearson.
+
 ## Key Industry Terms
 
 - **Carrier**: An airline identified by a two-character code (e.g., "AC" for Air Canada, "AA" for American Airlines).

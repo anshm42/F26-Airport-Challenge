@@ -5,6 +5,12 @@ receiver that accepts these requests and maps them into its own flight state.
 The run's `webhook_url` supplies the receiver's HTTP(S) address and path; examples
 use `POST /updates`. Changing that URL does not change the API's payload or semantics.
 
+Before starting a daily replay, initialize the matcher according to
+[daily initialization](../JsonFlightMessageSpecification.md#daily-initialization).
+Each day starts with static reference data and an empty dynamic state; the
+`CreateFlight` messages build its baseline schedule. The updater does not send a
+reset request or carry aircraft state between days.
+
 Each event sends one `POST` with `Content-Type: application/json`, containing its
 `message` unchanged in value (JSON formatting may differ). The body follows the
 [JSON Flight Message Specification](../JsonFlightMessageSpecification.md); it has no
