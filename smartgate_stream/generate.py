@@ -36,7 +36,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         fleet[(aircraft["carrier"], aircraft["aircraftType"])].append(aircraft["registration"])
     start = datetime.combine(day, time(), TORONTO).astimezone(timezone.utc)
     next_day = datetime.combine(day + timedelta(days=1), time(), TORONTO).astimezone(timezone.utc)
-    events, outbound_flights = [], []
+    events, inbound_flights, outbound_flights = [], [], []
     reservations = defaultdict(list)
     numbers = {p["carrier"]: p["flightNumberStart"] for p in carriers}
     codeshare_numbers = {p["carrier"]: 7000 for p in carriers}
@@ -134,6 +134,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         inbound = message_for(profile, aircraft, tail, station, "YYZ", arrival - duration, arrival)
         announcement = start + timedelta(seconds=rng.randrange(180 * 60))
         add(announcement, inbound)
+        inbound_flights.append((inbound, arrival))
         if index * 2 + 1 >= flight_count:
             continue
         outbound = message_for(profile, aircraft, tail, "YYZ", station, departure, departure + duration)
@@ -183,6 +184,16 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         if rng.random() < 0.8:
             outage["scheduledEndTime"] = (outage_start + timedelta(minutes=rng.randint(30, 180))).strftime("%H:%M")
         add(outage_start - timedelta(seconds=rng.randint(0, 30 * 60)), outage)
+
+    for message, arrival in inbound_flights:
+        if rng.random() >= 0.25:
+            continue
+        early_arrival = arrival - timedelta(minutes=rng.randint(1, 30))
+        update = copy.deepcopy(message)
+        update["action"] = "UpdateTiming"
+        update["legs"][0]["scheduledArrivalTime"] = early_arrival.astimezone(TORONTO).strftime("%H:%M")
+        add(early_arrival - timedelta(seconds=rng.randint(5 * 60, 20 * 60)), update)
+
     events.sort(key=lambda event: event["timestamp"])
     scenario = {"metadata": {"seed": seed, "date": start_date, "flight_count": flight_count, "rate": rate,
                              "synthetic": True, "profiles": "data/stream_profiles.json",

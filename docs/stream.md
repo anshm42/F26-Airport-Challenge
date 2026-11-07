@@ -38,8 +38,13 @@ changes, replacement schedules, equipment swaps, cancellations/reinstatements,
 gate outages, and occasional diversions, including turnbacks. A 1,200-flight scenario
 has 600 paired arrivals/departures, plus those extra events. Odd counts leave one unpaired inbound.
 Creates announce the initial schedule during the first three hours of the day;
-perturbations announce later, before affected departures. Some long-haul inbound
-legs depart their origin on the preceding local date.
+outbound perturbations announce later, before affected departures. Roughly a quarter
+of inbound flights receive an `UpdateTiming` moving arrival 1–30 minutes earlier,
+announced 5–20 minutes before the revised arrival while the aircraft is in flight.
+The departure time, aircraft, flight identity, and paired outbound schedule stay
+unchanged. These early arrivals can extend occupancy into a previous assignment's
+window; the matcher checks feasibility and chooses any necessary reassignment.
+Some long-haul inbound legs depart their origin on the preceding local date.
 Announcements are sampled at second resolution within their notice windows.
 Related messages can arrive together, and gaps vary between events; flight and
 outage schedule fields retain their required `HH:MM` format.

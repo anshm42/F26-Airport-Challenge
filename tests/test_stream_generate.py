@@ -176,6 +176,36 @@ class GeneratorTests(unittest.TestCase):
                     self.assertGreater((dep - previous_end).total_seconds(), 0)
                 previous_end = following + (arr - dep)
 
+    def test_early_inbound_updates_preserve_departure_and_precede_arrival(self):
+        for day in ("2026-11-07", "2026-03-08", "2026-11-01"):
+            with self.subTest(day=day):
+                scenario = self.scenario if day == "2026-11-07" else generate(7, day, 120)
+                created, early = {}, []
+                for event in scenario["events"]:
+                    message = event["message"]
+                    if message["action"] == "CreateFlight":
+                        created[flight_key(message)] = event
+                    elif message["action"] == "UpdateTiming" and message["legs"][0]["arrivalStation"] == "YYZ":
+                        original = created[flight_key(message)]
+                        original_leg, leg = original["message"]["legs"][0], message["legs"][0]
+                        self.assertEqual(message["flight"], original["message"]["flight"])
+                        self.assertEqual({k: v for k, v in leg.items() if k != "scheduledArrivalTime"},
+                                         {k: v for k, v in original_leg.items() if k != "scheduledArrivalTime"})
+                        arrival = datetime.fromisoformat(day + "T" + leg["scheduledArrivalTime"]).replace(tzinfo=TORONTO)
+                        scheduled = datetime.fromisoformat(day + "T" + original_leg["scheduledArrivalTime"]).replace(tzinfo=TORONTO)
+                        advance = (scheduled - arrival).total_seconds() / 60
+                        self.assertGreaterEqual(advance, 1)
+                        self.assertLessEqual(advance, 30)
+                        origin = self.profiles["airports"][leg["departureStation"]]
+                        departure = datetime.fromisoformat(leg["originatingDate"] + "T" + leg["scheduledDepartureTime"]).replace(
+                            tzinfo=ZoneInfo(origin["timeZone"]))
+                        announced = parse_utc(event["timestamp"])
+                        self.assertGreater(announced, parse_utc(original["timestamp"]))
+                        self.assertGreater(announced, departure)
+                        self.assertLess(announced, arrival)
+                        early.append(message)
+                self.assertTrue(early, "scenario must exercise early inbound arrivals")
+
     def test_perturbations_preserve_identity_and_cancel_before_reinstate(self):
         flights, cancelled, aliases = {}, set(), set()
         for event in self.scenario["events"]:
@@ -203,7 +233,11 @@ class GeneratorTests(unittest.TestCase):
                 self.assertIn(key, cancelled)
                 cancelled.remove(key)
             elif action in ("UpdateTiming", "ReplaceFlight"):
-                self.assertGreater(leg["scheduledDepartureTime"], original["scheduledDepartureTime"])
+                if leg["arrivalStation"] == "YYZ":
+                    self.assertEqual(leg["scheduledDepartureTime"], original["scheduledDepartureTime"])
+                    self.assertLess(leg["scheduledArrivalTime"], original["scheduledArrivalTime"])
+                else:
+                    self.assertGreater(leg["scheduledDepartureTime"], original["scheduledDepartureTime"])
 
     def test_dst_and_overnight_service_keep_utc_announcements_on_toronto_date(self):
         for day in ("2026-03-08", "2026-11-01", "2026-12-31"):
