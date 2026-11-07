@@ -37,6 +37,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
     start = datetime.combine(day, time(), TORONTO).astimezone(timezone.utc)
     next_day = datetime.combine(day + timedelta(days=1), time(), TORONTO).astimezone(timezone.utc)
     events, inbound_flights, outbound_flights = [], [], []
+    initial_flights, parked_aircraft = [], []
     reservations = defaultdict(list)
     numbers = {p["carrier"]: p["flightNumberStart"] for p in carriers}
     codeshare_numbers = {p["carrier"]: 7000 for p in carriers}
@@ -81,6 +82,21 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         return {"action": "CreateFlight",
                 "flight": {"carrier": carrier, "registration": tail, "aircraftType": aircraft}, "legs": [leg]}
 
+    initial_departures = min(12, max(1, flight_count // 20))
+    idle_aircraft = min(4, max(1, flight_count // 120))
+    profile, service = carriers[0], carriers[0]["services"][0]
+    for index in range(initial_departures + idle_aircraft):
+        station = rng.choice(service["stations"])
+        departure = datetime.combine(day, time(rng.randint(6, 9), rng.randrange(60)), TORONTO).astimezone(timezone.utc)
+        duration = timedelta(minutes=airports[station]["minutes"] + rng.randint(-10, 10))
+        # No return is modeled for these aircraft, so exclude them from later rotations.
+        equipment = allocate(profile["carrier"], service, start, next_day, "YYZ")
+        require(equipment is not None, "snapshot has no available aircraft for initial state")
+        aircraft, tail = equipment
+        parked_aircraft.append({"carrier": profile["carrier"], "registration": tail, "aircraftType": aircraft})
+        if index < initial_departures:
+            initial_flights.append(message_for(profile, aircraft, tail, "YYZ", station, departure, departure + duration))
+
     # Keep real aircraft available for the unscheduled inbound cases too.
     for _ in range(flight_count // 600):
         profile = carriers[0]
@@ -99,7 +115,8 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
             divert["legs"][0]["flightSuffix"] = "R"
         add(arrival - timedelta(seconds=rng.randint(15 * 60, 30 * 60)), divert)
 
-    rotations = (flight_count + 1) // 2
+    remaining_flights = flight_count - initial_departures
+    rotations = (remaining_flights + 1) // 2
     chosen = list(carriers) if rotations >= len(carriers) else []
     counts = Counter(p["carrier"] for p in chosen)
     while len(chosen) < rotations:
@@ -132,13 +149,12 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
             raise ValueError(f"cannot fit {flight_count} flights into the snapshot fleet for {profile['carrier']}; reduce --flights")
         aircraft, tail = equipment
         inbound = message_for(profile, aircraft, tail, station, "YYZ", arrival - duration, arrival)
-        announcement = start + timedelta(seconds=rng.randrange(180 * 60))
-        add(announcement, inbound)
+        initial_flights.append(inbound)
         inbound_flights.append((inbound, arrival))
-        if index * 2 + 1 >= flight_count:
+        if index * 2 + 1 >= remaining_flights:
             continue
         outbound = message_for(profile, aircraft, tail, "YYZ", station, departure, departure + duration)
-        add(announcement, outbound)
+        initial_flights.append(outbound)
         outbound_flights.append((outbound, service, departure, departure + duration))
 
     for message, service, departure, arrival in outbound_flights:
@@ -159,12 +175,11 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
             update["legs"] = [{k: v for k, v in message["legs"][0].items()
                                if k in ("flightNumber", "flightSuffix", "originatingDate", "departureStation", "arrivalStation")}]
             if action == "UpdateEquipment":
-                equipment = allocate(message["flight"]["carrier"], service,
-                                     departure - timedelta(minutes=45), arrival + timedelta(minutes=90),
-                                     message["legs"][0]["arrivalStation"])
+                equipment = allocate(message["flight"]["carrier"], service, start, next_day, "YYZ")
                 if equipment is None:
                     continue
                 update["flight"]["aircraftType"], update["flight"]["registration"] = equipment
+                parked_aircraft.append(copy.deepcopy(update["flight"]))
                 update["equipmentUpdate"] = {"scope": rng.choice(["AllLegs", "SpecificLeg"])}
             else:
                 update["cancelScope"] = {"type": rng.choice(["AllLegs", "SpecificLeg"])}
@@ -194,6 +209,8 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         update["legs"][0]["scheduledArrivalTime"] = early_arrival.astimezone(TORONTO).strftime("%H:%M")
         add(early_arrival - timedelta(seconds=rng.randint(5 * 60, 20 * 60)), update)
 
+    add(start, {"action": "InitializeAirport", "flights": initial_flights,
+                "parkedAircraft": parked_aircraft, "gateOutages": []})
     events.sort(key=lambda event: event["timestamp"])
     scenario = {"metadata": {"seed": seed, "date": start_date, "flight_count": flight_count, "rate": rate,
                              "synthetic": True, "profiles": "data/stream_profiles.json",

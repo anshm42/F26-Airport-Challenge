@@ -33,12 +33,26 @@ value to `metadata.rate`; it preserves event timestamps and flight schedules.
 Replay scales the actual gaps between events, so quiet periods, irregular updates,
 and bursts remain intact. There is no fixed update heartbeat.
 
-The count specifies single-leg `CreateFlight` messages. The generator adds timing
-changes, replacement schedules, equipment swaps, cancellations/reinstatements,
-gate outages, and occasional diversions, including turnbacks. A 1,200-flight scenario
-has 600 paired arrivals/departures, plus those extra events. Odd counts leave one unpaired inbound.
-Creates announce the initial schedule during the first three hours of the day;
-outbound perturbations announce later, before affected departures. Roughly a quarter
+Each generated scenario starts at Toronto midnight with one `InitializeAirport`
+message containing the entire known schedule and aircraft already parked at YYZ.
+No hand-written startup file is needed. The count specifies the number of
+single-leg `CreateFlight` messages inside that snapshot, not additional update
+events. The default 1,200-flight scenario has twelve morning departures by parked
+aircraft and 594 paired arrivals/departures. Four additional parked aircraft have
+no departure that day. Smaller scenarios scale these startup counts down; the
+maximum remains twelve departing and four idle aircraft. These aircraft use
+Air Canada's checked-in fleet and route profile. Spare aircraft needed for later
+equipment swaps also start parked; they come from each affected carrier's fleet
+and are reserved exclusively for that swap. The matcher chooses all initial
+gates/stands; the generator supplies no assignments.
+
+The generator then sends timing changes, replacement schedules, equipment swaps,
+cancellations/reinstatements, gate outages, and occasional diversions, including
+turnbacks. Flights in the snapshot are not sent again as individual `CreateFlight`
+events. An odd remaining flight count leaves one unpaired inbound. Startup
+departures leave between 06:00 and 09:59 and are held fixed; their aircraft are
+excluded from other generated rotations, and idle startup aircraft stay parked.
+Regular outbound perturbations announce before affected departures. Roughly a quarter
 of inbound flights receive an `UpdateTiming` moving arrival 1–30 minutes earlier,
 announced 5–20 minutes before the revised arrival while the aircraft is in flight.
 The departure time, aircraft, flight identity, and paired outbound schedule stay
@@ -46,7 +60,7 @@ unchanged. These early arrivals can extend occupancy into a previous assignment'
 window; the matcher checks feasibility and chooses any necessary reassignment.
 Some long-haul inbound legs depart their origin on the preceding local date.
 Announcements are sampled at second resolution within their notice windows.
-Related messages can arrive together, and gaps vary between events; flight and
+Related messages can arrive together, and gaps vary between updates; flight and
 outage schedule fields retain their required `HH:MM` format.
 
 [Traffic profiles](../data/stream_profiles.json) use a weighted selection of twelve

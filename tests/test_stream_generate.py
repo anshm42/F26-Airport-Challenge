@@ -24,6 +24,12 @@ def flight_key(message):
     return (message["flight"]["carrier"], leg["flightNumber"], leg.get("flightSuffix"), leg["originatingDate"])
 
 
+def announcements(scenario):
+    initial = scenario["events"][0]
+    return ([{"timestamp": initial["timestamp"], "message": message} for message in initial["message"]["flights"]]
+            + scenario["events"][1:])
+
+
 class GeneratorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -38,7 +44,7 @@ class GeneratorTests(unittest.TestCase):
         for count in (1, 2, 3, 23, 24, 25):
             with self.subTest(count=count):
                 scenario = generate(1, "2026-11-07", count)
-                self.assertEqual(sum(e["message"]["action"] == "CreateFlight" for e in scenario["events"]), count)
+                self.assertEqual(len(scenario["events"][0]["message"]["flights"]), count)
         for seed, date, count in ((True, "2026-11-07", 1), (1, "2026-02-29", 1),
                                   (1, "20261107", 1), (1, None, 1),
                                   (1, "2026-11-07", 0), (1, "2026-11-07", True),
@@ -56,13 +62,53 @@ class GeneratorTests(unittest.TestCase):
             with self.subTest(rate=rate), self.assertRaises(ValueError):
                 generate(42, "2026-11-07", rate=rate)
 
-    def test_announcements_have_irregular_gaps_second_precision_and_bursts(self):
+    def test_generated_startup_has_known_schedule_and_consistent_parked_aircraft(self):
+        for day in ("2026-11-07", "2026-03-08", "2026-11-01"):
+            with self.subTest(day=day):
+                scenario = self.scenario if day == "2026-11-07" else generate(7, day, 120)
+                first = scenario["events"][0]
+                self.assertEqual(first["message"]["action"], "InitializeAirport")
+                start = parse_utc(first["timestamp"]).astimezone(TORONTO)
+                self.assertEqual(start.isoformat()[:19], day + "T00:00:00")
+                initial = first["message"]
+                self.assertEqual(len(initial["flights"]), scenario["metadata"]["flight_count"])
+                self.assertEqual({m["action"] for m in initial["flights"]}, {"CreateFlight"})
+                self.assertTrue(initial["parkedAircraft"])
+                self.assertFalse(any(e["message"]["action"] in ("InitializeAirport", "CreateFlight")
+                                     for e in scenario["events"][1:]))
+                known = {(a["carrier"], a["aircraftType"], a["registration"]) for a in self.fleet["records"]}
+                idle, departing = 0, 0
+                for aircraft in initial["parkedAircraft"]:
+                    self.assertIn((aircraft["carrier"], aircraft["aircraftType"], aircraft["registration"]), known)
+                    self.assertNotIn("gate", aircraft)
+                    self.assertNotIn("stand", aircraft)
+                    flights = [m for m in initial["flights"] if m["flight"]["registration"] == aircraft["registration"]]
+                    if flights:
+                        departing += 1
+                        self.assertEqual(len(flights), 1)
+                        self.assertEqual(flights[0]["flight"], aircraft)
+                        leg = flights[0]["legs"][0]
+                        self.assertEqual(leg["departureStation"], "YYZ")
+                        self.assertEqual(leg["originatingDate"], day)
+                        self.assertGreater(leg["scheduledDepartureTime"], "00:00")
+                    movements = [e["message"] for e in scenario["events"][1:]
+                                 if e["message"].get("flight", {}).get("registration") == aircraft["registration"]]
+                    if not flights and not movements:
+                        idle += 1
+                    self.assertTrue(all(m["action"] == "UpdateEquipment" for m in movements))
+                self.assertGreater(idle, 0)
+                self.assertGreater(departing, 0)
+                parked = {a["registration"] for a in initial["parkedAircraft"]}
+                for event in scenario["events"][1:]:
+                    if event["message"]["action"] == "UpdateEquipment":
+                        self.assertIn(event["message"]["flight"]["registration"], parked)
+
+    def test_updates_have_irregular_gaps_and_second_precision(self):
         events = self.scenario["events"]
         timestamps = [parse_utc(event["timestamp"]) for event in events]
         gaps = [(following - current).total_seconds() for current, following in zip(timestamps, timestamps[1:])]
-        self.assertIn(0, gaps)
         self.assertGreater(len(set(gaps)), 10)
-        for action in ACTIONS - {"InitializeAirport"}:
+        for action in ACTIONS - {"InitializeAirport", "CreateFlight"}:
             with self.subTest(action=action):
                 times = [parse_utc(e["timestamp"]) for e in events if e["message"]["action"] == action]
                 self.assertTrue(any(t.second != 0 for t in times))
@@ -82,7 +128,7 @@ class GeneratorTests(unittest.TestCase):
 
     def test_default_has_diverse_traffic_and_no_assignments(self):
         events = self.scenario["events"]
-        messages = [e["message"] for e in events]
+        messages = [e["message"] for e in announcements(self.scenario)]
         created = [m for m in messages if m["action"] == "CreateFlight"]
         self.assertEqual(len(created), 1200)
         self.assertEqual({m["action"] for m in messages}, ACTIONS - {"InitializeAirport"})
@@ -116,7 +162,7 @@ class GeneratorTests(unittest.TestCase):
         profiles = {p["carrier"]: p for p in self.profiles["carriers"]}
         known = {(r["carrier"], r["aircraftType"], r["registration"]) for r in self.fleet["records"]}
         tails = {}
-        for event in self.scenario["events"]:
+        for event in announcements(self.scenario):
             message = event["message"]
             if "flight" not in message:
                 continue
@@ -152,14 +198,18 @@ class GeneratorTests(unittest.TestCase):
     def test_created_rotations_have_valid_local_dates_block_times_and_turnaround(self):
         rotations = defaultdict(list)
         day = self.scenario["metadata"]["date"]
-        for event in self.scenario["events"]:
+        for event in announcements(self.scenario):
             message = event["message"]
             if message["action"] == "CreateFlight":
                 rotations[message["flight"]["registration"]].append(message["legs"][0])
-        self.assertLessEqual(len(rotations), 600)
-        for legs in rotations.values():
+        parked = {aircraft["registration"] for aircraft in self.scenario["events"][0]["message"]["parkedAircraft"]}
+        for tail, legs in rotations.items():
             incoming = sorted((l for l in legs if l["arrivalStation"] == "YYZ"), key=lambda l: l["scheduledArrivalTime"])
             outgoing = sorted((l for l in legs if l["departureStation"] == "YYZ"), key=lambda l: l["scheduledDepartureTime"])
+            if tail in parked:
+                self.assertEqual(len(incoming), 0)
+                self.assertEqual(len(outgoing), 1)
+                continue
             self.assertEqual(len(incoming), len(outgoing))
             previous_end = None
             for inbound, outbound in zip(incoming, outgoing):
@@ -181,7 +231,7 @@ class GeneratorTests(unittest.TestCase):
             with self.subTest(day=day):
                 scenario = self.scenario if day == "2026-11-07" else generate(7, day, 120)
                 created, early = {}, []
-                for event in scenario["events"]:
+                for event in announcements(scenario):
                     message = event["message"]
                     if message["action"] == "CreateFlight":
                         created[flight_key(message)] = event
@@ -208,7 +258,7 @@ class GeneratorTests(unittest.TestCase):
 
     def test_perturbations_preserve_identity_and_cancel_before_reinstate(self):
         flights, cancelled, aliases = {}, set(), set()
-        for event in self.scenario["events"]:
+        for event in announcements(self.scenario):
             message = event["message"]
             action = message["action"]
             if action == "GateOutage":

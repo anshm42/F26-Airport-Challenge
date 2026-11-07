@@ -76,10 +76,10 @@ def validate_message(message):
                     identity = (flight["carrier"], flight["aircraftType"])
                     require(aircraft.setdefault(flight["registration"], identity) == identity,
                             "conflicting initial aircraft details")
-                    for leg in item["legs"]:
-                        key = (flight["carrier"], leg["flightNumber"], leg.get("flightSuffix"), leg["originatingDate"])
-                        require(key not in flights, "duplicate initial flight")
-                        flights.add(key)
+                    leg = item["legs"][0]
+                    key = (flight["carrier"], leg["flightNumber"], leg.get("flightSuffix"), leg["originatingDate"])
+                    require(key not in flights, "duplicate initial flight")
+                    flights.add(key)
                 else:
                     require(item["gate"] not in gates, "duplicate initial gate outage")
                     gates.add(item["gate"])

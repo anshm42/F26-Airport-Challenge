@@ -27,7 +27,9 @@ class Webhook(BaseHTTPRequestHandler):
         if not self.server.release.wait(3):
             self.send_error(504)
             return
-        self.send_response(self.server.response_status)
+        status = (self.server.initialization_status if message["action"] == "InitializeAirport"
+                  else self.server.response_status)
+        self.send_response(status)
         self.end_headers()
 
 
@@ -41,6 +43,7 @@ class HttpTests(unittest.TestCase):
         self.webhook.release = threading.Event()
         self.webhook.release.set()
         self.webhook.response_status = 204
+        self.webhook.initialization_status = 204
         self.control = ControlServer(0)
         self.threads = []
         for server in (self.webhook, self.control):
@@ -118,6 +121,10 @@ class HttpTests(unittest.TestCase):
 
     def test_generated_day_delivers_every_message_in_order(self):
         scenario = generate(42, "2026-11-07")
+        initial = scenario["events"][0]["message"]
+        self.assertEqual(initial["action"], "InitializeAirport")
+        self.assertEqual(len(initial["flights"]), 1200)
+        self.assertTrue(initial["parkedAircraft"])
         early_updates = [(index, event) for index, event in enumerate(scenario["events"])
                          if event["message"]["action"] == "UpdateTiming"
                          and event["message"]["legs"][0]["arrivalStation"] == "YYZ"]
@@ -135,6 +142,36 @@ class HttpTests(unittest.TestCase):
             headers = {k.lower(): v for k, v in self.webhook.received[index][1].items()}
             self.assertEqual(headers["x-stream-event-id"], f"{state['run_id']}:{index}")
             self.assertEqual(headers["x-stream-simulated-time"], event["timestamp"])
+
+    def test_generated_initialization_blocks_updates_until_ready(self):
+        scenario = generate(42, "2026-11-07", 24)
+        path = Path(self.temp.name) / "initialized.json"
+        path.write_text(json.dumps(scenario))
+        self.options["scenario_path"] = str(path)
+        self.webhook.release.clear()
+        code, created = self.request("POST", "/runs", self.options)
+        self.assertEqual(code, 201)
+        self.assertTrue(self.webhook.entered.wait(2))
+        self.assertEqual([m["action"] for m, _ in self.webhook.received], ["InitializeAirport"])
+        self.assertEqual(self.request("GET", f"/runs/{created['run_id']}")[1]["delivered"], 0)
+        self.webhook.release.set()
+        self.assertEqual(self.terminal(created["run_id"])["status"], "completed")
+        self.assertEqual([m for m, _ in self.webhook.received], [e["message"] for e in scenario["events"]])
+
+    def test_generated_initialization_rejection_sends_no_updates(self):
+        scenario = generate(42, "2026-11-07", 24)
+        path = Path(self.temp.name) / "rejected.json"
+        path.write_text(json.dumps(scenario))
+        self.options["scenario_path"] = str(path)
+        for status in (202, 422):
+            with self.subTest(status=status):
+                self.webhook.initialization_status = status
+                self.webhook.received.clear()
+                code, created = self.request("POST", "/runs", self.options)
+                self.assertEqual(code, 201)
+                state = self.terminal(created["run_id"])
+                self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("failed", 1, 0))
+                self.assertEqual([m["action"] for m, _ in self.webhook.received], ["InitializeAirport"])
 
     def test_stop_wakes_paced_wait(self):
         self.options.update(mode="paced", speed=1)

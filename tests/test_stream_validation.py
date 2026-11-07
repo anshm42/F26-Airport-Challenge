@@ -21,6 +21,10 @@ class ValidationTests(unittest.TestCase):
     def test_initialization_preserved_and_invalid_snapshots_rejected(self):
         initial = {"action": "InitializeAirport", "flights": [copy.deepcopy(self.scenario["events"][0]["message"])],
                    "parkedAircraft": [], "gateOutages": [copy.deepcopy(self.scenario["events"][2]["message"])]}
+        leg = initial["flights"][0]["legs"][0]
+        initial["flights"][0]["legs"].append(dict(leg, legType="Through", departureStation=leg["arrivalStation"],
+                                                arrivalStation=leg["departureStation"], scheduledDepartureTime="14:00",
+                                                scheduledArrivalTime="15:15"))
         event = {"timestamp": self.scenario["events"][0]["timestamp"], "message": initial}
         self.scenario["events"].insert(0, event)
         original = copy.deepcopy(self.scenario)
