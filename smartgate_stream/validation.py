@@ -9,7 +9,7 @@ from pathlib import Path
 
 ACTIONS = {
     "CreateFlight", "ReplaceFlight", "UpdateTiming", "CancelFlight",
-    "ReinstateFlight", "UpdateEquipment", "GateOutage", "DivertFlight",
+    "ReinstateFlight", "UpdateEquipment", "GateOutage", "DivertFlight", "InitializeAirport",
 }
 COMPLETE_ACTIONS = {"CreateFlight", "ReplaceFlight", "UpdateTiming", "DivertFlight"}
 DEFAULT_RATE = 60
@@ -51,10 +51,49 @@ def parse_utc(value):
     return datetime.fromisoformat(value).astimezone(timezone.utc)
 
 
+def validate_aircraft(aircraft):
+    require(isinstance(aircraft, dict), "aircraft must be an object")
+    string_field(aircraft, "carrier", r"[A-Z0-9]{2}")
+    string_field(aircraft, "registration", r"[A-Z0-9]+(?:-[A-Z0-9]+)*")
+    string_field(aircraft, "aircraftType", r"[A-Z0-9]{3}")
+
+
 def validate_message(message):
     require(isinstance(message, dict), "message must be an object")
     action = message.get("action")
     require(isinstance(action, str) and action in ACTIONS, "unsupported action")
+    if action == "InitializeAirport":
+        aircraft, flights, gates = {}, set(), set()
+        for field, expected in (("flights", "CreateFlight"), ("gateOutages", "GateOutage")):
+            items = message.get(field)
+            require(isinstance(items, list), f"{field} must be an array")
+            for item in items:
+                require(isinstance(item, dict) and item.get("action") == expected,
+                        f"{field} must contain {expected} messages")
+                validate_message(item)
+                if expected == "CreateFlight":
+                    flight = item["flight"]
+                    identity = (flight["carrier"], flight["aircraftType"])
+                    require(aircraft.setdefault(flight["registration"], identity) == identity,
+                            "conflicting initial aircraft details")
+                    for leg in item["legs"]:
+                        key = (flight["carrier"], leg["flightNumber"], leg.get("flightSuffix"), leg["originatingDate"])
+                        require(key not in flights, "duplicate initial flight")
+                        flights.add(key)
+                else:
+                    require(item["gate"] not in gates, "duplicate initial gate outage")
+                    gates.add(item["gate"])
+        parked = message.get("parkedAircraft")
+        require(isinstance(parked, list), "parkedAircraft must be an array")
+        registrations = set()
+        for flight in parked:
+            validate_aircraft(flight)
+            tail = flight["registration"]
+            require(tail not in registrations, "duplicate parked aircraft")
+            registrations.add(tail)
+            identity = (flight["carrier"], flight["aircraftType"])
+            require(aircraft.get(tail, identity) == identity, "conflicting initial aircraft details")
+        return
     if action == "GateOutage":
         require("flight" not in message and "legs" not in message,
                 "GateOutage must not contain flight or legs")
@@ -70,9 +109,7 @@ def validate_message(message):
         require(isinstance(emergency_state, str) and emergency_state in ("Turnback", "Emergency"),
                 "invalid emergencyState")
     flight = object_field(message, "flight")
-    string_field(flight, "carrier", r"[A-Z0-9]{2}")
-    string_field(flight, "registration", r"[A-Z0-9]+(?:-[A-Z0-9]+)*")
-    string_field(flight, "aircraftType", r"[A-Z0-9]{3}")
+    validate_aircraft(flight)
     legs = message.get("legs")
     require(isinstance(legs, list) and len(legs) > 0, "legs must be a nonempty array")
     complete = action in COMPLETE_ACTIONS
@@ -143,6 +180,8 @@ def validate_scenario(scenario):
             timestamp = parse_utc(event.get("timestamp"))
             require(previous is None or timestamp >= previous, "timestamps must not decrease")
             validate_message(event.get("message"))
+            require(index == 0 or event["message"]["action"] != "InitializeAirport",
+                    "InitializeAirport must be the first and only initialization")
             previous = timestamp
         except ValueError as error:
             raise ValueError(f"event {index}: {error}") from error

@@ -83,6 +83,33 @@ class ReplayTests(unittest.TestCase):
         self.assertEqual(run.snapshot()["http_seconds"], 8)
         self.assertEqual(run.snapshot()["lateness_seconds"], 6)
 
+    def test_initialization_must_finish_before_simulation_clock_starts(self):
+        self.scenario["events"][0]["message"] = {
+            "action": "InitializeAirport", "flights": [], "parkedAircraft": [], "gateOutages": []}
+        self.path.write_text(json.dumps(self.scenario))
+        for response in (200, 204, 202, 503):
+            with self.subTest(response=response):
+                clock, sent = Clock(), []
+                run = self.run_for_test()
+
+                def send(url, message, headers):
+                    sent.append(clock())
+                    if len(sent) == 1:
+                        clock.now += 8
+                        return response
+                    return 202
+
+                run.execute(clock=clock, wait=clock.wait, send=send)
+                if response in (200, 204):
+                    self.assertEqual(sent, [100, 113, 113])
+                    self.assertEqual(run.snapshot()["status"], "completed")
+                    self.assertEqual(run.snapshot()["lateness_seconds"], 0)
+                    self.assertEqual([r["intended_deadline_seconds"] for r in self.records(run)], [0, 13, 13])
+                else:
+                    self.assertEqual(sent, [100])
+                    self.assertEqual(run.snapshot()["status"], "failed")
+                    self.assertEqual(run.snapshot()["delivered"], 0)
+
     def test_scenario_rate_scales_irregular_gaps_and_preserves_bursts(self):
         scenario = load_scenario(FIXTURE)
         scenario["events"] = scenario["events"][:5]

@@ -100,11 +100,12 @@ class Run:
         wait = wait or self.stop_event.wait
         self.started = clock()
         event_id = None
+        initialization_seconds = 0
         try:
             with (self.directory / "deliveries.jsonl").open("a", encoding="utf-8") as records:
                 for index, event in enumerate(self.scenario["events"]):
                     event_id = f"{self.id}:{index}"
-                    deadline = self.offsets[index] if self.mode == "paced" else None
+                    deadline = initialization_seconds + self.offsets[index] if self.mode == "paced" else None
                     if deadline is not None:
                         while not self.stop_event.is_set():
                             delay = self.started + deadline - clock()
@@ -133,6 +134,8 @@ class Run:
                         })
                         if not 200 <= record["http_status"] < 300:
                             record["error"] = f"webhook returned HTTP {record['http_status']}"
+                        elif event["message"]["action"] == "InitializeAirport" and record["http_status"] not in (200, 204):
+                            record["error"] = "InitializeAirport requires HTTP 200 or 204 after initial allocation is ready"
                     except Exception as error:
                         record["error"] = f"{type(error).__name__}: {error}"
                     record["http_seconds"] = clock() - sent
@@ -146,6 +149,8 @@ class Run:
                     records.flush()
                     if record["error"]:
                         raise RuntimeError(record["error"])
+                    if event["message"]["action"] == "InitializeAirport":
+                        initialization_seconds = clock() - self.started
             with self.lock:
                 self.state["status"] = "stopped" if self.stop_event.is_set() else "completed"
                 self.finished = clock()

@@ -108,14 +108,13 @@ source metadata and profiles.
 
 ## Start and inspect a run
 
-Each day is an independent simulation. During modeled overnight downtime,
-reinitialize the matcher with static reference data and clear the previous day's
-flights, dynamic outages, aircraft occupancy, and gate/stand assignments. Retain
-prior run records for audit. The day's `CreateFlight` messages build its baseline
-schedule, as defined under
+A scenario may start with `InitializeAirport`, containing its known schedule,
+parked aircraft, and active outages. The matcher loads this state and makes the
+initial gate/stand allocation before returning HTTP `200` or `204`; replay starts
+only after that response. HTTP `202` fails initialization. See
 [daily initialization](../JsonFlightMessageSpecification.md#daily-initialization).
-Complete this reset before starting replay: `POST /runs` and a new run ID do not
-reset the matcher. The stream does not carry aircraft or assignments between days.
+For older fixtures without this message, prepare the matcher before replay;
+`POST /runs` and a new run ID do not reset it. Days remain independent.
 
 Start a matcher (or a test receiver) implementing the updater's
 [webhook API](#webhook-api), then:
@@ -195,13 +194,13 @@ required headers:
 - `X-Stream-Event-Id`: `RUN_ID:INDEX`, with a zero-based file index.
 - `X-Stream-Simulated-Time`: the event's exact timestamp string.
 
-The receiver must accept all eight defined actions and use the supplied simulated
+The receiver must accept the eight update actions and `InitializeAirport`, and use the supplied simulated
 time for schedule evaluation. Requests arrive sequentially in fixture order,
 including events with equal timestamps; the updater waits for each acknowledgment
 before sending the next event. An asynchronous matcher must preserve that order
 when applying updates.
 
-The receiver returns a 2xx status to acknowledge receipt (for example, `204 No
+For ordinary updates, the receiver returns a 2xx status to acknowledge receipt (for example, `204 No
 Content` or `202 Accepted`). The updater ignores the response body. An acknowledgment
 does not prove matching computation finished. Measure
 matcher computation in matcher logs, correlated by event ID. Redirects, non-2xx
@@ -210,7 +209,9 @@ first affected event. There are no retries.
 
 ## Clock and records
 
-The first event anchors real monotonic start time. At 60×, five simulated minutes
+When the first event is `InitializeAirport`, its successful readiness response
+anchors the simulation clock. Otherwise the first event's send time is the anchor.
+At 60×, five simulated minutes
 take five real seconds. Each paced deadline is computed from that original anchor:
 `(event timestamp - first timestamp) / speed`. Requests are sequential. Late
 acknowledgments cause overdue events to send immediately; deadlines never shift.

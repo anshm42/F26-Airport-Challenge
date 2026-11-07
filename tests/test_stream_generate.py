@@ -62,7 +62,7 @@ class GeneratorTests(unittest.TestCase):
         gaps = [(following - current).total_seconds() for current, following in zip(timestamps, timestamps[1:])]
         self.assertIn(0, gaps)
         self.assertGreater(len(set(gaps)), 10)
-        for action in ACTIONS:
+        for action in ACTIONS - {"InitializeAirport"}:
             with self.subTest(action=action):
                 times = [parse_utc(e["timestamp"]) for e in events if e["message"]["action"] == action]
                 self.assertTrue(any(t.second != 0 for t in times))
@@ -85,7 +85,7 @@ class GeneratorTests(unittest.TestCase):
         messages = [e["message"] for e in events]
         created = [m for m in messages if m["action"] == "CreateFlight"]
         self.assertEqual(len(created), 1200)
-        self.assertEqual({m["action"] for m in messages}, ACTIONS)
+        self.assertEqual({m["action"] for m in messages}, ACTIONS - {"InitializeAirport"})
         self.assertEqual([parse_utc(e["timestamp"]) for e in events], sorted(parse_utc(e["timestamp"]) for e in events))
         carriers = Counter(m["flight"]["carrier"] for m in created)
         types = Counter(m["flight"]["aircraftType"] for m in created)

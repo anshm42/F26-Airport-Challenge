@@ -16,7 +16,36 @@ class ValidationTests(unittest.TestCase):
         original = copy.deepcopy(self.scenario)
         validate_scenario(self.scenario)
         self.assertEqual(self.scenario, original)
-        self.assertEqual({e["message"]["action"] for e in self.scenario["events"]}, ACTIONS)
+        self.assertEqual({e["message"]["action"] for e in self.scenario["events"]}, ACTIONS - {"InitializeAirport"})
+
+    def test_initialization_preserved_and_invalid_snapshots_rejected(self):
+        initial = {"action": "InitializeAirport", "flights": [copy.deepcopy(self.scenario["events"][0]["message"])],
+                   "parkedAircraft": [], "gateOutages": [copy.deepcopy(self.scenario["events"][2]["message"])]}
+        event = {"timestamp": self.scenario["events"][0]["timestamp"], "message": initial}
+        self.scenario["events"].insert(0, event)
+        original = copy.deepcopy(self.scenario)
+        validate_scenario(self.scenario)
+        self.assertEqual(self.scenario, original)
+        aircraft = initial["flights"][0]["flight"]
+        mutations = [
+            lambda s: s["events"][1].update(message=copy.deepcopy(initial)),
+            lambda s: s["events"][0]["message"].update(flights=None),
+            lambda s: s["events"][0]["message"].update(flights=[initial]),
+            lambda s: s["events"][0]["message"]["flights"].append(initial["flights"][0]),
+            lambda s: s["events"][0]["message"]["flights"][0]["legs"][0].update(scheduledArrivalTime="25:00"),
+            lambda s: s["events"][0]["message"].update(parkedAircraft=None),
+            lambda s: s["events"][0]["message"].update(parkedAircraft=[{}]),
+            lambda s: s["events"][0]["message"].update(parkedAircraft=[aircraft, aircraft]),
+            lambda s: s["events"][0]["message"].update(parkedAircraft=[dict(aircraft, aircraftType="388")]),
+            lambda s: s["events"][0]["message"].update(gateOutages=None),
+            lambda s: s["events"][0]["message"].update(gateOutages=[initial["gateOutages"][0]] * 2),
+        ]
+        for mutate in mutations:
+            with self.subTest(mutation=mutate):
+                invalid = copy.deepcopy(original)
+                mutate(invalid)
+                with self.assertRaises(ValueError):
+                    validate_scenario(invalid)
 
     def test_connected_route_codeshares_suffix_and_overnight(self):
         message = self.scenario["events"][0]["message"]
