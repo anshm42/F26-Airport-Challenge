@@ -386,6 +386,49 @@ For other modifications, the operating carrier plus the referenced leg's flight 
 **Plain English**:
 > "Update only the timing for Air Canada flight 200, using aircraft C-FCEI, on August 20th, 2025. New departure is 8:15 AM, new arrival is 10:15 AM."
 
+### Example 4: Early Inbound Arrival
+
+`UpdateTiming` can revise arrival or departure times earlier as well as later.
+For an arrival-only revision, send a complete leg with its existing departure time
+and identifiers unchanged. The new `scheduledArrivalTime` replaces the stored
+arrival planning time; it does not report an actual landing. No additional action
+or early-arrival flag is required.
+
+Suppose AC456 from Montreal to Toronto was announced with an 11:00 departure and
+a 12:30 arrival on November 7, 2026. At 11:40 Toronto local time, the updater learns
+it will arrive at 12:10, twenty minutes early. It sends this message with
+`X-Stream-Simulated-Time: 2026-11-07T16:40:00Z`:
+
+```json
+{
+  "action": "UpdateTiming",
+  "flight": {
+    "carrier": "AC",
+    "registration": "C-FCEU",
+    "aircraftType": "321"
+  },
+  "legs": [
+    {
+      "legType": "Originating",
+      "flightNumber": "456",
+      "flightSuffix": null,
+      "originatingDate": "2026-11-07",
+      "departureStation": "YUL",
+      "arrivalStation": "YYZ",
+      "scheduledDepartureTime": "11:00",
+      "scheduledArrivalTime": "12:10"
+    }
+  ]
+}
+```
+
+The matcher must re-evaluate gate/stand availability for the revised arrival.
+For example, a gate occupied until 12:20 conflicts with the new 12:10 arrival even
+though it could accommodate the original 12:30 arrival. Aircraft compatibility,
+occupancy, and outage constraints still apply; the updater supplies no gate
+assignment. The announcement precedes the revised arrival, allowing the matcher
+to react before the aircraft arrives.
+
 ---
 
 ## Cancel Flight Messages
@@ -712,7 +755,7 @@ When working with JSON flight messages:
 
 1. **CreateFlight** requires complete leg information for all legs
 2. **ReplaceFlight** replaces the entire schedule for the stored route identified by the first leg - provide all new leg information
-3. **UpdateTiming** updates only times - aircraft and stations from existing schedule
+3. **UpdateTiming** updates only times, earlier or later - aircraft, stations, and flight identifiers remain from the existing schedule; unchanged times must still be included in the complete leg
 4. **CancelFlight** with "AllLegs" cancels entire flight
 5. **CancelFlight** with "SpecificLeg" cancels only the leg identified in `legs`; its station pair belongs in that leg reference
 6. **ReinstateFlight** only works on previously cancelled flights
