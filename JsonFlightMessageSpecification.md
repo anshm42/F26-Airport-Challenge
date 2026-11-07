@@ -2,7 +2,11 @@
 
 ## Overview
 
-This document describes a Modified JSON-based format for communicating flight schedule information between systems.
+This document defines the updater-owned JSON payload contract for flight schedule
+updates. The matching algorithm must consume this format. The updater defines the
+API independently of the matcher's internal data model; any mapping into that model
+belongs in the matcher. See the [webhook API](docs/webhook-api.md) for HTTP
+delivery, required headers, ordering, and acknowledgments.
 
 The `flight` object holds the shared aircraft details: operating carrier, registration, and aircraft type. The `legs` array holds the details that can change between flights: flight number, suffix, departure date, codeshares, stations, and times. All legs grouped under one `flight` use the same aircraft.
 
