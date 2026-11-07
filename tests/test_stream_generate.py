@@ -1,0 +1,196 @@
+import copy
+import json
+import subprocess
+import sys
+import tempfile
+import unittest
+from collections import Counter, defaultdict
+from datetime import datetime, timezone
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+from smartgate_stream.generate import generate
+from smartgate_stream.validation import ACTIONS, load_scenario, parse_utc
+
+
+ROOT = Path(__file__).resolve().parents[1]
+TORONTO = ZoneInfo("America/Toronto")
+
+
+def flight_key(message):
+    leg = message["legs"][0]
+    return (message["flight"]["carrier"], leg["flightNumber"], leg.get("flightSuffix"), leg["originatingDate"])
+
+
+class GeneratorTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.profiles = json.loads((ROOT / "data" / "stream_profiles.json").read_text())
+        cls.pearson = json.loads((ROOT / "data" / "pearson.json").read_text())
+        cls.fleet = json.loads((ROOT / "data" / "opensky_fleet_2025.json").read_text())
+        cls.scenario = generate(42, "2026-11-07")
+
+    def test_reproducibility_and_input_boundaries(self):
+        self.assertEqual(generate(42, "2026-11-07"), self.scenario)
+        self.assertNotEqual(generate(43, "2026-11-07"), self.scenario)
+        for count in (1, 2, 3, 23, 24, 25):
+            with self.subTest(count=count):
+                scenario = generate(1, "2026-11-07", count)
+                self.assertEqual(sum(e["message"]["action"] == "CreateFlight" for e in scenario["events"]), count)
+        for seed, date, count in ((True, "2026-11-07", 1), (1, "2026-02-29", 1),
+                                  (1, "20261107", 1), (1, None, 1),
+                                  (1, "2026-11-07", 0), (1, "2026-11-07", True),
+                                  (1, "2026-11-07", 10000)):
+            with self.subTest(seed=seed, date=date, count=count), self.assertRaises(ValueError):
+                generate(seed, date, count)
+
+    def test_profiles_use_pearson_carriers_known_aircraft_and_airports(self):
+        carriers = {r["carrier"] for r in self.pearson["airlineTerminals"]["records"]}
+        aircraft = json.loads((ROOT / "data" / "aircraft.json").read_text())["aircraftTypes"]["records"]
+        types = {r["aircraftType"] for r in aircraft if "Passenger" in r["serviceTypes"]}
+        for profile in self.profiles["carriers"]:
+            self.assertIn(profile["carrier"], carriers)
+            for service in profile["services"]:
+                self.assertLessEqual(set(service["aircraft"]), types)
+                for station in service["stations"]:
+                    self.assertIn(station, self.profiles["airports"])
+        for airport in self.profiles["airports"].values():
+            ZoneInfo(airport["timeZone"])
+
+    def test_default_has_diverse_traffic_and_no_assignments(self):
+        events = self.scenario["events"]
+        messages = [e["message"] for e in events]
+        created = [m for m in messages if m["action"] == "CreateFlight"]
+        self.assertEqual(len(created), 1200)
+        self.assertEqual({m["action"] for m in messages}, ACTIONS)
+        self.assertEqual([parse_utc(e["timestamp"]) for e in events], sorted(parse_utc(e["timestamp"]) for e in events))
+        carriers = Counter(m["flight"]["carrier"] for m in created)
+        types = Counter(m["flight"]["aircraftType"] for m in created)
+        self.assertEqual(set(carriers), {p["carrier"] for p in self.profiles["carriers"]})
+        self.assertGreater(len(types), 15)
+        self.assertLess(types["321"], 300)
+        self.assertGreater(carriers["AC"], carriers["WS"])
+        self.assertEqual(carriers["EK"], 2)
+        known_gates = {gate for terminal in self.pearson["passengerGateGroups"]["terminals"].values()
+                       for group in terminal["groups"] for gate in group}
+        for message in messages:
+            if message["action"] == "GateOutage":
+                self.assertIn(message["gate"], known_gates)
+                self.assertNotIn("flight", message)
+            else:
+                self.assertNotIn("gate", message)
+                self.assertNotIn("gate", message["flight"])
+                for leg in message["legs"]:
+                    self.assertNotIn("gate", leg)
+                    self.assertIn("YYZ", (leg["departureStation"], leg["arrivalStation"]))
+
+    def test_registration_country_fleet_and_tail_consistency(self):
+        patterns = {"AC": r"C-[FG][A-Z]{3}", "WS": r"C-[FG][A-Z]{3}", "PD": r"C-[FG][A-Z]{3}",
+                    "TS": r"C-[FG][A-Z]{3}", "F8": r"C-[FG][A-Z]{3}",
+                    "UA": r"N[1-9][0-9A-HJ-NP-Z]{0,4}", "AA": r"N[1-9][0-9A-HJ-NP-Z]{0,4}",
+                    "DL": r"N[1-9][0-9A-HJ-NP-Z]{0,4}", "BA": r"G-[A-Z]{4}",
+                    "LH": r"D-A[A-Z]{3}", "AF": r"F-[A-Z]{4}", "EK": r"A6-[A-Z]{3}"}
+        profiles = {p["carrier"]: p for p in self.profiles["carriers"]}
+        known = {(r["carrier"], r["aircraftType"], r["registration"]) for r in self.fleet["records"]}
+        tails = {}
+        for event in self.scenario["events"]:
+            message = event["message"]
+            if "flight" not in message:
+                continue
+            flight, leg = message["flight"], message["legs"][0]
+            carrier, aircraft, tail = flight["carrier"], flight["aircraftType"], flight["registration"]
+            self.assertRegex(tail, "^" + patterns[carrier] + "$")
+            self.assertIn((carrier, aircraft, tail), known)
+            self.assertEqual(tails.setdefault(tail, (carrier, aircraft)), (carrier, aircraft))
+            station = leg["arrivalStation"] if leg["departureStation"] == "YYZ" else leg["departureStation"]
+            services = [s for s in profiles[carrier]["services"] if station in s["stations"]]
+            self.assertTrue(any(aircraft in s["aircraft"] for s in services))
+
+    def test_created_rotations_have_valid_local_dates_block_times_and_turnaround(self):
+        rotations = defaultdict(list)
+        day = self.scenario["metadata"]["date"]
+        for event in self.scenario["events"]:
+            message = event["message"]
+            if message["action"] == "CreateFlight":
+                rotations[message["flight"]["registration"]].append(message["legs"][0])
+        self.assertLessEqual(len(rotations), 600)
+        for legs in rotations.values():
+            incoming = sorted((l for l in legs if l["arrivalStation"] == "YYZ"), key=lambda l: l["scheduledArrivalTime"])
+            outgoing = sorted((l for l in legs if l["departureStation"] == "YYZ"), key=lambda l: l["scheduledDepartureTime"])
+            self.assertEqual(len(incoming), len(outgoing))
+            previous_end = None
+            for inbound, outbound in zip(incoming, outgoing):
+                self.assertEqual(inbound["departureStation"], outbound["arrivalStation"])
+                self.assertEqual(outbound["originatingDate"], day)
+                origin = self.profiles["airports"][inbound["departureStation"]]
+                dep = datetime.fromisoformat(inbound["originatingDate"] + "T" + inbound["scheduledDepartureTime"]).replace(tzinfo=ZoneInfo(origin["timeZone"])).astimezone(timezone.utc)
+                arr = datetime.fromisoformat(day + "T" + inbound["scheduledArrivalTime"]).replace(tzinfo=TORONTO).astimezone(timezone.utc)
+                block = (arr - dep).total_seconds() / 60
+                self.assertLessEqual(abs(block - origin["minutes"]), 10)
+                following = datetime.fromisoformat(day + "T" + outbound["scheduledDepartureTime"]).replace(tzinfo=TORONTO).astimezone(timezone.utc)
+                self.assertGreaterEqual((following - arr).total_seconds(), 60 * 60)
+                if previous_end is not None:
+                    self.assertGreater((dep - previous_end).total_seconds(), 0)
+                previous_end = following + (arr - dep)
+
+    def test_perturbations_preserve_identity_and_cancel_before_reinstate(self):
+        flights, cancelled, aliases = {}, set(), set()
+        for event in self.scenario["events"]:
+            message = event["message"]
+            action = message["action"]
+            if action == "GateOutage":
+                continue
+            key = flight_key(message)
+            if action in ("CreateFlight", "DivertFlight"):
+                self.assertNotIn(key, flights)
+                flights[key] = copy.deepcopy(message)
+                for alias in message["legs"][0].get("codeshare", []):
+                    alias_key = (alias["carrier"], alias["flightNumber"])
+                    self.assertNotIn(alias_key, aliases)
+                    aliases.add(alias_key)
+                continue
+            self.assertIn(key, flights)
+            leg, original = message["legs"][0], flights[key]["legs"][0]
+            for field in ("departureStation", "arrivalStation"):
+                self.assertEqual(leg[field], original[field])
+            if action == "CancelFlight":
+                self.assertNotIn(key, cancelled)
+                cancelled.add(key)
+            elif action == "ReinstateFlight":
+                self.assertIn(key, cancelled)
+                cancelled.remove(key)
+            elif action in ("UpdateTiming", "ReplaceFlight"):
+                self.assertGreater(leg["scheduledDepartureTime"], original["scheduledDepartureTime"])
+
+    def test_dst_and_overnight_service_keep_utc_announcements_on_toronto_date(self):
+        for day in ("2026-03-08", "2026-11-01", "2026-12-31"):
+            with self.subTest(day=day):
+                scenario = generate(7, day, 120)
+                for event in scenario["events"]:
+                    self.assertEqual(parse_utc(event["timestamp"]).astimezone(TORONTO).date().isoformat(), day)
+                    if "flight" in event["message"]:
+                        leg = event["message"]["legs"][0]
+                        if leg["departureStation"] == "YYZ":
+                            self.assertEqual(leg["originatingDate"], day)
+
+    def test_cli_writes_loadable_fixture_and_protects_existing_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "scenario.json"
+            command = [sys.executable, "-m", "smartgate_stream", "generate", "--seed", "42",
+                       "--date", "2026-11-07", "--flights", "25", "--output", str(path)]
+            result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            scenario = load_scenario(path)
+            self.assertEqual(scenario, generate(42, "2026-11-07", 25))
+            before = path.read_bytes()
+            result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertEqual(path.read_bytes(), before)
+            path.unlink()
+            command[command.index("--date") + 1] = "2026-02-30"
+            self.assertEqual(subprocess.run(command, cwd=ROOT, capture_output=True).returncode, 2)
+            self.assertFalse(path.exists())
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -4,62 +4,174 @@
       "timestamp": "2026-11-07T12:30:00Z",
       "message": {
         "action": "CreateFlight",
-        "flight": {"carrier": "AC", "registration": "C-FCEU", "aircraftType": "321"},
-        "legs": [{"legType": "Originating", "flightNumber": "456", "originatingDate": "2026-11-07", "departureStation": "YYZ", "arrivalStation": "YUL", "scheduledDepartureTime": "09:00", "scheduledArrivalTime": "10:15", "codeshare": [{"carrier": "UA", "flightNumber": "8456"}]}]
+        "flight": {
+          "carrier": "AC",
+          "registration": "C-FFGZ",
+          "aircraftType": "321"
+        },
+        "legs": [
+          {
+            "legType": "Originating",
+            "flightNumber": "456",
+            "originatingDate": "2026-11-07",
+            "departureStation": "YYZ",
+            "arrivalStation": "YUL",
+            "scheduledDepartureTime": "09:00",
+            "scheduledArrivalTime": "10:15",
+            "codeshare": [
+              {
+                "carrier": "UA",
+                "flightNumber": "8456"
+              }
+            ]
+          }
+        ]
       }
     },
     {
       "timestamp": "2026-11-07T12:35:00Z",
       "message": {
         "action": "UpdateTiming",
-        "flight": {"carrier": "AC", "registration": "C-FCEU", "aircraftType": "321"},
-        "legs": [{"legType": "Originating", "flightNumber": "456", "originatingDate": "2026-11-07", "departureStation": "YYZ", "arrivalStation": "YUL", "scheduledDepartureTime": "09:15", "scheduledArrivalTime": "10:30", "codeshare": [{"carrier": "UA", "flightNumber": "8456"}]}]
+        "flight": {
+          "carrier": "AC",
+          "registration": "C-FFGZ",
+          "aircraftType": "321"
+        },
+        "legs": [
+          {
+            "legType": "Originating",
+            "flightNumber": "456",
+            "originatingDate": "2026-11-07",
+            "departureStation": "YYZ",
+            "arrivalStation": "YUL",
+            "scheduledDepartureTime": "09:15",
+            "scheduledArrivalTime": "10:30",
+            "codeshare": [
+              {
+                "carrier": "UA",
+                "flightNumber": "8456"
+              }
+            ]
+          }
+        ]
       }
     },
     {
       "timestamp": "2026-11-07T12:35:00Z",
-      "message": {"action": "GateOutage", "gate": "D32", "scheduledStartTime": "08:00", "scheduledEndTime": "10:00"}
+      "message": {
+        "action": "GateOutage",
+        "gate": "D32",
+        "scheduledStartTime": "08:00",
+        "scheduledEndTime": "10:00"
+      }
     },
     {
       "timestamp": "2026-11-07T12:36:00Z",
       "message": {
         "action": "ReplaceFlight",
-        "flight": {"carrier": "AC", "registration": "C-FCEU", "aircraftType": "321"},
-        "legs": [{"legType": "Originating", "flightNumber": "456", "originatingDate": "2026-11-07", "departureStation": "YYZ", "arrivalStation": "YUL", "scheduledDepartureTime": "09:30", "scheduledArrivalTime": "10:45"}]
+        "flight": {
+          "carrier": "AC",
+          "registration": "C-FFGZ",
+          "aircraftType": "321"
+        },
+        "legs": [
+          {
+            "legType": "Originating",
+            "flightNumber": "456",
+            "originatingDate": "2026-11-07",
+            "departureStation": "YYZ",
+            "arrivalStation": "YUL",
+            "scheduledDepartureTime": "09:30",
+            "scheduledArrivalTime": "10:45"
+          }
+        ]
       }
     },
     {
       "timestamp": "2026-11-07T12:37:00Z",
       "message": {
         "action": "UpdateEquipment",
-        "flight": {"carrier": "AC", "registration": "C-GEPJ", "aircraftType": "73G"},
-        "legs": [{"flightNumber": "456", "originatingDate": "2026-11-07", "departureStation": "YYZ", "arrivalStation": "YUL"}],
-        "equipmentUpdate": {"scope": "AllLegs"}
+        "flight": {
+          "carrier": "AC",
+          "registration": "C-FFIQ",
+          "aircraftType": "7M8"
+        },
+        "legs": [
+          {
+            "flightNumber": "456",
+            "originatingDate": "2026-11-07",
+            "departureStation": "YYZ",
+            "arrivalStation": "YUL"
+          }
+        ],
+        "equipmentUpdate": {
+          "scope": "AllLegs"
+        }
       }
     },
     {
       "timestamp": "2026-11-07T12:38:00Z",
       "message": {
         "action": "CancelFlight",
-        "flight": {"carrier": "AC", "registration": "C-GEPJ", "aircraftType": "73G"},
-        "legs": [{"flightNumber": "456", "originatingDate": "2026-11-07", "departureStation": "YYZ", "arrivalStation": "YUL"}],
-        "cancelScope": {"type": "SpecificLeg"}
+        "flight": {
+          "carrier": "AC",
+          "registration": "C-FFIQ",
+          "aircraftType": "7M8"
+        },
+        "legs": [
+          {
+            "flightNumber": "456",
+            "originatingDate": "2026-11-07",
+            "departureStation": "YYZ",
+            "arrivalStation": "YUL"
+          }
+        ],
+        "cancelScope": {
+          "type": "SpecificLeg"
+        }
       }
     },
     {
       "timestamp": "2026-11-07T12:39:00Z",
       "message": {
         "action": "ReinstateFlight",
-        "flight": {"carrier": "AC", "registration": "C-GEPJ", "aircraftType": "73G"},
-        "legs": [{"flightNumber": "456", "originatingDate": "2026-11-07", "departureStation": "YYZ", "arrivalStation": "YUL"}]
+        "flight": {
+          "carrier": "AC",
+          "registration": "C-FFIQ",
+          "aircraftType": "7M8"
+        },
+        "legs": [
+          {
+            "flightNumber": "456",
+            "originatingDate": "2026-11-07",
+            "departureStation": "YYZ",
+            "arrivalStation": "YUL"
+          }
+        ]
       }
     },
     {
       "timestamp": "2026-11-07T12:40:00Z",
       "message": {
-        "action": "DivertFlight", "reason": "medical",
-        "flight": {"carrier": "AC", "registration": "C-FNOE", "aircraftType": "789"},
-        "legs": [{"legType": "Originating", "flightNumber": "501", "flightSuffix": "R", "originatingDate": "2026-11-07", "departureStation": "YUL", "arrivalStation": "YYZ", "scheduledDepartureTime": "07:00", "scheduledArrivalTime": "08:00"}]
+        "action": "DivertFlight",
+        "reason": "medical",
+        "flight": {
+          "carrier": "AC",
+          "registration": "C-FEGI",
+          "aircraftType": "789"
+        },
+        "legs": [
+          {
+            "legType": "Originating",
+            "flightNumber": "501",
+            "flightSuffix": "R",
+            "originatingDate": "2026-11-07",
+            "departureStation": "YUL",
+            "arrivalStation": "YYZ",
+            "scheduledDepartureTime": "07:00",
+            "scheduledArrivalTime": "08:00"
+          }
+        ]
       }
     }
   ]

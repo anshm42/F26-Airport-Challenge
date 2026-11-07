@@ -11,6 +11,77 @@ separate matcher webhook. The stream never assigns gates, tracks matcher flight
 state, or evaluates operational feasibility. `GateOutage` announces an unavailable
 resource; choosing gates remains entirely the matcher's responsibility.
 
+## Generate a scenario
+
+```sh
+python3 -m smartgate_stream generate --seed 42 --date 2026-11-07 \
+  --flights 1200 --output /tmp/pearson-scenario.json
+```
+
+The output path must not already exist. The seed defaults to `1`, and flight count
+defaults to `1200` (input range: 1–9999). The date is a Toronto local calendar
+date. The same inputs and checked-in profiles reproduce the same scenario on the
+same Python version. Generate once and retain that fixture for comparisons across
+Python versions.
+
+The count specifies single-leg `CreateFlight` messages. The generator adds timing
+changes, replacement schedules, equipment swaps, cancellations/reinstatements,
+gate outages, and occasional diversions. A 1,200-flight scenario has 600 paired
+arrivals/departures, plus those extra events. Odd counts leave one unpaired inbound.
+Creates announce the initial schedule during the first three hours of the day;
+perturbations announce later, before affected departures. Some long-haul inbound
+legs depart their origin on the preceding local date.
+
+[Traffic profiles](../data/stream_profiles.json) use a weighted selection of twelve
+Pearson-serving carriers, with actual registration/type pairs from the
+[OpenSky August 2025 subset](../data/opensky_fleet_2025.json).
+Route groups restrict equipment: Porter uses E195-E2s, regional routes include
+Embraer regional jets and CRJs, transatlantic flights use appropriate longer-range equipment,
+and Emirates' daily Dubai rotation uses an A380. Pairs reuse a tail with a plausible
+turnaround, and equipment updates select another available aircraft from that
+carrier's snapshot pool. Aircraft can fly multiple rotations on the same route,
+with a 45-minute remote turnaround and delay headroom reserved between uses.
+When a carrier's pool cannot fit another rotation, generation tries other
+Pearson carriers; if no placement is found, it fails with a capacity error rather
+than inventing registrations. High flight counts may exceed this historical pool.
+Local station times use IANA time zones; event announcements are UTC, including on
+Toronto daylight-saving transitions. No flight contains a gate assignment.
+
+This is synthetic traffic inspired by the Pearson arrival/departure boards.
+Registrations and aircraft types retain their association from the 2025 snapshot;
+historical metadata may be incomplete or stale. Weights, block times, flight
+numbers, codeshares, and frequency caps are simulation choices rather
+than an exact daily timetable. The twelve-carrier sample is not a complete inventory
+of every airline serving Pearson. See the profile source links for provenance.
+
+Use the generated file as `scenario_path` in the run request below. Replay itself
+does not contact fleet APIs or need internet access.
+
+### Refresh the fleet subset
+
+Download `aircraft-database-complete-2025-08.csv` from
+[OpenSky's metadata snapshots](https://opensky-network.org/datasets/#metadata/), then:
+
+```sh
+python3 -m smartgate_stream.fleet /tmp/aircraft-database-complete-2025-08.csv \
+  /tmp/opensky-fleet.json
+```
+
+Compare the generated subset with the checked-in file before replacing it. The
+importer uses the source's single-quoted CSV format and records a SHA-256 of the
+complete source. It filters explicit operator ICAO codes and compatible IATA
+codes, national registration formats, configured passenger types, known expired
+registrations, and inactive status values. Conflicting records for one tail are
+excluded. Missing IATA codes are resolved by explicit operator ICAO, without
+guessing from the owner name. Porter operators `POE`/`PTR` are explicitly grouped
+under public code `PD`; original operator codes stay in each record. ICAO aircraft
+type codes are mapped to the existing three-character IATA contract.
+
+OpenSky labels this metadata as outdated and provides no current fleet guarantee.
+The subset establishes a reproducible 2025 simulation input, not current ownership
+or airworthiness. Other snapshot months need deliberate review of the importer
+source metadata and profiles.
+
 ## Start and inspect a run
 
 Start a matcher (or a test webhook) accepting JSON POSTs, then:

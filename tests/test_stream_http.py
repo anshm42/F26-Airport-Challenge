@@ -8,6 +8,7 @@ import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+from smartgate_stream.generate import generate
 from smartgate_stream.server import ControlServer
 from smartgate_stream.validation import load_scenario
 
@@ -72,8 +73,8 @@ class HttpTests(unittest.TestCase):
         finally:
             connection.close()
 
-    def terminal(self, run_id):
-        deadline = time.monotonic() + 3
+    def terminal(self, run_id, timeout=3):
+        deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             status, result = self.request("GET", f"/runs/{run_id}")
             self.assertEqual(status, 200)
@@ -114,6 +115,18 @@ class HttpTests(unittest.TestCase):
         state = self.terminal(created["run_id"])
         self.assertEqual((state["status"], state["delivered"]), ("stopped", 1))
         self.assertEqual(len(self.webhook.received), 1)
+
+    def test_generated_day_delivers_every_message_in_order(self):
+        scenario = generate(42, "2026-11-07")
+        path = Path(self.temp.name) / "generated.json"
+        path.write_text(json.dumps(scenario))
+        self.options["scenario_path"] = str(path)
+        code, created = self.request("POST", "/runs", self.options)
+        self.assertEqual(code, 201)
+        state = self.terminal(created["run_id"], timeout=10)
+        self.assertEqual(state["status"], "completed", state["error"])
+        self.assertEqual(state["delivered"], len(scenario["events"]))
+        self.assertEqual([r[0] for r in self.webhook.received], [e["message"] for e in scenario["events"]])
 
     def test_stop_wakes_paced_wait(self):
         self.options.update(mode="paced", speed=1)
