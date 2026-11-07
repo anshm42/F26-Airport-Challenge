@@ -35,6 +35,8 @@ def catalog():
                  if record["serviceTypes"] == ["Passenger"]}
     return {
         "gates": gates, "aliases": aliases,
+        "gate_stands": {gate: mapping[gate]["ifatcStandNames"] for gate in gates},
+        "stand_gates": {name: gate for gate in gates for name in mapping[gate]["ifatcStandNames"]},
         "footprints": {gate: mapping[gate]["conflictGroup"] for gate in gates},
         "gate_widths": {gate: mapping[gate]["widthClass"] for gate in gates},
         "aircraft_widths": {row["aircraftType"]: row["widthClass"]
@@ -52,6 +54,12 @@ def canonical_gate(value):
     if not isinstance(value, str) or value not in catalog()["aliases"]:
         raise ValueError(f"unknown passenger gate: {value!r}")
     return catalog()["aliases"][value]
+
+
+def outage_gate(value):
+    if not isinstance(value, str) or value not in catalog()["stand_gates"]:
+        raise ValueError(f"unknown IFATC passenger stand: {value!r}")
+    return catalog()["stand_gates"][value]
 
 
 def passenger_aircraft(aircraft):

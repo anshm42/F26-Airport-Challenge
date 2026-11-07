@@ -68,6 +68,30 @@ class ValidationTests(unittest.TestCase):
         del outage["scheduledEndTime"]
         validate_scenario(self.scenario)
 
+    def test_outages_require_exact_mapped_ifatc_stand_names(self):
+        outage = self.scenario["events"][2]["message"]
+        for stand in ("Gate 132", "Gate C24", "Gate B11A", "Remote Stand H01A"):
+            with self.subTest(stand=stand):
+                outage["gate"] = stand
+                original = copy.deepcopy(outage)
+                validate_message(outage)
+                self.assertEqual(outage, original)
+        for stand in ("D32", "F32", "B24", "Gate 999", "Gate 101", "gate 132", None, [], {}):
+            with self.subTest(stand=stand):
+                outage["gate"] = stand
+                with self.assertRaisesRegex(ValueError, "unknown IFATC passenger stand"):
+                    validate_message(outage)
+        del outage["gate"]
+        with self.assertRaisesRegex(ValueError, "unknown IFATC passenger stand"):
+            validate_message(outage)
+
+    def test_initial_outages_reject_duplicate_ifatc_positions_for_one_gate(self):
+        outages = [{"action": "GateOutage", "gate": stand, "scheduledStartTime": "08:00"}
+                   for stand in ("Gate 120", "Gate 120A")]
+        initial = {"action": "InitializeAirport", "flights": [], "parkedAircraft": [], "gateOutages": outages}
+        with self.assertRaisesRegex(ValueError, "duplicate initial gate outage"):
+            validate_message(initial)
+
     def test_diversion_reasons_and_legacy_messages_are_preserved(self):
         for reason in ("turnback", "medical", "diversion", "other", None):
             with self.subTest(reason=reason):

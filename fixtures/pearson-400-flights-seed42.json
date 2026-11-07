@@ -9813,7 +9813,7 @@
       "timestamp": "2026-11-07T11:11:50Z",
       "message": {
         "action": "GateOutage",
-        "gate": "F60",
+        "gate": "Gate 160",
         "scheduledStartTime": "06:31",
         "scheduledEndTime": "08:39"
       }
@@ -11874,7 +11874,7 @@
       "timestamp": "2026-11-07T19:26:49Z",
       "message": {
         "action": "GateOutage",
-        "gate": "C31",
+        "gate": "Gate C31",
         "scheduledStartTime": "14:41",
         "scheduledEndTime": "17:16"
       }
@@ -12735,7 +12735,7 @@
       "timestamp": "2026-11-07T22:33:43Z",
       "message": {
         "action": "GateOutage",
-        "gate": "B24",
+        "gate": "Gate C24",
         "scheduledStartTime": "17:53",
         "scheduledEndTime": "18:44"
       }

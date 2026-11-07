@@ -12,6 +12,7 @@ class GateStateSpecTest(unittest.TestCase):
         gates = request["gateState"]
         self.assertEqual(set(gates), expected)
         self.assertEqual(len(gates), 110)
+        self.assertEqual(request["gate"], "Gate 132")
         self.assertIn("D32", gates)
         self.assertNotIn("F32", gates)
         self.assertEqual(request["unassignedAircraft"], [])

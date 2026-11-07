@@ -6,8 +6,8 @@ import re
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-from .inventory import (AIRCRAFT_FIELDS, canonical_gate, catalog, gate_fits,
-                        initial_gate_state, passenger_aircraft, traffic_type)
+from .inventory import (AIRCRAFT_FIELDS, catalog, gate_fits,
+                        initial_gate_state, outage_gate, passenger_aircraft, traffic_type)
 
 
 ACTIONS = {
@@ -125,8 +125,9 @@ def validate_message(message):
                     require(key not in flights, "duplicate initial flight")
                     flights.add(key)
                 else:
-                    require(item["gate"] not in gates, "duplicate initial gate outage")
-                    gates.add(item["gate"])
+                    gate = outage_gate(item["gate"])
+                    require(gate not in gates, "duplicate initial gate outage")
+                    gates.add(gate)
         parked = message.get("parkedAircraft")
         require(isinstance(parked, list), "parkedAircraft must be an array")
         registrations = set()
@@ -145,7 +146,7 @@ def validate_message(message):
         require("flight" not in message and "legs" not in message,
                 "GateOutage must not contain flight or legs")
         require("emergencyState" not in message, "GateOutage must not contain emergencyState")
-        canonical_gate(message.get("gate"))
+        outage_gate(message.get("gate"))
         string_field(message, "scheduledStartTime", r"(?:[01][0-9]|2[0-3]):[0-5][0-9]")
         if "scheduledEndTime" in message:
             string_field(message, "scheduledEndTime", r"(?:[01][0-9]|2[0-3]):[0-5][0-9]")

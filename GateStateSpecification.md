@@ -20,11 +20,19 @@ The passenger map's `D30`, `F82`, `F83`, `E82`, `E85`, `B2a`, `B2c`, `B3`, `B4`,
 inventory and rejected in assignments, moves, initial parking, and outages.
 The raw map transcription remains in the reference data for provenance.
 
+`GateOutage.gate` uses an exact IFATC name from the crosswalk's `ifatcStandNames`,
+such as `Gate 132`, rather than a passenger label. Any alternative IFATC position
+closes its whole passenger gate group; `Gate 120` and `Gate 120A` both close `D20`.
+Unmapped IFATC stands are rejected. Gate-state keys, initial parking, assignments,
+and moves use passenger labels.
+
 H positions sharing the same base number are mutually exclusive: occupying
 `Remote Stand H01A` blocks `Remote Stand H01` and `Remote Stand H01B`, even though
 their values remain `null`. This conservative simulation rule avoids assuming an
 unverified simultaneous-use matrix. A and B subpositions are not independent
 capacity in this version.
+
+An outage on any H position closes its entire conflict group for the outage window.
 
 The 110 entries represent **92 independent conflict groups** under this rule.
 Usable capacity also depends on aircraft size and known outages; counting `null`

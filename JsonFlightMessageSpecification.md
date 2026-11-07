@@ -699,21 +699,31 @@ carries the gate id and the outage window instead.
 ```json
 {
   "action": "GateOutage",
-  "gate": "D1",
+  "gate": "Gate 132",
   "scheduledStartTime": "10:00",
   "scheduledEndTime": "15:00"
 }
 ```
 
 **Plain English**:
-> "Gate D1 is out of service from 10:00 AM to 3:00 PM. No flight may occupy it during
+> "IFATC Gate 132 is out of service from 10:00 AM to 3:00 PM. No flight may occupy it during
 > that window, and any flight already assigned there must be moved."
 
-- **`gate`** (string, required) — the gate id, e.g. `"D1"`.
+- **`gate`** (string, required) — an exact IFATC stand name from
+  `passengerStandMapping.records[].ifatcStandNames` in
+  [data/pearson.json](data/pearson.json), e.g. `"Gate 132"`, `"Gate C24"`, or
+  `"Remote Stand H01A"`. Passenger labels such as `"D32"` and `"F32"` are rejected.
 - **`scheduledStartTime`** (string, required) — `HH:MM`, when the gate goes offline.
 - **`scheduledEndTime`** (string, optional) — `HH:MM`, when it returns. If omitted, the
   outage lasts until further notice. May be earlier than the start time if the window
   crosses midnight.
+
+Use the crosswalk to resolve the IFATC name to its passenger gate. An outage on
+any alternative position closes the whole passenger group: `Gate 120` and
+`Gate 120A` both close `D20`, and `Gate 132` closes the shared `D32`/`F32` resource.
+H outages close all positions sharing the same `conflictGroup`.
+`gateState` keys, initial parking, and matcher decisions continue to use passenger
+gate IDs. Unmapped IFATC stands are outside the simulation inventory and rejected.
 
 Like flight messages, a GateOutage appears at an info-delivery time in the schedule, so
 the system only learns about it when it is announced.

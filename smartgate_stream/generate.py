@@ -228,7 +228,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
     gates = [gate for gate, terminal in catalog()["gates"].items() if terminal is not None]
     for _ in range(max(1, flight_count // 120)):
         outage_start = datetime.combine(day, time(rng.randint(6, 20), rng.randrange(60)), TORONTO)
-        outage = {"action": "GateOutage", "gate": rng.choice(gates),
+        outage = {"action": "GateOutage", "gate": catalog()["gate_stands"][rng.choice(gates)][0],
                   "scheduledStartTime": outage_start.strftime("%H:%M")}
         if rng.random() < 0.8:
             outage["scheduledEndTime"] = (outage_start + timedelta(minutes=rng.randint(30, 180))).strftime("%H:%M")

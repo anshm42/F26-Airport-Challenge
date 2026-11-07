@@ -54,6 +54,11 @@ receipt time; replay can run faster or slower than real time.
 Gate-outage times are local to Toronto. For an undated outage window, use the
 announcement's Toronto date; an end time earlier than the start crosses midnight.
 An omitted end time means the outage continues until further notice.
+`GateOutage.gate` uses exact IFATC names from the passenger crosswalk's
+`ifatcStandNames`, such as `Gate 132` for the shared `D32`/`F32` passenger resource.
+An outage closes the whole mapped group, including overlapping H positions.
+Passenger labels are rejected in outages; gate-state keys and matcher decisions
+use passenger labels.
 
 The updater validates message structure and preserves unknown extension fields.
 The stream validates known flight/gate references, passenger eligibility, and

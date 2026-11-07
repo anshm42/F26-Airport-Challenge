@@ -3,7 +3,8 @@
 import copy
 from datetime import datetime, time, timedelta, timezone
 
-from .inventory import AIRCRAFT_FIELDS, canonical_gate, catalog, gate_blocker, gate_fits, initial_gate_state
+from .inventory import (AIRCRAFT_FIELDS, canonical_gate, catalog, gate_blocker, gate_fits,
+                        initial_gate_state, outage_gate)
 from .validation import (flight_key, parse_utc, require, string_field,
                          validate_leg_reference, validate_message)
 
@@ -78,7 +79,7 @@ class GateState:
                 self.assignments[key] = previous_plans[key]
 
     def _outage(self, message, timestamp):
-        gate = canonical_gate(message["gate"])
+        gate = outage_gate(message["gate"])
         zone = catalog()["zones"]["YYZ"]
         day = timestamp.astimezone(zone).date()
         start = datetime.combine(day, time.fromisoformat(message["scheduledStartTime"]), zone)

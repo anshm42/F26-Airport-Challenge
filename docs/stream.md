@@ -204,7 +204,7 @@ precedence over a pending stop. Ctrl-C stops further delivery and closes the ser
       "timestamp": "2026-11-07T12:30:00Z",
       "message": {
         "action": "GateOutage",
-        "gate": "D32",
+        "gate": "Gate 132",
         "scheduledStartTime": "08:00",
         "scheduledEndTime": "10:00"
       }
@@ -223,6 +223,10 @@ flight references, and physical occupancy; the matcher plans future availability
 and applies its other allocation rules. Flight times are local to their stations; outage times are
 local to Toronto. For undated outage windows, the matcher uses the announcement's
 Toronto date; an earlier end time crosses midnight.
+`GateOutage.gate` must be an exact IFATC name listed in the passenger crosswalk's
+`ifatcStandNames`. It closes the corresponding passenger group and overlapping H
+positions. For example, `Gate 132` closes the shared `D32`/`F32` resource.
+Passenger labels are rejected in outages; occupancy and matcher decisions use them.
 
 ## Webhook API
 

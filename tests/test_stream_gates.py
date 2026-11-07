@@ -149,7 +149,7 @@ class GateStateTests(unittest.TestCase):
                            {**INBOUND, "registration": f"C-WIDE{index}", "aircraftType": "388"})
                     for index in range(3)]
         state = self.initialized(incoming, [])
-        state.apply_message({"action": "GateOutage", "gate": "E71", "scheduledStartTime": "09:00",
+        state.apply_message({"action": "GateOutage", "gate": "Gate 171A", "scheduledStartTime": "09:00",
                              "scheduledEndTime": "10:00"}, "2026-11-07T05:00:00Z")
         with self.assertRaisesRegex(ValueError, "2026-11-07T14:00:00Z"):
             state.check_baseline_capacity()
@@ -247,7 +247,7 @@ class GateStateTests(unittest.TestCase):
 
     def test_outage_blocks_moves_and_future_occupancy(self):
         state = self.initialized([self.arrival])
-        state.apply_message({"action": "GateOutage", "gate": "D22", "scheduledStartTime": "00:00",
+        state.apply_message({"action": "GateOutage", "gate": "Gate 122", "scheduledStartTime": "00:00",
                              "scheduledEndTime": "10:00"}, "2026-11-07T05:01:00Z")
         state.apply_decisions({"assignments": [assignment(self.arrival, "D22")]})
         with self.assertRaises(ValueError):
@@ -255,6 +255,34 @@ class GateStateTests(unittest.TestCase):
         state.advance(parse_utc("2026-11-07T13:00:00Z"))
         self.assertIsNone(state.gates["D22"])
         self.assertEqual(state.snapshot()["unassigned_aircraft"], [INBOUND])
+
+    def test_ifatc_outages_block_shared_resources_only_during_the_window(self):
+        for stand, gate in (("Gate 132", "F32"), ("Gate B11A", "A11"),
+                            ("Remote Stand H01A", "Remote Stand H01B")):
+            with self.subTest(stand=stand):
+                state = self.initialized([])
+                outage = {"action": "GateOutage", "gate": stand, "scheduledStartTime": "08:00",
+                          "scheduledEndTime": "10:00"}
+                state.apply_message(outage, "2026-11-07T12:30:00Z")
+                move = {"moves": [{"registration": PARKED["registration"], "gate": gate}]}
+                state.apply_decisions(move)
+                state.apply_decisions({"moves": [{"registration": PARKED["registration"], "gate": "D20"}]})
+                state.advance(parse_utc("2026-11-07T13:00:00Z"))
+                before = state.snapshot()
+                with self.assertRaisesRegex(ValueError, "out-of-service"):
+                    state.apply_decisions(move)
+                self.assertEqual(state.snapshot(), before)
+                self.assertEqual(state.request(outage)["gate"], stand)
+                state.advance(parse_utc("2026-11-07T15:00:00Z"))
+                state.apply_decisions(move)
+                self.assertEqual(state.gates[canonical_gate(gate)], PARKED)
+
+    def test_initial_ifatc_outage_rejects_an_occupied_shared_gate(self):
+        initial = {"action": "InitializeAirport", "flights": [],
+                   "parkedAircraft": [{**PARKED, "gate": "D20"}], "gateOutages": [
+                       {"action": "GateOutage", "gate": "Gate 120A", "scheduledStartTime": "00:00"}]}
+        with self.assertRaisesRegex(ValueError, "initial aircraft occupies an out-of-service position"):
+            GateState().apply_message(initial, "2026-11-07T05:00:00Z")
 
     def test_initial_positions_are_not_replaced_implicitly(self):
         state = self.initialized([self.departure])

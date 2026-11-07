@@ -29,6 +29,8 @@ ten spares for later equipment swaps. Each parked record includes its initial
 positions. Future flights have no initial gate. The matcher returns future
 assignments separately, and they take effect at arrival time.
 The map contains 110 positions matched to IFATC and respects its size classes.
+`GateOutage.gate` uses exact IFATC stand names from the passenger crosswalk, such
+as `Gate 160` or `Gate C24`; initial parking and gate-state keys use passenger labels.
 Every flight leg and reference includes `trafficType` (`Domestic`, `Transborder`,
 or `International`).
 The full baseline fits passenger-gate capacity throughout the day; the peak is

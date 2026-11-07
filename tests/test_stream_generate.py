@@ -163,7 +163,8 @@ class GeneratorTests(unittest.TestCase):
         self.assertLess(types["321"], 300)
         self.assertGreater(carriers["AC"], carriers["WS"])
         self.assertEqual(carriers["EK"], 2)
-        known_gates = {row["gate"] for row in self.pearson["passengerStandMapping"]["records"]}
+        known_gates = {name for row in self.pearson["passengerStandMapping"]["records"]
+                       for name in row["ifatcStandNames"]}
         for message in messages:
             if message["action"] == "GateOutage":
                 self.assertIn(message["gate"], known_gates)

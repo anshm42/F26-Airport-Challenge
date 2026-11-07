@@ -29572,7 +29572,7 @@
       "timestamp": "2026-11-07T12:55:24Z",
       "message": {
         "action": "GateOutage",
-        "gate": "A7",
+        "gate": "Gate B07D",
         "scheduledStartTime": "08:15",
         "scheduledEndTime": "09:33"
       }
@@ -30088,7 +30088,7 @@
       "timestamp": "2026-11-07T13:34:59Z",
       "message": {
         "action": "GateOutage",
-        "gate": "D28",
+        "gate": "Gate 128",
         "scheduledStartTime": "08:46",
         "scheduledEndTime": "09:32"
       }
@@ -33541,7 +33541,7 @@
       "timestamp": "2026-11-07T18:37:21Z",
       "message": {
         "action": "GateOutage",
-        "gate": "A11",
+        "gate": "Gate B11",
         "scheduledStartTime": "14:05",
         "scheduledEndTime": "15:26"
       }
@@ -33670,7 +33670,7 @@
       "timestamp": "2026-11-07T18:48:17Z",
       "message": {
         "action": "GateOutage",
-        "gate": "A17",
+        "gate": "Gate B17",
         "scheduledStartTime": "14:18",
         "scheduledEndTime": "15:08"
       }
@@ -33907,7 +33907,7 @@
       "timestamp": "2026-11-07T19:00:30Z",
       "message": {
         "action": "GateOutage",
-        "gate": "D28",
+        "gate": "Gate 128",
         "scheduledStartTime": "14:14",
         "scheduledEndTime": "15:29"
       }
@@ -34498,7 +34498,7 @@
       "timestamp": "2026-11-07T19:53:54Z",
       "message": {
         "action": "GateOutage",
-        "gate": "E71",
+        "gate": "Gate 171",
         "scheduledStartTime": "15:18",
         "scheduledEndTime": "16:15"
       }
@@ -35310,7 +35310,7 @@
       "timestamp": "2026-11-07T20:54:34Z",
       "message": {
         "action": "GateOutage",
-        "gate": "A14",
+        "gate": "Gate B14",
         "scheduledStartTime": "16:16",
         "scheduledEndTime": "18:11"
       }
@@ -37157,7 +37157,7 @@
       "timestamp": "2026-11-07T23:04:42Z",
       "message": {
         "action": "GateOutage",
-        "gate": "E76",
+        "gate": "Gate 176",
         "scheduledStartTime": "18:14",
         "scheduledEndTime": "20:18"
       }
@@ -37850,7 +37850,7 @@
       "timestamp": "2026-11-08T00:10:55Z",
       "message": {
         "action": "GateOutage",
-        "gate": "E66",
+        "gate": "Gate 166",
         "scheduledStartTime": "19:26",
         "scheduledEndTime": "20:10"
       }
@@ -39110,7 +39110,7 @@
       "timestamp": "2026-11-08T01:42:10Z",
       "message": {
         "action": "GateOutage",
-        "gate": "E66",
+        "gate": "Gate 166",
         "scheduledStartTime": "20:43",
         "scheduledEndTime": "23:39"
       }

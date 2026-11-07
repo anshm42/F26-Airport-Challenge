@@ -1,6 +1,6 @@
 {
   "action": "GateOutage",
-  "gate": "D32",
+  "gate": "Gate 132",
   "scheduledStartTime": "08:00",
   "scheduledEndTime": "10:00",
   "gateState": {

@@ -202,9 +202,9 @@ class HttpTests(unittest.TestCase):
         scenario = {"events": [
             {"timestamp": "2026-11-07T05:00:00Z", "message": initial},
             {"timestamp": "2026-11-07T12:30:00Z", "message": {
-                "action": "GateOutage", "gate": "D32", "scheduledStartTime": "08:00", "scheduledEndTime": "10:00"}},
+                "action": "GateOutage", "gate": "Gate 132", "scheduledStartTime": "08:00", "scheduledEndTime": "10:00"}},
             {"timestamp": "2026-11-07T13:05:00Z", "message": {
-                "action": "GateOutage", "gate": "D24", "scheduledStartTime": "09:00", "scheduledEndTime": "10:00"}},
+                "action": "GateOutage", "gate": "Gate 124", "scheduledStartTime": "09:00", "scheduledEndTime": "10:00"}},
         ]}
         path = Path(self.temp.name) / "gates.json"
         path.write_text(json.dumps(scenario))
