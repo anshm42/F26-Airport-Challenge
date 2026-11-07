@@ -1,14 +1,18 @@
-# Pearson static reference data
+# Static reference data
 
-[pearson.json](pearson.json) is a static research snapshot retrieved on **2026-11-07**.
-It has no runtime network dependency. Every section identifies its sources; their
-URLs, dates where available, and limitations are in `sources`.
+[pearson.json](pearson.json) contains the airport reference data;
+[aircraft.json](aircraft.json) contains aircraft types, service roles, and the
+shared size-class definitions. Both are static research snapshots retrieved on
+**2026-11-07**, with no runtime network dependency. Each file includes its sources,
+URLs, dates where available, and limitations.
 
-It contains 54 airline terminal defaults, all 286 stand records from the supplied
-IFATC page (178 named `Gate ...`), six IFATC width classes, and 89 passenger gate
-groups explicitly shown on Pearson's linked departure maps. Fifteen groups have
+The airport file contains 54 airline terminal defaults, all 286 stand records
+from the supplied IFATC page (178 named `Gate ...`), and 89 passenger gate groups
+explicitly shown on Pearson's linked departure maps. Fifteen gate groups have
 paired swing aliases. These counts describe different source inventories and
-must not be added together as the airport's gate count.
+must not be added together as the airport's gate count. The aircraft file contains
+six IFATC width classes and 254 IATA aircraft type codes covering 277 rows of the
+linked Wikipedia list.
 
 ## Airline terminals
 
@@ -75,7 +79,8 @@ to swing. Preserve printed suffix case, including `B2a` and `B2c`.
 ## Stand sizes and aircraft examples
 
 `ifatcStands.records` preserves each source `name`, `type`, and `widthClass`.
-`gateWidthClasses.classes` preserves IFATC's maximum-aircraft-size key:
+Resolve those class letters using `gateWidthClasses.classes` in
+[aircraft.json](aircraft.json), which preserves IFATC's maximum-aircraft-size key:
 
 | Class | Aircraft examples in IFATC's key |
 | --- | --- |
@@ -88,14 +93,67 @@ to swing. Preserve printed suffix case, including `B2a` and `B2c`.
 
 These are **simulator size hints**, not an authoritative list of aircraft accepted
 at each Pearson stand. They are not a verified ICAO code-letter classification.
-Generic families can hide variant differences; there is no verified mapping from
-the specification's three-character aircraft codes (such as `73G`, `321`, or
-`789`) to these classes. Unknown equipment compatibility must stay unknown.
+Generic families can hide variant differences. `aircraftTypes` adds reference
+assignments for the specification's three-character IATA aircraft codes; these
+assignments do not verify equipment compatibility at individual stands.
 
 Do not turn `aircraft class <= stand class` into operational approval. Dimensions,
 boarding bridges, clearance from neighbours, servicing, and aircraft variants
 can impose further restrictions. The source's `Airline` type also covers cargo,
 remote, and maintenance positions and does not establish passenger suitability.
+
+## Aircraft type codes and passenger/cargo roles
+
+Use `aircraftTypes.records` in [aircraft.json](aircraft.json), keyed by
+`aircraftType`, with the IATA type-code column from the supplied
+[Wikipedia list](https://en.wikipedia.org/wiki/List_of_aircraft_type_designators).
+It is static JSON with no scraper, API, or runtime network lookup. All 254 unique
+IATA codes in that snapshot are included. The six models without an IATA code
+are recorded in `excludedModelsWithoutIataCode`; no code is invented for them.
+The list includes historical and proposed aircraft and does not imply that they
+currently operate at Pearson.
+
+Each record retains the source model names in `models` and has a `widthClass`
+and `serviceTypes`:
+
+| IATA code | Model/configuration | Reference class | Service types |
+| --- | --- | --- | --- |
+| `73G` | 737-700 | C | Passenger |
+| `738` | 737-800 | C | Passenger |
+| `73U`, `73K` | 737-800 freighter, without/with winglets | C | Cargo |
+| `73L` | 737-200 combi | C | Combi |
+| `763` | 767-300 | D | Passenger |
+| `76Y` | 767-300 freighter | D | Cargo |
+| `77L` / `77X` | 777-200LR / 777 freighter | E | Passenger / Cargo |
+| `74H` / `74N` | 747-8I / 747-8F | F | Passenger / Cargo |
+| `C08` | Cessna 208 Caravan | B | Passenger, Cargo; code alone is ambiguous |
+| `A5F` | An-225 | Unclassified (`null`) | Cargo |
+
+`Passenger` includes business aircraft. `Cargo` identifies dedicated freighters
+or cargo transports. `Combi` identifies mixed passenger/cargo configurations,
+which must not be treated as cargo-only services. `SpecialPurpose` covers
+survey/tanker missions. Multiple service types indicate alternative roles under
+one code; actual flight or operator data must resolve the service. The snapshot
+does not enumerate every possible aircraft conversion.
+
+Repeated IATA codes such as `ATR`, `CJ1`, `ER3`, `CCX`, and `LOH` retain all their
+source models in one record. When models span reference classes, the record
+uses the largest listed class (`CJ1`: B; `ER3`: C). A lookup must not silently
+overwrite these groups or infer a specific variant from a shared code.
+
+`widthClassBasis` distinguishes `IFATCFamilyExample` from editorial
+`SizeEstimate` and `ConservativeGroupEstimate` assignments. These are the
+existing simulator classes, **not ICAO aerodrome code letters**. The Wikipedia
+list supplies no A-F classes. Estimates need operational verification before
+gate allocation. Class F is retained for large aircraft; they are not squeezed
+into A-E. The An-225's 88.4 m span exceeds the published F examples, so its class
+stays `null`. The 777X codes `778`/`779` conservatively use F for extended
+wingtips; folded-wing stand compatibility requires separate confirmation.
+
+The secondary IATA reference confirms `76X` and `D8T` as cargo types despite
+incomplete Wikipedia labels. Record notes also preserve the sources' disagreement
+over `DHC` (DHC-5 versus DHC-4). Unlisted codes and `null` classes remain unknown;
+do not fall back to a passenger role or a default size class.
 
 ## Reconcile the sources before allocating gates
 
@@ -119,7 +177,7 @@ turn this reference snapshot into an operational gate-allocation inventory.
 
 ## Update and check
 
-Refresh the static file deliberately from the linked sources, update `retrievedOn`,
+Refresh the static files deliberately from the linked sources, update `retrievedOn`,
 and retain the distinction between source facts, map aliases, and unknowns.
 Do not copy temporary closures from historical advisories into current defaults.
 
@@ -131,5 +189,6 @@ python3 -m unittest discover -s tests
 
 The check covers source references, source-row counts, unique stand/carrier/alias
 identifiers, terminal and size-class references, representative airline defaults,
-the documented swing pairs, and the closed Gate 272 exception. It does not certify
-the underlying sources as current operational data.
+the documented swing pairs, the closed Gate 272 exception, aircraft-code coverage,
+shared model groups, and representative passenger/cargo/combi classifications.
+It does not certify the underlying sources as current operational data.

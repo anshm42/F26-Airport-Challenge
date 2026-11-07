@@ -186,7 +186,8 @@ The `flight` object contains only the aircraft details shared by every leg in th
 - Country prefix followed by letters and/or digits, with a hyphen where applicable (e.g., "C-FCEU", "9M-MRO", "N38955")
 
 **`aircraftType`** (string, required)
-- 3-character aircraft code (e.g., "73G", "321", "789")
+- 3-character IATA aircraft type code (e.g., "73G", "321", "789")
+- Static size-class and service-role references are in `aircraftTypes.records` in [data/aircraft.json](data/aircraft.json), keyed by `aircraftType`; shared codes can require additional model or service information
 - The model of the registered aircraft, shared by all legs in this message
 
 For `UpdateEquipment`, `flight` contains the new aircraft registration and type. The leg reference identifies the existing schedule to update. Changing aircraft for only one leg separates the schedule into connected groups of legs sharing an aircraft; a single `flight` object must never describe different aircraft.

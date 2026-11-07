@@ -745,20 +745,6 @@
       }
     ]
   },
-  "gateWidthClasses": {
-    "sourceIds": [
-      "ifatcGates"
-    ],
-    "scope": "IFATC maximum-aircraft-size examples as published; not exact variant compatibility or a GTAA approved-equipment list.",
-    "classes": {
-      "A": "Small GA, most fighters",
-      "B": "A-10, C208, Citation X, CRJs, P-38",
-      "C": "A321, 737, Dash-8, Embraers",
-      "D": "757, 767, C-17, C-130, MD11/DC10",
-      "E": "A340, 747-400, 777, 787",
-      "F": "A380, 747-800"
-    }
-  },
   "ifatcStands": {
     "sourceIds": [
       "ifatcGates"
@@ -2214,7 +2200,6 @@
     "IFATC airside stand names and passenger gate labels must not be joined by stripping prefixes or leading digits. In particular, older T3 A/B/C labels differ from the passenger maps.",
     "Zone membership is a label classification. It does not mean every B/C gate individually supports both domestic and international flights, or that every shared zone gate is a swing gate.",
     "Mapped swing aliases are mutually exclusive modes of the same resource. Active mode, sterility and mode-change time are operational state, not provided by this static snapshot.",
-    "There is no automatic aircraftType-code-to-width-class mapping. IFATC family examples can conceal variant differences; preserve unknown compatibility instead of assuming acceptance.",
     "Airline lookups use the operating carrier in flight.carrier, not marketing codeshares. Regional operators and brands not separately listed in the directory require a verified mapping; no terminal is inferred for them.",
     "Terminal defaults describe airline/check-in assignment; IFC and remote-stand use can differ. No exclusive terminal is assigned here to IFC stands.",
     "Stand variants and adjacent positions can overlap. The IFATC list does not establish that all listed positions can be occupied simultaneously."
