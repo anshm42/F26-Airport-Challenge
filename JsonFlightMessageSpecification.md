@@ -37,7 +37,7 @@ The `flight` object holds the shared aircraft details: operating carrier, regist
 - **ReinstateFlight** = Reinstate a cancelled flight
 - **UpdateEquipment** = Update aircraft information
 - **GateOutage** = Mark a gate unavailable for a time window (a resource message, not a flight message)
-- **DivertFlight** = An unscheduled inbound that needs a gate soon (a medical diversion, an air turnback, ...)
+- **DivertFlight** = An unscheduled inbound needing a gate or remote stand soon; turnbacks have gate priority
 
 ---
 
@@ -170,6 +170,27 @@ Specifies the type of operation to perform:
 - `"CancelFlight"` = Cancel a flight (equivalent to ASM CNL)
 - `"ReinstateFlight"` = Reinstate cancelled flight (equivalent to ASM RIN)
 - `"UpdateEquipment"` = Update assigned aircraft and aircraft type (equivalent to ASM EQT)
+
+---
+
+### Emergency State Field
+
+**`emergencyState`** (string, optional, top level)
+
+May accompany any flight message, alongside `action`, `flight`, and `legs`. It is
+not valid on the resource message `GateOutage`. The case-sensitive values are:
+
+- `"Turnback"` — an aircraft returning to YYZ; prioritize a compatible terminal gate.
+- `"Emergency"` — another emergency; a compatible remote stand is a valid assignment.
+
+Omit this field when no emergency state is supplied. `null`, other types, and unknown
+values are invalid. `reason` remains separate explanatory text. When both fields are
+present, `emergencyState` controls allocation policy even if `reason` contains a
+different classification. The stream preserves the field without assigning a resource.
+
+For older `DivertFlight` messages without `emergencyState`, retain the reason-based
+policy described under [gate priority and remote stands](#gate-priority-and-remote-stands).
+Other flight messages without the field keep their existing behavior.
 
 ---
 
@@ -548,13 +569,15 @@ the system only learns about it when it is announced.
 ## Divert Flight Messages
 
 A **DivertFlight** is an *unscheduled* inbound that was not in the filed schedule and now
-needs a gate soon — a medical emergency diversion, or an aircraft that departed and has to
-turn back. It looks like a one-leg `CreateFlight` plus a `reason`, and it usually arrives
-only a short time after it is announced.
+needs a parking position soon — a medical emergency diversion, or an aircraft that departed
+and has to turn back. It looks like a one-leg `CreateFlight` plus optional `emergencyState`
+and `reason` fields. It usually arrives only a short time after it is announced. Turnbacks receive priority
+for a terminal gate; other emergencies and diversions can use remote stands.
 
 ```json
 {
   "action": "DivertFlight",
+  "emergencyState": "Emergency",
   "reason": "medical",
   "flight": {
     "carrier": "QK",
@@ -578,15 +601,42 @@ only a short time after it is announced.
 
 **Plain English**:
 > "An A321 registered C-FGJI from Quebec City is diverting to Toronto for a medical emergency and will land
-> at 11:15 — find it a gate now."
+> at 11:15 — find it a compatible parking position, which may be a remote stand."
 
-- **`reason`** (string) — e.g. `"medical"`, `"turnback"`, `"diversion"` (informational).
+- **`emergencyState`** (string, optional) — `"Turnback"` or `"Emergency"`, as described above.
+- **`reason`** (string, optional) — explanatory text, such as `"medical"`, `"technical"`, or
+  `"weather"`. New messages use `emergencyState` to control gate priority.
 - **`legs`** — one inbound leg ending at YYZ, same shape as a flight leg.
 - A turnback (a plane that left YYZ and returns) is modeled the same way: the returning
-  aircraft arrives unscheduled (often with a flight suffix like `"R"`).
+  leg has both `departureStation` and `arrivalStation` set to `"YYZ"`, with the actual
+  departure time and expected return time. A suffix like `"R"` can identify the return
+  leg, but the suffix alone does not determine priority.
 
-The solution sees diverted flights flagged as **priority** in the observation, and leaving
-one unassigned costs a heavier penalty than an ordinary flight.
+### Gate priority and remote stands
+
+The matcher derives gate priority from `emergencyState`. No gate or stand assignment
+is sent in the message. These rules apply whenever a flight message supplies the field.
+
+| `emergencyState` | Gate priority | Remote stand use |
+| --- | --- | --- |
+| `"Turnback"` | Priority over ordinary flights competing for a compatible terminal gate | Fallback if no compatible gate is feasible |
+| `"Emergency"` | No special claim on a terminal gate | A compatible remote stand is a valid assignment |
+
+For a `DivertFlight` that omits `emergencyState`, preserve the legacy policy:
+`reason: "turnback"` gets gate priority; `"medical"` or `"diversion"` allows remote stands;
+an omitted or unrecognized reason retains diversion gate priority with remote fallback.
+An explicit `emergencyState` takes precedence over all of these legacy reason values.
+
+Without an explicit emergency state, missing or unrecognized reasons do not opt an
+emergency into the remote-stand policy. All diversions still need timely parking, and leaving one unassigned costs a
+heavier penalty than an ordinary flight. A valid remote-stand assignment counts as assigned;
+a turnback still prefers a feasible terminal gate over a remote stand.
+
+Gate priority never overrides aircraft compatibility, occupancy, or outages. Remote stands
+are listed in `ifatcStands.records` in [data/pearson.json](data/pearson.json), with names such
+as `"Remote Stand H01"`; their use must satisfy the matcher's availability and compatibility
+checks. The stream announces the emergency state, reason, and times; the matcher chooses
+the gate or stand.
 
 ---
 
@@ -609,6 +659,8 @@ one unassigned costs a heavier penalty than an ordinary flight.
 **Optional:**
 - `legs[].flightSuffix` - Can be `null` or omitted if not applicable
 - `legs[].codeshare` - Array of marketing carrier/flight-number pairs for that leg; omit or use `[]` when there are no codeshare agreements
+- `emergencyState` - Top-level `"Turnback"` or `"Emergency"` on flight messages; omit when not supplied
+- `reason` - Explanatory text for `DivertFlight`; older messages without `emergencyState` retain the reason-based allocation policy
 
 ---
 
