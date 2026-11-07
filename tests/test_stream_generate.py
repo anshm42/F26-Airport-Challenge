@@ -7,8 +7,10 @@ import unittest
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
+from smartgate_stream.__main__ import main
 from smartgate_stream.generate import generate
 from smartgate_stream.validation import ACTIONS, load_scenario, parse_utc
 
@@ -190,6 +192,23 @@ class GeneratorTests(unittest.TestCase):
             command[command.index("--date") + 1] = "2026-02-30"
             self.assertEqual(subprocess.run(command, cwd=ROOT, capture_output=True).returncode, 2)
             self.assertFalse(path.exists())
+
+    def test_cli_defaults_to_toronto_date_at_utc_midnight_and_dst_boundaries(self):
+        cases = (("2026-11-08T03:30:00+00:00", "2026-11-07"),
+                 ("2026-03-08T04:30:00+00:00", "2026-03-07"),
+                 ("2026-11-01T03:30:00+00:00", "2026-10-31"))
+        with tempfile.TemporaryDirectory() as directory:
+            for index, (instant, expected_date) in enumerate(cases):
+                with self.subTest(instant=instant):
+                    path = Path(directory) / f"scenario-{index}.json"
+                    argv = ["smartgate_stream", "generate", "--seed", "42", "--flights", "2", "--output", str(path)]
+                    with patch("sys.argv", argv), patch("smartgate_stream.__main__.datetime") as clock, patch("builtins.print"):
+                        clock.now.side_effect = lambda tz: datetime.fromisoformat(instant).astimezone(tz)
+                        main()
+                        clock.now.assert_called_once_with(TORONTO)
+                    scenario = load_scenario(path)
+                    self.assertEqual(scenario["metadata"]["date"], expected_date)
+                    self.assertEqual(scenario, generate(42, expected_date, 2))
 
 
 if __name__ == "__main__":

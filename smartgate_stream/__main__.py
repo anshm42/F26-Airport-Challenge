@@ -1,8 +1,9 @@
 import argparse
 import json
+from datetime import datetime
 from pathlib import Path
 
-from .generate import generate
+from .generate import TORONTO, generate
 from .server import ControlServer
 
 
@@ -13,7 +14,8 @@ def main():
     serve.add_argument("--port", type=int, default=8080)
     scenario = commands.add_parser("generate", help="write a seeded synthetic Pearson scenario")
     scenario.add_argument("--seed", type=int, default=1)
-    scenario.add_argument("--date", required=True, help="Toronto local date, YYYY-MM-DD")
+    scenario.add_argument("--date", default=datetime.now(TORONTO).date().isoformat(),
+                          help="Toronto local date, YYYY-MM-DD (default: today in Toronto)")
     scenario.add_argument("--flights", type=int, default=1200, help="number of single-leg flight creations")
     scenario.add_argument("--output", type=Path, required=True, help="new JSON file (must not already exist)")
     args = parser.parse_args()

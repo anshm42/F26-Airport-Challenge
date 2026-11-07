@@ -14,13 +14,14 @@ resource; choosing gates remains entirely the matcher's responsibility.
 ## Generate a scenario
 
 ```sh
-python3 -m smartgate_stream generate --seed 42 --date 2026-11-07 \
+python3 -m smartgate_stream generate --seed 42 \
   --flights 1200 --output /tmp/pearson-scenario.json
 ```
 
 The output path must not already exist. The seed defaults to `1`, and flight count
-defaults to `1200` (input range: 1–9999). The date is a Toronto local calendar
-date. The same inputs and checked-in profiles reproduce the same scenario on the
+defaults to `1200` (input range: 1–9999). The date defaults to today in Toronto.
+Use `--date YYYY-MM-DD` to select a specific Toronto local calendar date.
+The same inputs and checked-in profiles reproduce the same scenario on the
 same Python version. Generate once and retain that fixture for comparisons across
 Python versions.
 
