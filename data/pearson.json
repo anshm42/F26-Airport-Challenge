@@ -1,0 +1,2222 @@
+{
+  "airport": {
+    "name": "Toronto Pearson International Airport",
+    "iata": "YYZ",
+    "icao": "CYYZ",
+    "timeZone": "America/Toronto"
+  },
+  "retrievedOn": "2026-11-07",
+  "sources": {
+    "ifatcGates": {
+      "title": "IFATC Info - CYYZ gates and width-class key",
+      "url": "https://www.ifatc.org/gates?code=CYYZ",
+      "kind": "Simulation",
+      "note": "Stand labels, types and width classes are preserved as published; these are not GTAA approvals."
+    },
+    "pearsonAirlines": {
+      "title": "Pearson airlines and destinations - airline directory",
+      "url": "https://www.torontopearson.com/en/airlines",
+      "kind": "AirportAuthority"
+    },
+    "pearsonT1Map": {
+      "title": "Pearson Terminal 1 Level 2 departures map",
+      "url": "https://cdn.torontopearson.com/-/media/project/pearson/content/travel/while-you-are-here/terminal-maps/new-pdfs/toronto-pearson-terminal-1-map-departures-20190429.pdf?modified=20190427160116&rev=dddda638df284b45a39d02db1b3ffa7e",
+      "kind": "AirportAuthority",
+      "mapDateInFilename": "2019-04-29",
+      "note": "Still linked from Pearson terminal-maps page at retrieval. Map labels only; not a complete current stand inventory."
+    },
+    "pearsonT3Map": {
+      "title": "Pearson Terminal 3 Level 2 departures map",
+      "url": "https://cdn.torontopearson.com/-/media/project/pearson/content/travel/while-you-are-here/terminal-maps/new-pdfs/toronto-pearson-terminal-3-map-departures-20190429.pdf?modified=20190427160118&rev=f60e8f7a31024e5894ecf7ccb78423e2",
+      "kind": "AirportAuthority",
+      "mapDateInFilename": "2019-04-29",
+      "note": "Still linked from Pearson terminal-maps page at retrieval. Map labels only; not a complete current stand inventory."
+    },
+    "pearsonMapIndex": {
+      "title": "Pearson terminal maps - download index",
+      "url": "https://www.torontopearson.com/en/while-you-are-here/terminal-maps",
+      "kind": "AirportAuthority"
+    },
+    "gateZoning": {
+      "title": "Rezoning Pearson airport - interview with GTAA signage project manager",
+      "url": "https://www.signmedia.ca/rezoning-pearson-airport/",
+      "kind": "TradePublication",
+      "publishedOn": "2012-04-14",
+      "note": "Describes passenger zone conventions and distinguishes passenger labels from airside stand numbers."
+    },
+    "swingSterility": {
+      "title": "GTAA Advisory 2023-A-040 - Transborder/Preclearance Area Sterility",
+      "url": "https://cdn.torontopearson.com/-/media/project/pearson/content/airport-employees/airport-bulletins/advisories/g02-2023-a-040.pdf?hash=DF79E6B89028491E2BF2A19CAA8A99B8&rev=1efd84cab6aa474d8c1e944f7da06914",
+      "kind": "AirportAuthority",
+      "publishedOn": "2023-11-10",
+      "note": "Confirms domestic/transborder switching at airside stands 132, 136, 153 and T3 B18/B19. This is a subset, not a full swing-gate inventory."
+    },
+    "sasRelocation": {
+      "title": "GTAA Advisory 2025-A-041 - SAS relocation",
+      "url": "https://cdn.torontopearson.com/-/media/project/pearson/content/airport-employees/airport-bulletins/advisories/2025/G02-2025-A-041",
+      "kind": "AirportAuthority",
+      "publishedOn": "2025-10-20",
+      "effectiveOn": "2025-10-26"
+    },
+    "gate272Closure": {
+      "title": "GTAA Advisory 2019-A-035 - Gate 193 East Apron Expansion",
+      "url": "https://cdn.torontopearson.com/-/media/project/pearson/content/airport-employees/airport-bulletins/advisories/g02-2019-a-035.pdf",
+      "kind": "AirportAuthority",
+      "publishedOn": "2019-08-15",
+      "note": "Permanently closes Gate 272 during changes scheduled August 17-19, 2019."
+    },
+    "infieldConcourse": {
+      "title": "GTAA Advisory 2024-A-021 - Infield Concourse summer operations",
+      "url": "https://cdn.torontopearson.com/-/media/project/pearson/content/airport-employees/airport-bulletins/advisories/2024/G02-2024-A-021",
+      "kind": "AirportAuthority",
+      "publishedOn": "2024-04-25",
+      "note": "Historical evidence that IFC can serve carriers checking in at either terminal; 2024 seasonal airline/flight assignments are not current defaults."
+    }
+  },
+  "trafficTypes": {
+    "Domestic": "Travel within Canada.",
+    "Transborder": "Travel to or from the United States; US-bound departures use the US preclearance area.",
+    "International": "Travel outside Canada excluding the United States in this dataset."
+  },
+  "gateZones": {
+    "sourceIds": [
+      "gateZoning",
+      "pearsonT1Map",
+      "pearsonT3Map"
+    ],
+    "scope": "Passenger wayfinding zones; not a per-stand arrival/departure authorization matrix.",
+    "terminals": {
+      "T1": {
+        "D": [
+          "Domestic"
+        ],
+        "E": [
+          "International"
+        ],
+        "F": [
+          "Transborder"
+        ]
+      },
+      "T3": {
+        "A": [
+          "Transborder"
+        ],
+        "B": [
+          "Domestic",
+          "International"
+        ],
+        "C": [
+          "Domestic",
+          "International"
+        ]
+      }
+    }
+  },
+  "passengerGateGroups": {
+    "scope": "Labels explicitly printed on the linked maps. Multiple aliases in a group identify a mapped swing gate and share a resource; groups are not a complete current gate inventory.",
+    "terminals": {
+      "T1": {
+        "sourceIds": [
+          "pearsonT1Map"
+        ],
+        "groups": [
+          [
+            "D20"
+          ],
+          [
+            "D22"
+          ],
+          [
+            "D24"
+          ],
+          [
+            "D26"
+          ],
+          [
+            "D28"
+          ],
+          [
+            "D30"
+          ],
+          [
+            "D31"
+          ],
+          [
+            "D33"
+          ],
+          [
+            "D35"
+          ],
+          [
+            "D37"
+          ],
+          [
+            "D38"
+          ],
+          [
+            "D39"
+          ],
+          [
+            "D40"
+          ],
+          [
+            "D41"
+          ],
+          [
+            "D42"
+          ],
+          [
+            "D43"
+          ],
+          [
+            "D44"
+          ],
+          [
+            "D45"
+          ],
+          [
+            "F60"
+          ],
+          [
+            "F61"
+          ],
+          [
+            "F62"
+          ],
+          [
+            "F63"
+          ],
+          [
+            "F64"
+          ],
+          [
+            "F65"
+          ],
+          [
+            "F82"
+          ],
+          [
+            "F83"
+          ],
+          [
+            "E70"
+          ],
+          [
+            "E71"
+          ],
+          [
+            "E72"
+          ],
+          [
+            "E73"
+          ],
+          [
+            "E74"
+          ],
+          [
+            "E75"
+          ],
+          [
+            "E76"
+          ],
+          [
+            "E77"
+          ],
+          [
+            "E78"
+          ],
+          [
+            "E79"
+          ],
+          [
+            "E80"
+          ],
+          [
+            "E81"
+          ],
+          [
+            "E82"
+          ],
+          [
+            "E85"
+          ],
+          [
+            "D32",
+            "F32"
+          ],
+          [
+            "D34",
+            "F34"
+          ],
+          [
+            "D36",
+            "F36"
+          ],
+          [
+            "D51",
+            "F51"
+          ],
+          [
+            "D53",
+            "F53"
+          ],
+          [
+            "D55",
+            "F55"
+          ],
+          [
+            "D57",
+            "F57"
+          ],
+          [
+            "E66",
+            "F66"
+          ],
+          [
+            "E67",
+            "F67"
+          ],
+          [
+            "E68",
+            "F68"
+          ],
+          [
+            "E69",
+            "F69"
+          ]
+        ]
+      },
+      "T3": {
+        "sourceIds": [
+          "pearsonT3Map"
+        ],
+        "groups": [
+          [
+            "A7"
+          ],
+          [
+            "A8"
+          ],
+          [
+            "A10"
+          ],
+          [
+            "A11"
+          ],
+          [
+            "A12"
+          ],
+          [
+            "A13"
+          ],
+          [
+            "A14"
+          ],
+          [
+            "A15"
+          ],
+          [
+            "A16"
+          ],
+          [
+            "B2a"
+          ],
+          [
+            "B2c"
+          ],
+          [
+            "B3"
+          ],
+          [
+            "B4"
+          ],
+          [
+            "B5"
+          ],
+          [
+            "B22"
+          ],
+          [
+            "B23"
+          ],
+          [
+            "B24"
+          ],
+          [
+            "B25"
+          ],
+          [
+            "B26"
+          ],
+          [
+            "B27"
+          ],
+          [
+            "B28"
+          ],
+          [
+            "B29"
+          ],
+          [
+            "C30"
+          ],
+          [
+            "C31"
+          ],
+          [
+            "C32"
+          ],
+          [
+            "C33"
+          ],
+          [
+            "C34"
+          ],
+          [
+            "C35"
+          ],
+          [
+            "C36"
+          ],
+          [
+            "B37"
+          ],
+          [
+            "B38"
+          ],
+          [
+            "B39"
+          ],
+          [
+            "B40"
+          ],
+          [
+            "B41"
+          ],
+          [
+            "A17",
+            "B17"
+          ],
+          [
+            "A18",
+            "B18"
+          ],
+          [
+            "A19",
+            "B19"
+          ],
+          [
+            "A20",
+            "B20"
+          ]
+        ]
+      }
+    }
+  },
+  "airlineTerminals": {
+    "sourceIds": [
+      "pearsonAirlines"
+    ],
+    "scope": "Directory terminal defaults for named airlines, not exclusive gate ownership or proof of service on a particular date.",
+    "records": [
+      {
+        "name": "Aer Lingus",
+        "carrier": "EI",
+        "icao": "EIN",
+        "terminal": "T3"
+      },
+      {
+        "name": "AeroMexico",
+        "carrier": "AM",
+        "icao": "AMX",
+        "terminal": "T3"
+      },
+      {
+        "name": "Air Canada",
+        "carrier": "AC",
+        "icao": "ACA",
+        "terminal": "T1"
+      },
+      {
+        "name": "Air China",
+        "carrier": "CA",
+        "icao": "CCA",
+        "terminal": "T1"
+      },
+      {
+        "name": "Air France",
+        "carrier": "AF",
+        "icao": "AFR",
+        "terminal": "T3"
+      },
+      {
+        "name": "Air India",
+        "carrier": "AI",
+        "icao": "AIC",
+        "terminal": "T1"
+      },
+      {
+        "name": "Air North",
+        "carrier": "4N",
+        "icao": "ANT",
+        "terminal": "T1"
+      },
+      {
+        "name": "Air Serbia",
+        "carrier": "JU",
+        "icao": "ASL",
+        "terminal": "T3"
+      },
+      {
+        "name": "Air Transat",
+        "carrier": "TS",
+        "icao": "TSC",
+        "terminal": "T3"
+      },
+      {
+        "name": "Alaska Airlines",
+        "carrier": "AS",
+        "icao": "ASA",
+        "terminal": "T3"
+      },
+      {
+        "name": "American Airlines",
+        "carrier": "AA",
+        "icao": "AAL",
+        "terminal": "T3"
+      },
+      {
+        "name": "Arajet",
+        "carrier": "DM",
+        "icao": "DWI",
+        "terminal": "T3"
+      },
+      {
+        "name": "Avianca Airlines",
+        "carrier": "AV",
+        "icao": "AVA",
+        "terminal": "T1"
+      },
+      {
+        "name": "Azores Airlines",
+        "carrier": "S4",
+        "icao": "RZO",
+        "terminal": "T3"
+      },
+      {
+        "name": "BermudAir",
+        "carrier": "2T",
+        "icao": "BMA",
+        "terminal": "T3"
+      },
+      {
+        "name": "Biman Bangladesh Airlines",
+        "carrier": "BG",
+        "icao": "BBC",
+        "terminal": "T3"
+      },
+      {
+        "name": "British Airways",
+        "carrier": "BA",
+        "icao": "BAW",
+        "terminal": "T3"
+      },
+      {
+        "name": "Caribbean Airlines",
+        "carrier": "BW",
+        "icao": "BWA",
+        "terminal": "T3"
+      },
+      {
+        "name": "Cathay Pacific",
+        "carrier": "CX",
+        "icao": "CPA",
+        "terminal": "T3"
+      },
+      {
+        "name": "China Eastern",
+        "carrier": "MU",
+        "icao": "CES",
+        "terminal": "T3"
+      },
+      {
+        "name": "China Southern",
+        "carrier": "CZ",
+        "icao": "CSN",
+        "terminal": "T3"
+      },
+      {
+        "name": "Condor",
+        "carrier": "DE",
+        "icao": "CFG",
+        "terminal": "T3"
+      },
+      {
+        "name": "Copa Airlines",
+        "carrier": "CM",
+        "icao": "CMP",
+        "terminal": "T1"
+      },
+      {
+        "name": "Delta",
+        "carrier": "DL",
+        "icao": "DAL",
+        "terminal": "T3"
+      },
+      {
+        "name": "Egyptair",
+        "carrier": "MS",
+        "icao": "MSR",
+        "terminal": "T1"
+      },
+      {
+        "name": "Emirates",
+        "carrier": "EK",
+        "icao": "UAE",
+        "terminal": "T1"
+      },
+      {
+        "name": "Ethiopian",
+        "carrier": "ET",
+        "icao": "ETH",
+        "terminal": "T1"
+      },
+      {
+        "name": "Etihad",
+        "carrier": "EY",
+        "icao": "ETD",
+        "terminal": "T1"
+      },
+      {
+        "name": "Eva Air",
+        "carrier": "BR",
+        "icao": "EVA",
+        "terminal": "T1"
+      },
+      {
+        "name": "Finnair",
+        "carrier": "AY",
+        "icao": "FIN",
+        "terminal": "T3"
+      },
+      {
+        "name": "Flair Airlines",
+        "carrier": "F8",
+        "icao": "FLE",
+        "terminal": "T3"
+      },
+      {
+        "name": "Hainan Airlines",
+        "carrier": "HU",
+        "icao": "CHH",
+        "terminal": "T3"
+      },
+      {
+        "name": "Iberia",
+        "carrier": "IB",
+        "icao": "IBE",
+        "terminal": "T3"
+      },
+      {
+        "name": "Icelandair",
+        "carrier": "FI",
+        "icao": "ICE",
+        "terminal": "T3"
+      },
+      {
+        "name": "ITA Airways",
+        "carrier": "AZ",
+        "icao": "ITY",
+        "terminal": "T1"
+      },
+      {
+        "name": "KLM",
+        "carrier": "KL",
+        "icao": "KLM",
+        "terminal": "T3"
+      },
+      {
+        "name": "Korean Air",
+        "carrier": "KE",
+        "icao": "KAL",
+        "terminal": "T3"
+      },
+      {
+        "name": "LOT Polish Airlines",
+        "carrier": "LO",
+        "icao": "LOT",
+        "terminal": "T1"
+      },
+      {
+        "name": "Lufthansa",
+        "carrier": "LH",
+        "icao": "DLH",
+        "terminal": "T1"
+      },
+      {
+        "name": "Pakistan International Airlines",
+        "carrier": "PK",
+        "icao": "PIA",
+        "terminal": "T3"
+      },
+      {
+        "name": "Philippine Airlines",
+        "carrier": "PR",
+        "icao": "PAL",
+        "terminal": "T3"
+      },
+      {
+        "name": "Porter Airlines",
+        "carrier": "PD",
+        "icao": "POE",
+        "terminal": "T3"
+      },
+      {
+        "name": "Qatar Airways",
+        "carrier": "QR",
+        "icao": "QTR",
+        "terminal": "T3"
+      },
+      {
+        "name": "Royal Air Maroc",
+        "carrier": "AT",
+        "icao": "RAM",
+        "terminal": "T1"
+      },
+      {
+        "name": "Royal Jordanian",
+        "carrier": "RJ",
+        "icao": "RJA",
+        "terminal": "T3"
+      },
+      {
+        "name": "Saudia",
+        "carrier": "SV",
+        "icao": "SVA",
+        "terminal": "T3"
+      },
+      {
+        "name": "Scandinavian Airlines",
+        "carrier": "SK",
+        "icao": "SAS",
+        "terminal": "T3"
+      },
+      {
+        "name": "Sun Country Airlines",
+        "carrier": "SY",
+        "icao": "SCX",
+        "terminal": "T3"
+      },
+      {
+        "name": "Swiss International Air Lines",
+        "carrier": "LX",
+        "icao": "SWR",
+        "terminal": "T1"
+      },
+      {
+        "name": "TAP Air Portugal",
+        "carrier": "TP",
+        "icao": "TAP",
+        "terminal": "T1"
+      },
+      {
+        "name": "Turkish Airlines",
+        "carrier": "TK",
+        "icao": "THY",
+        "terminal": "T1"
+      },
+      {
+        "name": "United Airlines",
+        "carrier": "UA",
+        "icao": "UAL",
+        "terminal": "T1"
+      },
+      {
+        "name": "Virgin Atlantic",
+        "carrier": "VS",
+        "icao": "VIR",
+        "terminal": "T3"
+      },
+      {
+        "name": "Westjet",
+        "carrier": "WS",
+        "icao": "WJA",
+        "terminal": "T3"
+      }
+    ]
+  },
+  "gateWidthClasses": {
+    "sourceIds": [
+      "ifatcGates"
+    ],
+    "scope": "IFATC maximum-aircraft-size examples as published; not exact variant compatibility or a GTAA approved-equipment list.",
+    "classes": {
+      "A": "Small GA, most fighters",
+      "B": "A-10, C208, Citation X, CRJs, P-38",
+      "C": "A321, 737, Dash-8, Embraers",
+      "D": "757, 767, C-17, C-130, MD11/DC10",
+      "E": "A340, 747-400, 777, 787",
+      "F": "A380, 747-800"
+    }
+  },
+  "ifatcStands": {
+    "sourceIds": [
+      "ifatcGates"
+    ],
+    "operationalStatus": "Unverified",
+    "scope": "All source rows, including passenger-named gates, remote stands, cargo, maintenance and GA positions. Source type Airline does not establish passenger use.",
+    "records": [
+      {
+        "name": "Air Canada Maintenance Hangar 01",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Air Canada Maintenance Hangar 02",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Air Canada Maintenance Hangar 03",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Air Canada Maintenance Hangar 04",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Fbo Chartright 01",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Chartright 02",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Chartright 03",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Field Aviation 01",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Field Aviation 02",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Field Aviation 03",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Novajet 01",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Novajet 02",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Novajet 03",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Quantum Aviation 01",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Quantum Aviation 02",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Quantum Aviation 03",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Signature Flight Support Yyz 01",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Signature Flight Support Yyz 02",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Signature Flight Support Yyz 03",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Skycharter 01",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Skycharter 02",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Fbo Skycharter 03",
+        "type": "GA",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 101",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 101A",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 103",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 103A",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 105",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 105A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 107",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 107A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 109",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 110",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 111",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 112",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 120",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 120A",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 122",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 124",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 126",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 128",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 131",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 132",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 133",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 134",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 134A",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 135",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 136",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 137",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 138",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 138A",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 139",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 140",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 141",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 141A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 142",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 143",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 143A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 144",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 145",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 145A",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 151",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 153",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 155",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 157",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 160",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 161",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 162",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 163",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 164A",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 164B",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 165",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 166",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 166B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 167",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 167A",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 168",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 168A",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 168B",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 169",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 169A",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 170",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 170A",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 171",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 171A",
+        "type": "Airline",
+        "widthClass": "F"
+      },
+      {
+        "name": "Gate 172",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 173",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 173A",
+        "type": "Airline",
+        "widthClass": "F"
+      },
+      {
+        "name": "Gate 174",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 175",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 175A",
+        "type": "Airline",
+        "widthClass": "F"
+      },
+      {
+        "name": "Gate 176",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 177",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 178",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 179",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 180",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 180A",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 181",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 181A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 191",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 193",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 193A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 244",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 245",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 246",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 247",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 248",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 249",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 250",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 251",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 252",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 253",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 254",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 255",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 256",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 258",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 260",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 262",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 264",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 266",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate 268",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 270",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 272",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate 521",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 522",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 523",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 524",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 525",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 525A",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 527",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 527A",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 528",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate 529",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 530",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate 531",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate A01A",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate A01B",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate A01C",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate A01D",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate A02",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate A03",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate A03B",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate A04",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate A05",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate A05A",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate A05B",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate A06",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate A06A",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate A06B",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate B07D",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate B07E",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate B07F",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate B08",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate B08A",
+        "type": "Airline",
+        "widthClass": "A"
+      },
+      {
+        "name": "Gate B09",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate B09A",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate B09B",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate B10A",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate B10B",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate B11",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate B11A",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate B12",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate B12A",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate B12B",
+        "type": "Airline",
+        "widthClass": "B"
+      },
+      {
+        "name": "Gate B13",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate B14",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate B14A",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate B15",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate B15A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate B16",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate B17",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate B18",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate B19",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate B20",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate B22",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate C24",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate C25",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate C26",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate C27",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate C27A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate C28",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate C29",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate C29A",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate C30",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate C30A",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate C31",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate C32",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate C33",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate C33A",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate C34",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate C34A",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate C35",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate C36",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Gate C37",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate C37A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate C38",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate C39",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate C39A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate C40",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Gate C40A",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "Gate C41",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "General Aviation Area 541",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "General Aviation Area 542",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "General Aviation Area 543",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "General Aviation Area 544",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "General Aviation Area 545",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "General Aviation Area 547",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Maintenance Apron H04N",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Maintenance Apron H05N",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Maintenance Apron H06N",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Maintenance Apron H08N",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Maintenance Apron H09N",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Maintenance Apron H10N",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "North Cargo Apron 01",
+        "type": "Airline",
+        "widthClass": "F"
+      },
+      {
+        "name": "North Cargo Apron 02",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "North Cargo Apron 03",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "North Cargo Apron 04",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "North Cargo Apron 05",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H01",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Remote Stand H01A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H01B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H02",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Remote Stand H02A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H02B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H03",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Remote Stand H03A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H03B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H04",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Remote Stand H04A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H04B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H05",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Remote Stand H05A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H05B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H06",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Remote Stand H06A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H06B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H07",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H08",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H09",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H10",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H11",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Remote Stand H11A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H11B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H12",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Remote Stand H12A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H12B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H13",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "Remote Stand H13A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H13B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "Remote Stand H14",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "South Cargo Apron 500",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "South Cargo Apron 500A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 500B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 501",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "South Cargo Apron 501A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 501B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 502",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "South Cargo Apron 502A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 502B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 503",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "South Cargo Apron 503A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 503B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 504",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "South Cargo Apron 504A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 505",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "South Cargo Apron 506",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "South Cargo Apron 506A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 506B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 507",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "South Cargo Apron 507A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 507B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 508",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "South Cargo Apron 508A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 508B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 509",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "South Cargo Apron 509A",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 509B",
+        "type": "Airline",
+        "widthClass": "C"
+      },
+      {
+        "name": "South Cargo Apron 510",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "South Cargo Apron 512",
+        "type": "Airline",
+        "widthClass": "E"
+      },
+      {
+        "name": "West Cargo Apron 601",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "West Cargo Apron 602",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "West Cargo Apron 603",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "West Cargo Apron 604",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "West Cargo Apron 605",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "West Cargo Apron 606",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "West Cargo Apron 607",
+        "type": "Airline",
+        "widthClass": "D"
+      },
+      {
+        "name": "West Cargo Apron 609",
+        "type": "Airline",
+        "widthClass": "D"
+      }
+    ]
+  },
+  "knownStandExceptions": [
+    {
+      "name": "Gate 272",
+      "status": "Closed",
+      "sourceIds": [
+        "gate272Closure"
+      ],
+      "note": "Retained in the raw IFATC snapshot for fidelity; exclude from real-airport planning."
+    }
+  ],
+  "limitations": [
+    "Retrieved-on is the research date, not a guarantee that each source is effective on that date. The official linked PDF maps have 2019 filenames.",
+    "No complete authoritative per-stand aircraft acceptance, arrival customs routing, adjacency/blocking, or current operating-status matrix was found in the consulted public sources.",
+    "IFATC airside stand names and passenger gate labels must not be joined by stripping prefixes or leading digits. In particular, older T3 A/B/C labels differ from the passenger maps.",
+    "Zone membership is a label classification. It does not mean every B/C gate individually supports both domestic and international flights, or that every shared zone gate is a swing gate.",
+    "Mapped swing aliases are mutually exclusive modes of the same resource. Active mode, sterility and mode-change time are operational state, not provided by this static snapshot.",
+    "There is no automatic aircraftType-code-to-width-class mapping. IFATC family examples can conceal variant differences; preserve unknown compatibility instead of assuming acceptance.",
+    "Airline lookups use the operating carrier in flight.carrier, not marketing codeshares. Regional operators and brands not separately listed in the directory require a verified mapping; no terminal is inferred for them.",
+    "Terminal defaults describe airline/check-in assignment; IFC and remote-stand use can differ. No exclusive terminal is assigned here to IFC stands.",
+    "Stand variants and adjacent positions can overlap. The IFATC list does not establish that all listed positions can be occupied simultaneously."
+  ]
+}
