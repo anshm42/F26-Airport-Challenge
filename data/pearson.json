@@ -71,6 +71,13 @@
       "kind": "AirportAuthority",
       "publishedOn": "2024-04-25",
       "note": "Historical evidence that IFC can serve carriers checking in at either terminal; 2024 seasonal airline/flight assignments are not current defaults."
+    },
+    "providedPassengerMap": {
+      "title": "User-provided Toronto Pearson (YYZ) International Airport Map",
+      "file": "sources/pearson-passenger-terminal-map.png",
+      "kind": "UserProvided",
+      "providedOn": "2026-11-07",
+      "note": "Publisher and map date were not supplied. Used for relative passenger walking-distance estimates, not measured routes or current gate-inventory verification."
     }
   },
   "trafficTypes": {
@@ -284,7 +291,71 @@
             "E69",
             "F69"
           ]
-        ]
+        ],
+        "walkingDistanceClassByGate": {
+          "D20": 1,
+          "D22": 2,
+          "D24": 3,
+          "D26": 4,
+          "D28": 5,
+          "D30": 1,
+          "D31": 1,
+          "D33": 2,
+          "D35": 3,
+          "D37": 4,
+          "D38": 6,
+          "D39": 5,
+          "D40": 6,
+          "D41": 7,
+          "D42": 8,
+          "D43": 9,
+          "D44": 9,
+          "D45": 8,
+          "F60": 4,
+          "F61": 5,
+          "F62": 5,
+          "F63": 6,
+          "F64": 6,
+          "F65": 7,
+          "F82": 2,
+          "F83": 3,
+          "E70": 8,
+          "E71": 8,
+          "E72": 9,
+          "E73": 9,
+          "E74": 9,
+          "E75": 9,
+          "E76": 9,
+          "E77": 9,
+          "E78": 9,
+          "E79": 9,
+          "E80": 8,
+          "E81": 8,
+          "E82": 8,
+          "E85": 2,
+          "D32": 3,
+          "F32": 3,
+          "D34": 4,
+          "F34": 4,
+          "D36": 5,
+          "F36": 5,
+          "D51": 2,
+          "F51": 2,
+          "D53": 3,
+          "F53": 3,
+          "D55": 4,
+          "F55": 4,
+          "D57": 5,
+          "F57": 5,
+          "E66": 7,
+          "F66": 7,
+          "E67": 7,
+          "F67": 7,
+          "E68": 8,
+          "F68": 8,
+          "E69": 8,
+          "F69": 8
+        }
       },
       "T3": {
         "sourceIds": [
@@ -409,8 +480,70 @@
             "A20",
             "B20"
           ]
-        ]
+        ],
+        "walkingDistanceClassByGate": {
+          "A7": 4,
+          "A8": 3,
+          "A10": 1,
+          "A11": 1,
+          "A12": 2,
+          "A13": 3,
+          "A14": 4,
+          "A15": 5,
+          "A16": 6,
+          "B2a": 9,
+          "B2c": 9,
+          "B3": 9,
+          "B4": 9,
+          "B5": 9,
+          "B22": 3,
+          "B23": 2,
+          "B24": 2,
+          "B25": 1,
+          "B26": 2,
+          "B27": 3,
+          "B28": 4,
+          "B29": 5,
+          "C30": 6,
+          "C31": 7,
+          "C32": 8,
+          "C33": 9,
+          "C34": 9,
+          "C35": 8,
+          "C36": 7,
+          "B37": 6,
+          "B38": 5,
+          "B39": 4,
+          "B40": 3,
+          "B41": 2,
+          "A17": 7,
+          "B17": 7,
+          "A18": 8,
+          "B18": 8,
+          "A19": 8,
+          "B19": 8,
+          "A20": 6,
+          "B20": 6
+        }
       }
+    },
+    "walkingDistanceScale": {
+      "sourceIds": [
+        "providedPassengerMap",
+        "pearsonT1Map"
+      ],
+      "basis": "VisualEstimate",
+      "description": "Passenger-only ordinal walking effort along the concourse from the nearest applicable security checkpoint: 1 is closest, 2-8 are progressively farther, 9 is the farthest terminal/satellite area, and 10 is a remote stand used for passenger service. Values are not metres or walking minutes.",
+      "remoteStandClass": 10,
+      "inferredGateLabels": [
+        "D30",
+        "E82",
+        "E85",
+        "F64",
+        "B23",
+        "C30"
+      ],
+      "note": "Shared swing aliases receive the same physical-access score. Labels not shown exactly on the supplied image use approximate concourse/neighbor placement; they are listed in inferredGateLabels. The existing passenger gate inventory is preserved. Remote-stand class 10 applies only when passenger use is established separately; it does not classify cargo, maintenance, or GA positions or establish passenger suitability of raw IFATC stands."
     }
   },
   "airlineTerminals": {

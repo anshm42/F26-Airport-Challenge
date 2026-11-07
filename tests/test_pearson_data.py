@@ -73,6 +73,40 @@ class PearsonDataTest(unittest.TestCase):
         self.assertEqual(exceptions["Gate 272"], "Closed")
         self.assertIn("Gate 272", {s["name"] for s in stands})
 
+    def test_passenger_walking_distance_classes(self):
+        data_path = Path(__file__).resolve().parents[1] / "data" / "pearson.json"
+        data = json.loads(data_path.read_text())
+        passenger = data["passengerGateGroups"]
+        scale = passenger["walkingDistanceScale"]
+        self.assertEqual(scale["remoteStandClass"], 10)
+        self.assertEqual(scale["basis"], "VisualEstimate")
+        all_gates = set()
+        for terminal, inventory in passenger["terminals"].items():
+            with self.subTest(terminal=terminal):
+                gates = {gate for group in inventory["groups"] for gate in group}
+                distances = inventory["walkingDistanceClassByGate"]
+                self.assertEqual(set(distances), gates)
+                for value in distances.values():
+                    self.assertIs(type(value), int)
+                    self.assertGreaterEqual(value, 1)
+                    self.assertLessEqual(value, 9)
+                for group in inventory["groups"]:
+                    self.assertEqual(len({distances[gate] for gate in group}), 1)
+                all_gates.update(gates)
+        self.assertLessEqual(set(scale["inferredGateLabels"]), all_gates)
+        t1 = passenger["terminals"]["T1"]["walkingDistanceClassByGate"]
+        t3 = passenger["terminals"]["T3"]["walkingDistanceClassByGate"]
+        self.assertEqual((t1["D20"], t1["D31"], t3["A11"], t3["B25"]), (1, 1, 1, 1))
+        for distances, near, far in ((t1, "D20", "D28"), (t1, "D31", "D43"),
+                                     (t1, "F82", "F65"), (t1, "F65", "E75"),
+                                     (t3, "A11", "A18"), (t3, "B25", "C34")):
+            self.assertLess(distances[near], distances[far])
+        self.assertEqual((t1["E75"], t3["C34"], t3["B2a"]), (9, 9, 9))
+        source = data["sources"]["providedPassengerMap"]
+        self.assertTrue((data_path.parent / source["file"]).is_file())
+        self.assertTrue(all(set(stand) == {"name", "type", "widthClass"}
+                            for stand in data["ifatcStands"]["records"]))
+
     def test_iata_aircraft_reference(self):
         data = json.loads(
             (Path(__file__).resolve().parents[1] / "data" / "aircraft.json").read_text()

@@ -76,6 +76,37 @@ map index when checked. They are evidence for the labels shown, not proof of a
 complete 2026 gate inventory. Do not treat omitted gates as nonexistent or unable
 to swing. Preserve printed suffix case, including `B2a` and `B2c`.
 
+## Passenger walking-distance classes
+
+Use `passengerGateGroups.terminals.T1.walkingDistanceClassByGate` or the equivalent
+`T3` map, keyed by the exact passenger label. All 104 existing passenger labels
+have a score; aliases of one swing gate share a score. The existing gate groups
+and raw IFATC stand records retain their structure.
+
+These are visual estimates from the
+[user-provided terminal map](sources/pearson-passenger-terminal-map.png), with the
+existing T1 departure map helping place labels omitted from that image. Scores
+follow approximate concourse routes from the nearest applicable security
+checkpoint, rather than straight-line proximity or gate-number order:
+
+| Class | Meaning | Examples |
+| --- | --- | --- |
+| 1 | Closest to security | T1 D20/D31; T3 A10/A11/B25 |
+| 2–8 | Progressively farther along the terminal concourses | T1 F82: 2, F65: 7 |
+| 9 | Farthest terminal or satellite areas | T1 E75; T3 C34/B2a |
+| 10 | Remote stand used for passenger service | `walkingDistanceScale.remoteStandClass` |
+
+`passengerGateGroups.walkingDistanceScale` records the basis, source references,
+and `inferredGateLabels` whose exact labels are absent from the supplied image:
+D30, E82, E85, F64, B23, and C30. These have approximate placements. The scores are
+ordinal walking-effort classes, not metres, walking minutes, or an accessible-route
+calculation. Shared aliases use one physical-access estimate; the scale does not
+model differences between sterile routes or checkpoint queues.
+
+Class 10 is reserved for remote stands when passenger use has been established
+separately. It does not make every IFATC `Airline` stand a passenger stand. Cargo,
+maintenance, and GA positions are outside this classification.
+
 ## Stand sizes and aircraft examples
 
 `ifatcStands.records` preserves each source `name`, `type`, and `widthClass`.
@@ -189,6 +220,7 @@ python3 -m unittest discover -s tests
 
 The check covers source references, source-row counts, unique stand/carrier/alias
 identifiers, terminal and size-class references, representative airline defaults,
-the documented swing pairs, the closed Gate 272 exception, aircraft-code coverage,
+the documented swing pairs, passenger walking-class coverage and shared-alias
+consistency, the closed Gate 272 exception, aircraft-code coverage,
 shared model groups, and representative passenger/cargo/combi classifications.
 It does not certify the underlying sources as current operational data.
