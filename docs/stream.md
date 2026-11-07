@@ -51,6 +51,17 @@ parking if needed. The explicit crosswalk contains 78 terminal groups and 32 H
 positions; 11 unresolved passenger labels have been removed. These are simulation
 placements, not a verified operational aircraft/stand capability matrix.
 
+The generator reserves a compatible position for each entire baseline ground
+stay, counting swing aliases and overlapping H positions once. The 110 gate-state
+entries represent 92 independent resources before size and outage restrictions.
+Initially parked aircraft occupy their position until their baseline departure;
+idle aircraft and spares reserve it for the day. An unpaired inbound stays until
+nightly reset. Arrival/departure times are resampled when capacity is unavailable;
+generation fails if fleet/gate capacity cannot fit the requested count. A spare
+for an equipment update is included only when a compatible position remains free
+for its whole baseline day. These private reservations are feasibility proof;
+the matcher still chooses all future assignments.
+
 The generator then sends timing changes, replacement schedules, equipment swaps,
 cancellations/reinstatements, gate outages, and occasional diversions, including
 turnbacks. Flights in the snapshot are not sent again as individual `CreateFlight`
@@ -144,6 +155,10 @@ and plans future assignments before returning HTTP `200` or `204`; replay starts
 only after that response. HTTP `202` fails initialization. See
 [daily initialization](../JsonFlightMessageSpecification.md#daily-initialization).
 Older initialized fixtures without gates for parked aircraft must be regenerated.
+Before accepting an initialized run, the server checks baseline demand at every
+movement and known-outage boundary, including after the last announcement. An
+overcapacity baseline returns `400` without contacting the matcher. Later
+announced disruptions can still create conflicts requiring new matching decisions.
 Incremental fixtures without this message start with an empty gate map; scheduled
 flights alone never imply that an aircraft is already on the ground. Days remain independent.
 

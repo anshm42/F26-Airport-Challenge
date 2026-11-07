@@ -115,6 +115,45 @@ class GateStateTests(unittest.TestCase):
         state.apply_message(turnback, "2026-11-07T10:30:00Z")
         self.assertEqual(state.request(turnback)["legs"][0]["trafficType"], "International")
 
+    def test_baseline_capacity_counts_all_day_visits_widths_and_overlapping_stands(self):
+        for count, code in ((93, "CR9"), (88, "321"), (4, "388")):
+            with self.subTest(count=count, code=code):
+                flights = [flight(str(300 + index), "YUL", "YYZ", "07:00", "08:00",
+                                  {**INBOUND, "registration": f"C-TEST{index}", "aircraftType": code})
+                           for index in range(count)]
+                state = self.initialized(flights, [])
+                before = state.snapshot()
+                with self.assertRaisesRegex(ValueError, "baseline schedule exceeds passenger gate capacity"):
+                    state.check_baseline_capacity()
+                self.assertEqual(state.snapshot(), before)
+        state = self.initialized()
+        before = state.snapshot()
+        state.check_baseline_capacity()
+        self.assertEqual(state.snapshot(), before)
+
+    def test_baseline_capacity_reuses_a_gate_at_departure_and_counts_idle_aircraft(self):
+        # All three F positions are needed; a same-time departure makes room for the third inbound.
+        parked = {**PARKED, "aircraftType": "388"}
+        outbound = flight("400", "YYZ", "YUL", "08:00", "09:00", parked)
+        incoming = [flight(str(401 + index), "YUL", "YYZ", "07:00", "08:00",
+                           {**INBOUND, "registration": f"C-WIDE{index}", "aircraftType": "388"})
+                    for index in range(3)]
+        state = self.initialized([outbound, *incoming], [{**parked, "gate": "E71"}])
+        state.check_baseline_capacity()
+        idle = self.initialized(incoming, [{**parked, "gate": "E71"}])
+        with self.assertRaisesRegex(ValueError, "baseline schedule exceeds passenger gate capacity"):
+            idle.check_baseline_capacity()
+
+    def test_known_initial_outage_reduces_future_baseline_capacity(self):
+        incoming = [flight(str(401 + index), "YUL", "YYZ", "07:00", "08:00",
+                           {**INBOUND, "registration": f"C-WIDE{index}", "aircraftType": "388"})
+                    for index in range(3)]
+        state = self.initialized(incoming, [])
+        state.apply_message({"action": "GateOutage", "gate": "E71", "scheduledStartTime": "09:00",
+                             "scheduledEndTime": "10:00"}, "2026-11-07T05:00:00Z")
+        with self.assertRaisesRegex(ValueError, "2026-11-07T14:00:00Z"):
+            state.check_baseline_capacity()
+
     def test_future_choices_apply_at_arrival_and_departure_frees_gate(self):
         state = self.initialized()
         state.apply_decisions({"assignments": [assignment(self.arrival, "D20"),

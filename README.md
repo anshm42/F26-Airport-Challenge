@@ -27,6 +27,9 @@ not occupy initial gates. The `gateState` object covers terminal passenger gates
 and the H remote positions included for this simulation.
 The 110 positions use the explicit IFATC crosswalk and size classes. Each flight
 leg includes `trafficType`: `Domestic`, `Transborder`, or `International`.
+Generation reserves capacity for complete ground stays across the baseline day,
+including idle aircraft and spares. Replay rejects an overcapacity baseline before
+sending any webhook.
 
 To skip generation, use the checked-in
 [seeded daily scenario](fixtures/pearson-2026-11-07-seed42.json) as `scenario_path`.

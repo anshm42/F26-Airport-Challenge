@@ -31,6 +31,9 @@ assignments separately, and they take effect at arrival time.
 The map contains 110 positions matched to IFATC and respects its size classes.
 Every flight leg and reference includes `trafficType` (`Domestic`, `Transborder`,
 or `International`).
+The full baseline fits passenger-gate capacity throughout the day; the peak is
+47 grounded aircraft, including idle aircraft and spares. Later updates can
+extend stays or remove gates and require the matcher to resolve new conflicts.
 
 After initial allocation, apply `events[1:]` in order at each event's UTC
 `timestamp`. The stream adds current `gateState` and `unassignedAircraft` to each

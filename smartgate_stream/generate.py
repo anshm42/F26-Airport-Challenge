@@ -9,7 +9,8 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from .validation import DEFAULT_RATE, positive_number, require, validate_scenario
-from .inventory import catalog, initial_gate_state, passenger_aircraft, traffic_type
+from .inventory import catalog, gate_fits, initial_gate_state, passenger_aircraft, traffic_type
+from .gates import GateState
 
 
 DATA = Path(__file__).resolve().parents[1] / "data"
@@ -41,6 +42,16 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
     events, inbound_flights, outbound_flights = [], [], []
     initial_flights, parked_aircraft = [], []
     reservations = defaultdict(list)
+    gate_reservations, initial_gates = defaultdict(list), {}
+    gate_options = {}
+    for profile in carriers:
+        carrier = profile["carrier"]
+        terminal = catalog()["airlines"].get(carrier)
+        for code in {code for service in profile["services"] for code in service["aircraft"]}:
+            gate_options[carrier, code] = sorted(
+                (gate for gate, owner in catalog()["gates"].items()
+                 if gate_fits(gate, {"aircraftType": code}) and (terminal is None or owner in (None, terminal))),
+                key=lambda gate: (catalog()["gates"][gate] is None, catalog()["gate_widths"][gate]))
     numbers = {p["carrier"]: p["flightNumberStart"] for p in carriers}
     codeshare_numbers = {p["carrier"]: 7000 for p in carriers}
 
@@ -48,9 +59,17 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         events.append({"timestamp": when.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
                        "message": copy.deepcopy(message)})
 
-    def allocate(carrier, service, begin, end, station):
-        eligible = {}
+    def allocate(carrier, service, begin, end, station, gate_window=None):
+        eligible, gates = {}, {}
         for aircraft in service["aircraft"]:
+            if gate_window is not None:
+                arrival, departure = gate_window
+                gate = next((gate for gate in gate_options[carrier, aircraft] if all(
+                    departure <= previous_arrival or arrival >= previous_departure
+                    for previous_arrival, previous_departure in gate_reservations[catalog()["footprints"][gate]])), None)
+                if gate is None:
+                    continue
+                gates[aircraft] = gate
             tails = [tail for tail in fleet[(carrier, aircraft)] if all(
                 previous_station == station and (end + timedelta(minutes=45) <= previous_begin
                                                   or begin >= previous_end + timedelta(minutes=45))
@@ -62,6 +81,11 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         aircraft = rng.choices(list(eligible), weights=[service["aircraft"][t] for t in eligible])[0]
         tail = rng.choice(eligible[aircraft])
         reservations[tail].append((begin, end, station))
+        if gate_window is not None:
+            gate = gates[aircraft]
+            gate_reservations[catalog()["footprints"][gate]].append(gate_window)
+            if station == "YYZ":
+                initial_gates[tail] = gate
         return aircraft, tail
 
     def message_for(profile, aircraft, tail, origin, destination, departure, arrival):
@@ -93,8 +117,9 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         departure = datetime.combine(day, time(rng.randint(6, 9), rng.randrange(60)), TORONTO).astimezone(timezone.utc)
         duration = timedelta(minutes=airports[station]["minutes"] + rng.randint(-10, 10))
         # No return is modeled for these aircraft, so exclude them from later rotations.
-        equipment = allocate(profile["carrier"], service, start, next_day, "YYZ")
-        require(equipment is not None, "snapshot has no available aircraft for initial state")
+        equipment = allocate(profile["carrier"], service, start, next_day, "YYZ",
+                             (start, departure if index < initial_departures else next_day))
+        require(equipment is not None, "not enough fleet or passenger-gate capacity for initial state")
         aircraft, tail = equipment
         parked_aircraft.append({"carrier": profile["carrier"], "registration": tail, "aircraftType": aircraft})
         if index < initial_departures:
@@ -144,12 +169,14 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
             turnaround = rng.randint(*service.get("turnaroundMinutes", [60, 100]))
             departure = arrival + timedelta(minutes=turnaround)
             # Reserve delay headroom so a later update cannot double-book a real tail.
+            has_outbound = index * 2 + 1 < remaining_flights
             equipment = allocate(profile["carrier"], service, arrival - duration,
-                                 departure + duration + timedelta(minutes=90), station)
+                                 departure + duration + timedelta(minutes=90), station,
+                                 (arrival, departure if has_outbound else next_day))
             if equipment is not None:
                 break
         else:
-            raise ValueError(f"cannot fit {flight_count} flights into the snapshot fleet for {profile['carrier']}; reduce --flights")
+            raise ValueError(f"cannot fit {flight_count} flights within fleet and passenger-gate capacity for {profile['carrier']}; reduce --flights")
         aircraft, tail = equipment
         inbound = message_for(profile, aircraft, tail, station, "YYZ", arrival - duration, arrival)
         initial_flights.append(inbound)
@@ -184,7 +211,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
             if action == "UpdateEquipment":
                 if departure != last_departure[message["flight"]["registration"]]:
                     continue
-                equipment = allocate(message["flight"]["carrier"], service, start, next_day, "YYZ")
+                equipment = allocate(message["flight"]["carrier"], service, start, next_day, "YYZ", (start, next_day))
                 if equipment is None:
                     continue
                 update["flight"]["aircraftType"], update["flight"]["registration"] = equipment
@@ -216,7 +243,8 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         update["legs"][0]["scheduledArrivalTime"] = early_arrival.astimezone(TORONTO).strftime("%H:%M")
         add(early_arrival - timedelta(seconds=rng.randint(5 * 60, 20 * 60)), update)
 
-    parked_aircraft, gates = initial_gate_state(parked_aircraft, assign=True)
+    parked_aircraft, gates = initial_gate_state([{**plane, "gate": initial_gates[plane["registration"]]}
+                                               for plane in parked_aircraft])
     add(start, {"action": "InitializeAirport", "flights": initial_flights,
                 "parkedAircraft": parked_aircraft, "gateOutages": [], "gateState": gates})
     events.sort(key=lambda event: event["timestamp"])
@@ -225,4 +253,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
                              "fleet_snapshot": fleet_snapshot["source"],
                              "fleet_source_sha256": fleet_snapshot["sourceSha256"]}, "events": events}
     validate_scenario(scenario)
+    baseline = GateState()
+    baseline.apply_message(scenario["events"][0]["message"], start)
+    baseline.check_baseline_capacity()
     return scenario

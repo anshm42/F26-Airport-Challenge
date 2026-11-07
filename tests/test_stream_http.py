@@ -237,6 +237,25 @@ class HttpTests(unittest.TestCase):
         records = Path(state["records_directory"]) / "deliveries.jsonl"
         self.assertEqual(json.loads(records.read_text().splitlines()[0])["matcher_response"], {"assignments": [choice]})
 
+    def test_overcapacity_baseline_is_rejected_before_any_delivery(self):
+        initial, arrival = self.gate_scenario()
+        initial["parkedAircraft"] = []
+        initial["flights"] = []
+        for index in range(4):
+            incoming = copy.deepcopy(arrival)
+            incoming["flight"].update(registration=f"C-OVER{index}", aircraftType="388")
+            incoming["legs"][0]["flightNumber"] = str(900 + index)
+            initial["flights"].append(incoming)
+        path = Path(self.options["scenario_path"])
+        scenario = json.loads(path.read_text())
+        scenario["events"][0]["message"] = initial
+        path.write_text(json.dumps(scenario))
+        status, error = self.request("POST", "/runs", self.options)
+        self.assertEqual(status, 400)
+        self.assertIn("baseline schedule exceeds passenger gate capacity", error["error"])
+        self.assertEqual(self.webhook.received, [])
+        self.assertEqual(self.control.manager.runs, {})
+
     def test_invalid_matcher_batch_keeps_occupancy_and_stops_delivery(self):
         initial, _ = self.gate_scenario()
         tail = initial["parkedAircraft"][0]["registration"]

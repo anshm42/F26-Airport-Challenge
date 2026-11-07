@@ -296,6 +296,29 @@ class GateState:
                 "unassigned_aircraft": [plane.copy() for tail, plane in sorted(self.grounded.items()) if tail not in occupied],
                 "planned_assignments": planned}
 
+    def check_baseline_capacity(self):
+        """Prove the known baseline fits at every movement/outage boundary."""
+        candidate = copy.deepcopy(self)
+        candidate.assignments.clear()
+        times = {self.now} | {when for when, _, _, _ in self._pending()}
+        times.update(when for _, start, end in self.outages for when in (start, end) if when is not None)
+        for when in sorted(when for when in times if when >= self.now and (self.day_end is None or when < self.day_end)):
+            candidate.advance(when)
+            capacities = {}
+            for gate in candidate.gates:
+                footprint = catalog()["footprints"][gate]
+                if not candidate._out_of_service(gate, when):
+                    capacities[footprint] = max(capacities.get(footprint, "A"), catalog()["gate_widths"][gate])
+            sizes = [catalog()["aircraft_widths"][plane["aircraftType"]]
+                     for plane in candidate.grounded.values()]
+            # Size classes form nested pools: every larger aircraft also consumes the smaller pool.
+            for size in "ABCDEF":
+                needed = sum(width >= size for width in sizes)
+                available = sum(width >= size for width in capacities.values())
+                require(needed <= available,
+                        f"baseline schedule exceeds passenger gate capacity at {utc_string(when)} "
+                        f"(class {size} or larger: {needed} aircraft, {available} usable positions)")
+
     def request(self, message):
         request = copy.deepcopy(message)
         for leg in request.get("legs", []):

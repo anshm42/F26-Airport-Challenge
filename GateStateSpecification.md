@@ -26,6 +26,10 @@ their values remain `null`. This conservative simulation rule avoids assuming an
 unverified simultaneous-use matrix. A and B subpositions are not independent
 capacity in this version.
 
+The 110 entries represent **92 independent conflict groups** under this rule.
+Usable capacity also depends on aircraft size and known outages; counting `null`
+entries alone does not establish available capacity.
+
 Occupants must be commercial passenger aircraft types configured in the stream's
 [traffic profiles](https://github.com/anshm42/F26-Airport-Challenge/blob/stream/data/stream_profiles.json),
 with exactly `serviceTypes: ["Passenger"]` in
@@ -75,6 +79,20 @@ later receive no initial gate and occupy no initial resource. The `flights` arra
 still contains the entire known schedule, but its flight/leg objects do not carry
 gate assignments. If the initialization includes `gateState`, it must exactly
 match `parkedAircraft` and contain all other gates as `null`.
+
+The initial known schedule must fit passenger parking **throughout the simulated
+day**, including idle aircraft, spares, every arrival-to-departure stay, and
+unpaired arrivals remaining until nightly reset. Apply IFATC size limits, shared
+swing/H resources, and outages already known in the snapshot. The generator
+reserves compatible positions for complete stays internally; those future choices
+are not transmitted as initial gate assignments. It resamples flights when no
+position fits and fails generation if capacity cannot be satisfied.
+
+Before starting replay, check baseline demand at every movement and known-outage
+boundary. An overcapacity baseline returns HTTP `400` from `POST /runs` before
+any webhook is sent. This is a guarantee about the initial schedule. Later
+announced early arrivals, delays, cancellations, and outages can create conflicts
+for the matcher to resolve.
 
 The matcher loads the supplied positions as current occupancy and plans the known
 flights. It does not choose replacement initial positions implicitly. It can

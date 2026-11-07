@@ -72,6 +72,7 @@ class Run:
         first = self.scenario["events"][0]
         if first["message"]["action"] == "InitializeAirport":
             self.gate_state.apply_message(first["message"], first["timestamp"])
+            self.gate_state.check_baseline_capacity()
         self.id = uuid.uuid4().hex
         self.webhook_url = webhook_url
         self.mode = mode

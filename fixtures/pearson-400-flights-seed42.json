@@ -9291,332 +9291,332 @@
             "carrier": "AC",
             "registration": "C-GJYA",
             "aircraftType": "223",
-            "gate": "D20"
+            "gate": "D26"
           },
           {
             "carrier": "AC",
             "registration": "C-GMYU",
             "aircraftType": "223",
-            "gate": "D22"
+            "gate": "D28"
           },
           {
             "carrier": "AC",
             "registration": "C-FLSU",
             "aircraftType": "320",
-            "gate": "D24"
-          },
-          {
-            "carrier": "AC",
-            "registration": "C-FKCO",
-            "aircraftType": "320",
-            "gate": "D26"
-          },
-          {
-            "carrier": "AC",
-            "registration": "C-FSIQ",
-            "aircraftType": "7M8",
-            "gate": "D28"
-          },
-          {
-            "carrier": "AC",
-            "registration": "C-GMIW",
-            "aircraftType": "7M8",
             "gate": "D31"
           },
           {
             "carrier": "AC",
-            "registration": "C-FCUG",
+            "registration": "C-FKCO",
             "aircraftType": "320",
             "gate": "D33"
           },
           {
             "carrier": "AC",
+            "registration": "C-FSIQ",
+            "aircraftType": "7M8",
+            "gate": "D35"
+          },
+          {
+            "carrier": "AC",
+            "registration": "C-GMIW",
+            "aircraftType": "7M8",
+            "gate": "D42"
+          },
+          {
+            "carrier": "AC",
+            "registration": "C-FCUG",
+            "aircraftType": "320",
+            "gate": "D44"
+          },
+          {
+            "carrier": "AC",
             "registration": "C-GJWD",
             "aircraftType": "321",
-            "gate": "D35"
+            "gate": "F60"
           },
           {
             "carrier": "AC",
             "registration": "C-GMZR",
             "aircraftType": "223",
-            "gate": "D37"
+            "gate": "F61"
           },
           {
             "carrier": "AC",
             "registration": "C-GROV",
             "aircraftType": "223",
-            "gate": "D38"
+            "gate": "F63"
           },
           {
             "carrier": "AC",
             "registration": "C-GJXV",
             "aircraftType": "223",
-            "gate": "D39"
+            "gate": "F65"
           },
           {
             "carrier": "AC",
             "registration": "C-GIUE",
             "aircraftType": "321",
-            "gate": "D40"
+            "gate": "D32"
           },
           {
             "carrier": "AC",
             "registration": "C-GEHI",
             "aircraftType": "7M8",
-            "gate": "D41"
+            "gate": "D36"
           },
           {
             "carrier": "AC",
             "registration": "C-GVDQ",
             "aircraftType": "223",
-            "gate": "D42"
+            "gate": "D51"
           },
           {
             "carrier": "AC",
             "registration": "C-FSEQ",
             "aircraftType": "7M8",
-            "gate": "D43"
+            "gate": "D53"
           },
           {
             "carrier": "TS",
             "registration": "C-GTSO",
             "aircraftType": "333",
-            "gate": "B27"
+            "gate": "C33"
           },
           {
             "carrier": "UA",
             "registration": "N37372",
             "aircraftType": "7M8",
-            "gate": "D44"
+            "gate": "D34"
           },
           {
             "carrier": "AC",
             "registration": "C-FSBV",
             "aircraftType": "789",
-            "gate": "D45"
+            "gate": "E76"
           },
           {
             "carrier": "DL",
             "registration": "N143DU",
             "aircraftType": "221",
-            "gate": "A11"
+            "gate": "B37"
           },
           {
             "carrier": "WS",
             "registration": "C-FUJR",
             "aircraftType": "738",
-            "gate": "A12"
+            "gate": "B39"
           },
           {
             "carrier": "LH",
             "registration": "D-ABYP",
             "aircraftType": "74H",
-            "gate": "E71"
+            "gate": "E75"
           },
           {
             "carrier": "WS",
             "registration": "C-FZWS",
             "aircraftType": "7M8",
-            "gate": "A13"
+            "gate": "B40"
           },
           {
             "carrier": "AC",
             "registration": "C-FSLU",
             "aircraftType": "7M8",
-            "gate": "F60"
+            "gate": "E67"
           },
           {
             "carrier": "AC",
             "registration": "C-FFWJ",
             "aircraftType": "320",
-            "gate": "F61"
+            "gate": "E68"
           },
           {
             "carrier": "WS",
             "registration": "C-GAWS",
             "aircraftType": "738",
-            "gate": "A14"
+            "gate": "A19"
           }
         ],
         "gateOutages": [],
         "gateState": {
-          "D20": {
+          "D20": null,
+          "D22": null,
+          "D24": null,
+          "D26": {
             "carrier": "AC",
             "registration": "C-GJYA",
             "aircraftType": "223"
           },
-          "D22": {
+          "D28": {
             "carrier": "AC",
             "registration": "C-GMYU",
             "aircraftType": "223"
           },
-          "D24": {
+          "D31": {
             "carrier": "AC",
             "registration": "C-FLSU",
             "aircraftType": "320"
           },
-          "D26": {
+          "D33": {
             "carrier": "AC",
             "registration": "C-FKCO",
             "aircraftType": "320"
           },
-          "D28": {
+          "D35": {
             "carrier": "AC",
             "registration": "C-FSIQ",
             "aircraftType": "7M8"
           },
-          "D31": {
+          "D37": null,
+          "D38": null,
+          "D39": null,
+          "D40": null,
+          "D41": null,
+          "D42": {
             "carrier": "AC",
             "registration": "C-GMIW",
             "aircraftType": "7M8"
           },
-          "D33": {
+          "D43": null,
+          "D44": {
             "carrier": "AC",
             "registration": "C-FCUG",
             "aircraftType": "320"
           },
-          "D35": {
+          "D45": null,
+          "F60": {
             "carrier": "AC",
             "registration": "C-GJWD",
             "aircraftType": "321"
           },
-          "D37": {
+          "F61": {
             "carrier": "AC",
             "registration": "C-GMZR",
             "aircraftType": "223"
           },
-          "D38": {
+          "F62": null,
+          "F63": {
             "carrier": "AC",
             "registration": "C-GROV",
             "aircraftType": "223"
           },
-          "D39": {
+          "F64": null,
+          "F65": {
             "carrier": "AC",
             "registration": "C-GJXV",
             "aircraftType": "223"
           },
-          "D40": {
-            "carrier": "AC",
-            "registration": "C-GIUE",
-            "aircraftType": "321"
-          },
-          "D41": {
-            "carrier": "AC",
-            "registration": "C-GEHI",
-            "aircraftType": "7M8"
-          },
-          "D42": {
-            "carrier": "AC",
-            "registration": "C-GVDQ",
-            "aircraftType": "223"
-          },
-          "D43": {
-            "carrier": "AC",
-            "registration": "C-FSEQ",
-            "aircraftType": "7M8"
-          },
-          "D44": {
-            "carrier": "UA",
-            "registration": "N37372",
-            "aircraftType": "7M8"
-          },
-          "D45": {
-            "carrier": "AC",
-            "registration": "C-FSBV",
-            "aircraftType": "789"
-          },
-          "F60": {
-            "carrier": "AC",
-            "registration": "C-FSLU",
-            "aircraftType": "7M8"
-          },
-          "F61": {
-            "carrier": "AC",
-            "registration": "C-FFWJ",
-            "aircraftType": "320"
-          },
-          "F62": null,
-          "F63": null,
-          "F64": null,
-          "F65": null,
           "E70": null,
-          "E71": {
+          "E71": null,
+          "E72": null,
+          "E73": null,
+          "E74": null,
+          "E75": {
             "carrier": "LH",
             "registration": "D-ABYP",
             "aircraftType": "74H"
           },
-          "E72": null,
-          "E73": null,
-          "E74": null,
-          "E75": null,
-          "E76": null,
+          "E76": {
+            "carrier": "AC",
+            "registration": "C-FSBV",
+            "aircraftType": "789"
+          },
           "E77": null,
           "E78": null,
           "E79": null,
           "E80": null,
           "E81": null,
-          "D32": null,
-          "D34": null,
-          "D36": null,
-          "D51": null,
-          "D53": null,
+          "D32": {
+            "carrier": "AC",
+            "registration": "C-GIUE",
+            "aircraftType": "321"
+          },
+          "D34": {
+            "carrier": "UA",
+            "registration": "N37372",
+            "aircraftType": "7M8"
+          },
+          "D36": {
+            "carrier": "AC",
+            "registration": "C-GEHI",
+            "aircraftType": "7M8"
+          },
+          "D51": {
+            "carrier": "AC",
+            "registration": "C-GVDQ",
+            "aircraftType": "223"
+          },
+          "D53": {
+            "carrier": "AC",
+            "registration": "C-FSEQ",
+            "aircraftType": "7M8"
+          },
           "D55": null,
           "D57": null,
           "E66": null,
-          "E67": null,
-          "E68": null,
+          "E67": {
+            "carrier": "AC",
+            "registration": "C-FSLU",
+            "aircraftType": "7M8"
+          },
+          "E68": {
+            "carrier": "AC",
+            "registration": "C-FFWJ",
+            "aircraftType": "320"
+          },
           "E69": null,
           "A7": null,
           "A8": null,
           "A10": null,
-          "A11": {
-            "carrier": "DL",
-            "registration": "N143DU",
-            "aircraftType": "221"
-          },
-          "A12": {
-            "carrier": "WS",
-            "registration": "C-FUJR",
-            "aircraftType": "738"
-          },
-          "A13": {
-            "carrier": "WS",
-            "registration": "C-FZWS",
-            "aircraftType": "7M8"
-          },
-          "A14": {
-            "carrier": "WS",
-            "registration": "C-GAWS",
-            "aircraftType": "738"
-          },
+          "A11": null,
+          "A12": null,
+          "A13": null,
+          "A14": null,
           "A15": null,
           "A16": null,
           "B22": null,
           "B24": null,
           "B25": null,
           "B26": null,
-          "B27": {
-            "carrier": "TS",
-            "registration": "C-GTSO",
-            "aircraftType": "333"
-          },
+          "B27": null,
           "B28": null,
           "B29": null,
           "C30": null,
           "C31": null,
           "C32": null,
-          "C33": null,
+          "C33": {
+            "carrier": "TS",
+            "registration": "C-GTSO",
+            "aircraftType": "333"
+          },
           "C34": null,
           "C35": null,
           "C36": null,
-          "B37": null,
+          "B37": {
+            "carrier": "DL",
+            "registration": "N143DU",
+            "aircraftType": "221"
+          },
           "B38": null,
-          "B39": null,
-          "B40": null,
+          "B39": {
+            "carrier": "WS",
+            "registration": "C-FUJR",
+            "aircraftType": "738"
+          },
+          "B40": {
+            "carrier": "WS",
+            "registration": "C-FZWS",
+            "aircraftType": "7M8"
+          },
           "B41": null,
           "A17": null,
           "A18": null,
-          "A19": null,
+          "A19": {
+            "carrier": "WS",
+            "registration": "C-GAWS",
+            "aircraftType": "738"
+          },
           "A20": null,
           "Remote Stand H01": null,
           "Remote Stand H01A": null,
