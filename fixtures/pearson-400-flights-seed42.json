@@ -30,6 +30,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "06:47",
                 "scheduledArrivalTime": "08:05"
               }
@@ -50,6 +51,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "09:02",
                 "scheduledArrivalTime": "10:12"
               }
@@ -70,6 +72,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:45",
                 "scheduledArrivalTime": "09:15",
                 "codeshare": [
@@ -96,6 +99,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "06:48",
                 "scheduledArrivalTime": "09:23",
                 "codeshare": [
@@ -122,6 +126,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:06",
                 "scheduledArrivalTime": "09:03"
               }
@@ -142,6 +147,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "06:46",
                 "scheduledArrivalTime": "09:30"
               }
@@ -162,6 +168,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:36",
                 "scheduledArrivalTime": "11:12"
               }
@@ -182,6 +189,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "06:54",
                 "scheduledArrivalTime": "09:31",
                 "codeshare": [
@@ -208,6 +216,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:23",
                 "scheduledArrivalTime": "10:04"
               }
@@ -228,6 +237,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:34",
                 "scheduledArrivalTime": "08:51",
                 "codeshare": [
@@ -254,6 +264,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:53",
                 "scheduledArrivalTime": "09:49"
               }
@@ -274,6 +285,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:04",
                 "scheduledArrivalTime": "11:10"
               }
@@ -294,6 +306,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "DFW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "08:46",
                 "scheduledArrivalTime": "13:26"
               }
@@ -314,6 +327,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "DFW",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "15:02",
                 "scheduledArrivalTime": "17:42",
                 "codeshare": [
@@ -340,6 +354,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:55",
                 "scheduledArrivalTime": "20:48"
               }
@@ -360,6 +375,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "22:15",
                 "scheduledArrivalTime": "01:08"
               }
@@ -380,6 +396,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "FRA",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "11:56",
                 "scheduledArrivalTime": "14:03"
               }
@@ -400,6 +417,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "FRA",
+                "trafficType": "International",
                 "scheduledDepartureTime": "16:18",
                 "scheduledArrivalTime": "06:25"
               }
@@ -420,6 +438,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YQB",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "17:23",
                 "scheduledArrivalTime": "18:57"
               }
@@ -440,6 +459,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YQB",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "20:36",
                 "scheduledArrivalTime": "22:10"
               }
@@ -460,6 +480,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YQT",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:29",
                 "scheduledArrivalTime": "13:16"
               }
@@ -480,6 +501,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YQT",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "14:56",
                 "scheduledArrivalTime": "16:43",
                 "codeshare": [
@@ -506,6 +528,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "05:02",
                 "scheduledArrivalTime": "10:15",
                 "codeshare": [
@@ -532,6 +555,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:36",
                 "scheduledArrivalTime": "14:49",
                 "codeshare": [
@@ -558,6 +582,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:21",
                 "scheduledArrivalTime": "17:13"
               }
@@ -578,6 +603,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "18:39",
                 "scheduledArrivalTime": "21:31",
                 "codeshare": [
@@ -604,6 +630,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "DEN",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "14:41",
                 "scheduledArrivalTime": "20:49"
               }
@@ -624,6 +651,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "DEN",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "21:50",
                 "scheduledArrivalTime": "23:58",
                 "codeshare": [
@@ -650,6 +678,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "18:44",
                 "scheduledArrivalTime": "19:57"
               }
@@ -670,6 +699,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "21:31",
                 "scheduledArrivalTime": "00:44"
               }
@@ -690,6 +720,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:26",
                 "scheduledArrivalTime": "12:31"
               }
@@ -710,6 +741,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:55",
                 "scheduledArrivalTime": "17:00"
               }
@@ -730,6 +762,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "ORD",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "12:49",
                 "scheduledArrivalTime": "15:34",
                 "codeshare": [
@@ -756,6 +789,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "ORD",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "16:59",
                 "scheduledArrivalTime": "17:44"
               }
@@ -776,6 +810,7 @@
                 "originatingDate": "2026-11-06",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "23:14",
                 "scheduledArrivalTime": "06:16",
                 "codeshare": [
@@ -802,6 +837,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:36",
                 "scheduledArrivalTime": "10:38"
               }
@@ -822,6 +858,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "09:51",
                 "scheduledArrivalTime": "10:53"
               }
@@ -842,6 +879,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "12:23",
                 "scheduledArrivalTime": "15:25",
                 "codeshare": [
@@ -868,6 +906,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YUL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "16:44",
                 "scheduledArrivalTime": "18:01",
                 "codeshare": [
@@ -894,6 +933,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "19:13",
                 "scheduledArrivalTime": "20:30",
                 "codeshare": [
@@ -920,6 +960,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YOW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "12:41",
                 "scheduledArrivalTime": "13:44"
               }
@@ -940,6 +981,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:07",
                 "scheduledArrivalTime": "16:10"
               }
@@ -960,6 +1002,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "02:58",
                 "scheduledArrivalTime": "10:06"
               }
@@ -980,6 +1023,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:07",
                 "scheduledArrivalTime": "14:15"
               }
@@ -1000,6 +1044,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "MIA",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "04:25",
                 "scheduledArrivalTime": "07:44"
               }
@@ -1020,6 +1065,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "MIA",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "09:22",
                 "scheduledArrivalTime": "12:41",
                 "codeshare": [
@@ -1046,6 +1092,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "04:42",
                 "scheduledArrivalTime": "07:32"
               }
@@ -1066,6 +1113,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:53",
                 "scheduledArrivalTime": "11:43",
                 "codeshare": [
@@ -1092,6 +1140,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "CDG",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "12:02",
                 "scheduledArrivalTime": "13:27",
                 "codeshare": [
@@ -1118,6 +1167,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "CDG",
+                "trafficType": "International",
                 "scheduledDepartureTime": "16:13",
                 "scheduledArrivalTime": "05:38"
               }
@@ -1138,6 +1188,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "ORD",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "10:24",
                 "scheduledArrivalTime": "13:27"
               }
@@ -1158,6 +1209,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "ORD",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "14:44",
                 "scheduledArrivalTime": "15:47",
                 "codeshare": [
@@ -1184,6 +1236,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "LGW",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "14:57",
                 "scheduledArrivalTime": "17:36"
               }
@@ -1204,6 +1257,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "LGW",
+                "trafficType": "International",
                 "scheduledDepartureTime": "20:18",
                 "scheduledArrivalTime": "08:57",
                 "codeshare": [
@@ -1230,6 +1284,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:06",
                 "scheduledArrivalTime": "18:16"
               }
@@ -1250,6 +1305,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "19:33",
                 "scheduledArrivalTime": "22:43"
               }
@@ -1270,6 +1326,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "12:11",
                 "scheduledArrivalTime": "17:26"
               }
@@ -1290,6 +1347,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "19:01",
                 "scheduledArrivalTime": "22:16"
               }
@@ -1310,6 +1368,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:20",
                 "scheduledArrivalTime": "13:50"
               }
@@ -1330,6 +1389,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "14:55",
                 "scheduledArrivalTime": "17:25",
                 "codeshare": [
@@ -1356,6 +1416,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YQT",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "12:42",
                 "scheduledArrivalTime": "14:33"
               }
@@ -1376,6 +1437,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YQT",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "16:00",
                 "scheduledArrivalTime": "17:51"
               }
@@ -1396,6 +1458,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YOW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "06:45",
                 "scheduledArrivalTime": "07:46"
               }
@@ -1416,6 +1479,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "09:06",
                 "scheduledArrivalTime": "10:07"
               }
@@ -1436,6 +1500,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "PHL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "09:03",
                 "scheduledArrivalTime": "10:46"
               }
@@ -1456,6 +1521,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "PHL",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "12:19",
                 "scheduledArrivalTime": "14:02",
                 "codeshare": [
@@ -1482,6 +1548,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "01:28",
                 "scheduledArrivalTime": "06:45"
               }
@@ -1502,6 +1569,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:53",
                 "scheduledArrivalTime": "11:10"
               }
@@ -1522,6 +1590,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "ORD",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "05:10",
                 "scheduledArrivalTime": "07:55"
               }
@@ -1542,6 +1611,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "ORD",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "09:31",
                 "scheduledArrivalTime": "10:16",
                 "codeshare": [
@@ -1568,6 +1638,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "06:50",
                 "scheduledArrivalTime": "07:52"
               }
@@ -1588,6 +1659,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "09:17",
                 "scheduledArrivalTime": "12:19",
                 "codeshare": [
@@ -1614,6 +1686,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "04:42",
                 "scheduledArrivalTime": "07:15"
               }
@@ -1634,6 +1707,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:50",
                 "scheduledArrivalTime": "11:23"
               }
@@ -1654,6 +1728,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "DEN",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "07:54",
                 "scheduledArrivalTime": "13:58",
                 "codeshare": [
@@ -1680,6 +1755,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "DEN",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "15:17",
                 "scheduledArrivalTime": "17:21"
               }
@@ -1700,6 +1776,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YUL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "16:43",
                 "scheduledArrivalTime": "18:13",
                 "codeshare": [
@@ -1726,6 +1803,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "19:26",
                 "scheduledArrivalTime": "20:56",
                 "codeshare": [
@@ -1752,6 +1830,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YUL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:59",
                 "scheduledArrivalTime": "12:28",
                 "codeshare": [
@@ -1778,6 +1857,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:58",
                 "scheduledArrivalTime": "15:27",
                 "codeshare": [
@@ -1804,6 +1884,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YOW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:11",
                 "scheduledArrivalTime": "16:14"
               }
@@ -1824,6 +1905,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "17:54",
                 "scheduledArrivalTime": "18:57"
               }
@@ -1844,6 +1926,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "03:45",
                 "scheduledArrivalTime": "08:58"
               }
@@ -1864,6 +1947,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:07",
                 "scheduledArrivalTime": "13:20"
               }
@@ -1884,6 +1968,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:48",
                 "scheduledArrivalTime": "13:07"
               }
@@ -1904,6 +1989,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "14:26",
                 "scheduledArrivalTime": "17:45"
               }
@@ -1924,6 +2010,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:27",
                 "scheduledArrivalTime": "20:27",
                 "codeshare": [
@@ -1950,6 +2037,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "22:05",
                 "scheduledArrivalTime": "01:05"
               }
@@ -1970,6 +2058,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "MCO",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "15:40",
                 "scheduledArrivalTime": "18:43"
               }
@@ -1990,6 +2079,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "MCO",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "20:19",
                 "scheduledArrivalTime": "23:22"
               }
@@ -2010,6 +2100,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "ORD",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "12:22",
                 "scheduledArrivalTime": "15:27",
                 "codeshare": [
@@ -2036,6 +2127,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "ORD",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "16:58",
                 "scheduledArrivalTime": "18:03",
                 "codeshare": [
@@ -2062,6 +2154,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "CDG",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "13:51",
                 "scheduledArrivalTime": "15:26"
               }
@@ -2082,6 +2175,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "CDG",
+                "trafficType": "International",
                 "scheduledDepartureTime": "17:44",
                 "scheduledArrivalTime": "07:19"
               }
@@ -2102,6 +2196,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "05:12",
                 "scheduledArrivalTime": "10:20"
               }
@@ -2122,6 +2217,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:45",
                 "scheduledArrivalTime": "14:53"
               }
@@ -2142,6 +2238,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "CUN",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "09:59",
                 "scheduledArrivalTime": "14:23",
                 "codeshare": [
@@ -2168,6 +2265,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "CUN",
+                "trafficType": "International",
                 "scheduledDepartureTime": "15:54",
                 "scheduledArrivalTime": "20:18"
               }
@@ -2188,6 +2286,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "CDG",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "12:47",
                 "scheduledArrivalTime": "14:07"
               }
@@ -2208,6 +2307,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "CDG",
+                "trafficType": "International",
                 "scheduledDepartureTime": "16:47",
                 "scheduledArrivalTime": "06:07",
                 "codeshare": [
@@ -2234,6 +2334,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "PHL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "05:46",
                 "scheduledArrivalTime": "07:14"
               }
@@ -2254,6 +2355,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "PHL",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "08:43",
                 "scheduledArrivalTime": "10:11"
               }
@@ -2274,6 +2376,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:38",
                 "scheduledArrivalTime": "12:53",
                 "codeshare": [
@@ -2300,6 +2403,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "14:23",
                 "scheduledArrivalTime": "17:38",
                 "codeshare": [
@@ -2326,6 +2430,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "DTW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "17:46",
                 "scheduledArrivalTime": "19:04",
                 "codeshare": [
@@ -2352,6 +2457,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "DTW",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "20:30",
                 "scheduledArrivalTime": "21:48",
                 "codeshare": [
@@ -2378,6 +2484,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "SFO",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "07:07",
                 "scheduledArrivalTime": "15:37",
                 "codeshare": [
@@ -2404,6 +2511,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "SFO",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "16:46",
                 "scheduledArrivalTime": "19:16"
               }
@@ -2424,6 +2532,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:14",
                 "scheduledArrivalTime": "20:20"
               }
@@ -2444,6 +2553,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "21:35",
                 "scheduledArrivalTime": "00:41"
               }
@@ -2464,6 +2574,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:16",
                 "scheduledArrivalTime": "17:58"
               }
@@ -2484,6 +2595,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "19:22",
                 "scheduledArrivalTime": "22:04"
               }
@@ -2504,6 +2616,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "16:22",
                 "scheduledArrivalTime": "19:06",
                 "codeshare": [
@@ -2530,6 +2643,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "20:12",
                 "scheduledArrivalTime": "22:56",
                 "codeshare": [
@@ -2556,6 +2670,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "ORD",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "04:37",
                 "scheduledArrivalTime": "07:30"
               }
@@ -2576,6 +2691,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "ORD",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "08:51",
                 "scheduledArrivalTime": "09:44"
               }
@@ -2596,6 +2712,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "SFO",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "05:59",
                 "scheduledArrivalTime": "14:24"
               }
@@ -2616,6 +2733,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "SFO",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "16:04",
                 "scheduledArrivalTime": "18:29",
                 "codeshare": [
@@ -2642,6 +2760,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "MSP",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "06:35",
                 "scheduledArrivalTime": "09:47"
               }
@@ -2662,6 +2781,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "MSP",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "11:14",
                 "scheduledArrivalTime": "12:26",
                 "codeshare": [
@@ -2688,6 +2808,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "14:55",
                 "scheduledArrivalTime": "20:01"
               }
@@ -2708,6 +2829,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "21:21",
                 "scheduledArrivalTime": "00:27"
               }
@@ -2728,6 +2850,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:08",
                 "scheduledArrivalTime": "15:43"
               }
@@ -2748,6 +2871,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "16:53",
                 "scheduledArrivalTime": "19:28"
               }
@@ -2768,6 +2892,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "MIA",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "12:50",
                 "scheduledArrivalTime": "16:15"
               }
@@ -2788,6 +2913,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "MIA",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "17:52",
                 "scheduledArrivalTime": "21:17"
               }
@@ -2808,6 +2934,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YQT",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "18:21",
                 "scheduledArrivalTime": "20:18"
               }
@@ -2828,6 +2955,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YQT",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "21:28",
                 "scheduledArrivalTime": "23:25",
                 "codeshare": [
@@ -2854,6 +2982,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "CUN",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "09:40",
                 "scheduledArrivalTime": "13:54",
                 "codeshare": [
@@ -2880,6 +3009,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "CUN",
+                "trafficType": "International",
                 "scheduledDepartureTime": "15:06",
                 "scheduledArrivalTime": "19:20"
               }
@@ -2900,6 +3030,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "ORD",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "14:33",
                 "scheduledArrivalTime": "17:18"
               }
@@ -2920,6 +3051,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "ORD",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "18:43",
                 "scheduledArrivalTime": "19:28"
               }
@@ -2940,6 +3072,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YQT",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "18:08",
                 "scheduledArrivalTime": "19:57",
                 "codeshare": [
@@ -2966,6 +3099,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YQT",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "21:11",
                 "scheduledArrivalTime": "23:00",
                 "codeshare": [
@@ -2992,6 +3126,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YOW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "14:51",
                 "scheduledArrivalTime": "16:06",
                 "codeshare": [
@@ -3018,6 +3153,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "17:08",
                 "scheduledArrivalTime": "18:23"
               }
@@ -3038,6 +3174,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "FRA",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "13:44",
                 "scheduledArrivalTime": "15:47"
               }
@@ -3058,6 +3195,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "FRA",
+                "trafficType": "International",
                 "scheduledDepartureTime": "17:58",
                 "scheduledArrivalTime": "08:01"
               }
@@ -3078,6 +3216,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "ORD",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "16:17",
                 "scheduledArrivalTime": "19:10"
               }
@@ -3098,6 +3237,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "ORD",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "20:40",
                 "scheduledArrivalTime": "21:33",
                 "codeshare": [
@@ -3124,6 +3264,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YUL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:31",
                 "scheduledArrivalTime": "08:48"
               }
@@ -3144,6 +3285,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:13",
                 "scheduledArrivalTime": "11:30"
               }
@@ -3164,6 +3306,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "DFW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "08:55",
                 "scheduledArrivalTime": "13:23",
                 "codeshare": [
@@ -3190,6 +3333,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "DFW",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "15:00",
                 "scheduledArrivalTime": "17:28",
                 "codeshare": [
@@ -3216,6 +3360,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "IAD",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "10:14",
                 "scheduledArrivalTime": "11:58"
               }
@@ -3236,6 +3381,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "IAD",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "13:12",
                 "scheduledArrivalTime": "14:56",
                 "codeshare": [
@@ -3262,6 +3408,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "MIA",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "02:43",
                 "scheduledArrivalTime": "06:02"
               }
@@ -3282,6 +3429,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "MIA",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "07:33",
                 "scheduledArrivalTime": "10:52",
                 "codeshare": [
@@ -3308,6 +3456,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "BOS",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "11:03",
                 "scheduledArrivalTime": "12:37"
               }
@@ -3328,6 +3477,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "BOS",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "14:03",
                 "scheduledArrivalTime": "15:37"
               }
@@ -3348,6 +3498,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "DFW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "12:57",
                 "scheduledArrivalTime": "17:23"
               }
@@ -3368,6 +3519,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "DFW",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "18:51",
                 "scheduledArrivalTime": "21:17",
                 "codeshare": [
@@ -3394,6 +3546,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YQB",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "04:57",
                 "scheduledArrivalTime": "06:25",
                 "codeshare": [
@@ -3420,6 +3573,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YQB",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:37",
                 "scheduledArrivalTime": "09:05",
                 "codeshare": [
@@ -3446,6 +3600,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YUL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "05:30",
                 "scheduledArrivalTime": "06:50",
                 "codeshare": [
@@ -3472,6 +3627,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:05",
                 "scheduledArrivalTime": "09:25"
               }
@@ -3492,6 +3648,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "14:48",
                 "scheduledArrivalTime": "19:55"
               }
@@ -3512,6 +3669,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "21:16",
                 "scheduledArrivalTime": "00:23",
                 "codeshare": [
@@ -3538,6 +3696,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "MCO",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "05:31",
                 "scheduledArrivalTime": "08:34",
                 "codeshare": [
@@ -3564,6 +3723,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "MCO",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "09:45",
                 "scheduledArrivalTime": "12:48"
               }
@@ -3584,6 +3744,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "MIA",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "07:46",
                 "scheduledArrivalTime": "11:01"
               }
@@ -3604,6 +3765,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "MIA",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "12:17",
                 "scheduledArrivalTime": "15:32"
               }
@@ -3624,6 +3786,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "FRA",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "15:44",
                 "scheduledArrivalTime": "17:37"
               }
@@ -3644,6 +3807,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "FRA",
+                "trafficType": "International",
                 "scheduledDepartureTime": "20:05",
                 "scheduledArrivalTime": "09:58"
               }
@@ -3664,6 +3828,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "CDG",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "13:20",
                 "scheduledArrivalTime": "14:43",
                 "codeshare": [
@@ -3690,6 +3855,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "CDG",
+                "trafficType": "International",
                 "scheduledDepartureTime": "17:14",
                 "scheduledArrivalTime": "06:37",
                 "codeshare": [
@@ -3716,6 +3882,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YUL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "06:48",
                 "scheduledArrivalTime": "08:17"
               }
@@ -3736,6 +3903,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "09:57",
                 "scheduledArrivalTime": "11:26"
               }
@@ -3756,6 +3924,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "06:47",
                 "scheduledArrivalTime": "07:50"
               }
@@ -3776,6 +3945,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "09:25",
                 "scheduledArrivalTime": "12:28"
               }
@@ -3796,6 +3966,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YQT",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:43",
                 "scheduledArrivalTime": "12:26",
                 "codeshare": [
@@ -3822,6 +3993,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YQT",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:46",
                 "scheduledArrivalTime": "15:29"
               }
@@ -3842,6 +4014,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YQT",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "05:23",
                 "scheduledArrivalTime": "07:05"
               }
@@ -3862,6 +4035,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YQT",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:10",
                 "scheduledArrivalTime": "09:52"
               }
@@ -3882,6 +4056,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "IAD",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "12:53",
                 "scheduledArrivalTime": "14:21"
               }
@@ -3902,6 +4077,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "IAD",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "15:47",
                 "scheduledArrivalTime": "17:15"
               }
@@ -3922,6 +4098,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "MCO",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "07:34",
                 "scheduledArrivalTime": "10:38",
                 "codeshare": [
@@ -3948,6 +4125,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "MCO",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "12:00",
                 "scheduledArrivalTime": "15:04"
               }
@@ -3968,6 +4146,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "04:47",
                 "scheduledArrivalTime": "11:54"
               }
@@ -3988,6 +4167,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:17",
                 "scheduledArrivalTime": "16:24"
               }
@@ -4008,6 +4188,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "SFO",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "11:05",
                 "scheduledArrivalTime": "19:39"
               }
@@ -4028,6 +4209,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "SFO",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "21:14",
                 "scheduledArrivalTime": "23:48"
               }
@@ -4048,6 +4230,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:09",
                 "scheduledArrivalTime": "17:48"
               }
@@ -4068,6 +4251,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "19:09",
                 "scheduledArrivalTime": "21:48"
               }
@@ -4088,6 +4272,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:50",
                 "scheduledArrivalTime": "17:40"
               }
@@ -4108,6 +4293,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "18:45",
                 "scheduledArrivalTime": "21:35"
               }
@@ -4128,6 +4314,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:57",
                 "scheduledArrivalTime": "17:20",
                 "codeshare": [
@@ -4154,6 +4341,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "18:58",
                 "scheduledArrivalTime": "22:21"
               }
@@ -4174,6 +4362,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YUL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "09:05",
                 "scheduledArrivalTime": "10:28",
                 "codeshare": [
@@ -4200,6 +4389,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:59",
                 "scheduledArrivalTime": "13:22"
               }
@@ -4220,6 +4410,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "06:00",
                 "scheduledArrivalTime": "07:18",
                 "codeshare": [
@@ -4246,6 +4437,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:49",
                 "scheduledArrivalTime": "12:07"
               }
@@ -4266,6 +4458,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "02:23",
                 "scheduledArrivalTime": "09:19"
               }
@@ -4286,6 +4479,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:27",
                 "scheduledArrivalTime": "13:23"
               }
@@ -4306,6 +4500,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YUL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "12:24",
                 "scheduledArrivalTime": "13:47"
               }
@@ -4326,6 +4521,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "14:58",
                 "scheduledArrivalTime": "16:21"
               }
@@ -4346,6 +4542,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "LHR",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "10:04",
                 "scheduledArrivalTime": "12:25"
               }
@@ -4366,6 +4563,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "LHR",
+                "trafficType": "International",
                 "scheduledDepartureTime": "14:52",
                 "scheduledArrivalTime": "03:13"
               }
@@ -4386,6 +4584,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "LHR",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "13:58",
                 "scheduledArrivalTime": "16:29",
                 "codeshare": [
@@ -4412,6 +4611,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "LHR",
+                "trafficType": "International",
                 "scheduledDepartureTime": "18:34",
                 "scheduledArrivalTime": "07:05"
               }
@@ -4432,6 +4632,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "14:09",
                 "scheduledArrivalTime": "19:19",
                 "codeshare": [
@@ -4458,6 +4659,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "20:33",
                 "scheduledArrivalTime": "23:43"
               }
@@ -4478,6 +4680,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:38",
                 "scheduledArrivalTime": "20:49"
               }
@@ -4498,6 +4701,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "22:11",
                 "scheduledArrivalTime": "01:22",
                 "codeshare": [
@@ -4524,6 +4728,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YOW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:39",
                 "scheduledArrivalTime": "08:38"
               }
@@ -4544,6 +4749,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "09:42",
                 "scheduledArrivalTime": "10:41"
               }
@@ -4564,6 +4770,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "12:25",
                 "scheduledArrivalTime": "13:43"
               }
@@ -4584,6 +4791,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:23",
                 "scheduledArrivalTime": "18:41"
               }
@@ -4604,6 +4812,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "CUN",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "09:03",
                 "scheduledArrivalTime": "13:28",
                 "codeshare": [
@@ -4630,6 +4839,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "CUN",
+                "trafficType": "International",
                 "scheduledDepartureTime": "14:47",
                 "scheduledArrivalTime": "19:12"
               }
@@ -4650,6 +4860,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YQT",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "04:12",
                 "scheduledArrivalTime": "06:03"
               }
@@ -4670,6 +4881,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YQT",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:21",
                 "scheduledArrivalTime": "09:12"
               }
@@ -4690,6 +4902,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "17:46",
                 "scheduledArrivalTime": "18:47"
               }
@@ -4710,6 +4923,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "20:15",
                 "scheduledArrivalTime": "23:16",
                 "codeshare": [
@@ -4736,6 +4950,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "EWR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "04:55",
                 "scheduledArrivalTime": "06:28"
               }
@@ -4756,6 +4971,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "EWR",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "07:49",
                 "scheduledArrivalTime": "09:22",
                 "codeshare": [
@@ -4782,6 +4998,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:47",
                 "scheduledArrivalTime": "13:33"
               }
@@ -4802,6 +5019,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:12",
                 "scheduledArrivalTime": "17:58"
               }
@@ -4822,6 +5040,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "LAX",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "06:33",
                 "scheduledArrivalTime": "15:03"
               }
@@ -4842,6 +5061,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "LAX",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "16:24",
                 "scheduledArrivalTime": "18:54"
               }
@@ -4862,6 +5082,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "17:59",
                 "scheduledArrivalTime": "19:09"
               }
@@ -4882,6 +5103,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "20:14",
                 "scheduledArrivalTime": "23:24",
                 "codeshare": [
@@ -4908,6 +5130,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:12",
                 "scheduledArrivalTime": "18:21"
               }
@@ -4928,6 +5151,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "19:54",
                 "scheduledArrivalTime": "23:03",
                 "codeshare": [
@@ -4954,6 +5178,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YOW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:39",
                 "scheduledArrivalTime": "11:49",
                 "codeshare": [
@@ -4980,6 +5205,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:01",
                 "scheduledArrivalTime": "14:11",
                 "codeshare": [
@@ -5006,6 +5232,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "17:18",
                 "scheduledArrivalTime": "18:34"
               }
@@ -5026,6 +5253,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "19:36",
                 "scheduledArrivalTime": "22:52"
               }
@@ -5046,6 +5274,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "JFK",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "06:35",
                 "scheduledArrivalTime": "08:10"
               }
@@ -5066,6 +5295,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "JFK",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "09:49",
                 "scheduledArrivalTime": "11:24",
                 "codeshare": [
@@ -5092,6 +5322,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:30",
                 "scheduledArrivalTime": "13:39",
                 "codeshare": [
@@ -5118,6 +5349,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:07",
                 "scheduledArrivalTime": "18:16"
               }
@@ -5138,6 +5370,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "04:35",
                 "scheduledArrivalTime": "11:43"
               }
@@ -5158,6 +5391,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:11",
                 "scheduledArrivalTime": "16:19"
               }
@@ -5178,6 +5412,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "EWR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "17:23",
                 "scheduledArrivalTime": "19:12"
               }
@@ -5198,6 +5433,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "EWR",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "20:20",
                 "scheduledArrivalTime": "22:09"
               }
@@ -5218,6 +5454,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:48",
                 "scheduledArrivalTime": "17:54",
                 "codeshare": [
@@ -5244,6 +5481,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "19:01",
                 "scheduledArrivalTime": "22:07"
               }
@@ -5264,6 +5502,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "06:51",
                 "scheduledArrivalTime": "07:58"
               }
@@ -5284,6 +5523,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "09:26",
                 "scheduledArrivalTime": "12:33"
               }
@@ -5304,6 +5544,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "CUN",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "03:11",
                 "scheduledArrivalTime": "07:23"
               }
@@ -5324,6 +5565,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "CUN",
+                "trafficType": "International",
                 "scheduledDepartureTime": "08:24",
                 "scheduledArrivalTime": "12:36"
               }
@@ -5344,6 +5586,7 @@
                 "originatingDate": "2026-11-06",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "23:13",
                 "scheduledArrivalTime": "06:18"
               }
@@ -5364,6 +5607,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:26",
                 "scheduledArrivalTime": "10:31",
                 "codeshare": [
@@ -5390,6 +5634,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:19",
                 "scheduledArrivalTime": "09:53",
                 "codeshare": [
@@ -5416,6 +5661,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:28",
                 "scheduledArrivalTime": "14:02",
                 "codeshare": [
@@ -5442,6 +5688,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YUL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:56",
                 "scheduledArrivalTime": "09:26"
               }
@@ -5462,6 +5709,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:05",
                 "scheduledArrivalTime": "12:35"
               }
@@ -5482,6 +5730,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "09:24",
                 "scheduledArrivalTime": "14:36"
               }
@@ -5502,6 +5751,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:45",
                 "scheduledArrivalTime": "18:57",
                 "codeshare": [
@@ -5528,6 +5778,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:44",
                 "scheduledArrivalTime": "16:05"
               }
@@ -5548,6 +5799,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "17:28",
                 "scheduledArrivalTime": "20:49"
               }
@@ -5568,6 +5820,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "05:50",
                 "scheduledArrivalTime": "12:55",
                 "codeshare": [
@@ -5594,6 +5847,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:57",
                 "scheduledArrivalTime": "17:02",
                 "codeshare": [
@@ -5620,6 +5874,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "DEN",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "03:36",
                 "scheduledArrivalTime": "09:46",
                 "codeshare": [
@@ -5646,6 +5901,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "DEN",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "10:52",
                 "scheduledArrivalTime": "13:02"
               }
@@ -5666,6 +5922,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YOW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "18:40",
                 "scheduledArrivalTime": "19:49",
                 "codeshare": [
@@ -5692,6 +5949,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "21:19",
                 "scheduledArrivalTime": "22:28"
               }
@@ -5712,6 +5970,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "03:51",
                 "scheduledArrivalTime": "09:02"
               }
@@ -5732,6 +5991,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:04",
                 "scheduledArrivalTime": "13:15"
               }
@@ -5752,6 +6012,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "01:28",
                 "scheduledArrivalTime": "06:48"
               }
@@ -5772,6 +6033,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:00",
                 "scheduledArrivalTime": "11:20"
               }
@@ -5792,6 +6054,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YUL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "17:00",
                 "scheduledArrivalTime": "18:23",
                 "codeshare": [
@@ -5818,6 +6081,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "19:48",
                 "scheduledArrivalTime": "21:11",
                 "codeshare": [
@@ -5844,6 +6108,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:30",
                 "scheduledArrivalTime": "20:51",
                 "codeshare": [
@@ -5870,6 +6135,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "22:08",
                 "scheduledArrivalTime": "01:29"
               }
@@ -5890,6 +6156,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "ORD",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "08:19",
                 "scheduledArrivalTime": "11:06"
               }
@@ -5910,6 +6177,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "ORD",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "12:26",
                 "scheduledArrivalTime": "13:13"
               }
@@ -5930,6 +6198,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:27",
                 "scheduledArrivalTime": "11:28",
                 "codeshare": [
@@ -5956,6 +6225,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "12:50",
                 "scheduledArrivalTime": "15:51"
               }
@@ -5976,6 +6246,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "LHR",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "11:47",
                 "scheduledArrivalTime": "14:23"
               }
@@ -5996,6 +6267,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "LHR",
+                "trafficType": "International",
                 "scheduledDepartureTime": "17:14",
                 "scheduledArrivalTime": "05:50",
                 "codeshare": [
@@ -6022,6 +6294,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YQT",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "04:26",
                 "scheduledArrivalTime": "06:08"
               }
@@ -6042,6 +6315,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YQT",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:23",
                 "scheduledArrivalTime": "09:05"
               }
@@ -6062,6 +6336,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YOW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:22",
                 "scheduledArrivalTime": "16:28"
               }
@@ -6082,6 +6357,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "17:51",
                 "scheduledArrivalTime": "18:57"
               }
@@ -6102,6 +6378,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "04:02",
                 "scheduledArrivalTime": "09:07"
               }
@@ -6122,6 +6399,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:18",
                 "scheduledArrivalTime": "13:23",
                 "codeshare": [
@@ -6148,6 +6426,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "LAX",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "04:44",
                 "scheduledArrivalTime": "13:13",
                 "codeshare": [
@@ -6174,6 +6453,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "LAX",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "14:31",
                 "scheduledArrivalTime": "17:00",
                 "codeshare": [
@@ -6200,6 +6480,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YOW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "19:36",
                 "scheduledArrivalTime": "20:45"
               }
@@ -6220,6 +6501,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "21:50",
                 "scheduledArrivalTime": "22:59"
               }
@@ -6240,6 +6522,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:14",
                 "scheduledArrivalTime": "20:19"
               }
@@ -6260,6 +6543,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "21:59",
                 "scheduledArrivalTime": "01:04",
                 "codeshare": [
@@ -6286,6 +6570,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "LHR",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "13:15",
                 "scheduledArrivalTime": "15:50"
               }
@@ -6306,6 +6591,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "LHR",
+                "trafficType": "International",
                 "scheduledDepartureTime": "17:51",
                 "scheduledArrivalTime": "06:26"
               }
@@ -6326,6 +6612,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YUL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "05:57",
                 "scheduledArrivalTime": "07:19"
               }
@@ -6346,6 +6633,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:49",
                 "scheduledArrivalTime": "10:11",
                 "codeshare": [
@@ -6372,6 +6660,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "FRA",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "05:24",
                 "scheduledArrivalTime": "07:28"
               }
@@ -6392,6 +6681,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "FRA",
+                "trafficType": "International",
                 "scheduledDepartureTime": "10:11",
                 "scheduledArrivalTime": "00:15"
               }
@@ -6412,6 +6702,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "LGW",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "10:51",
                 "scheduledArrivalTime": "13:27"
               }
@@ -6432,6 +6723,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "LGW",
+                "trafficType": "International",
                 "scheduledDepartureTime": "16:25",
                 "scheduledArrivalTime": "05:01",
                 "codeshare": [
@@ -6458,6 +6750,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YOW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:29",
                 "scheduledArrivalTime": "11:33"
               }
@@ -6478,6 +6771,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "12:38",
                 "scheduledArrivalTime": "13:42",
                 "codeshare": [
@@ -6504,6 +6798,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "LHR",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "07:03",
                 "scheduledArrivalTime": "09:42"
               }
@@ -6524,6 +6819,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "LHR",
+                "trafficType": "International",
                 "scheduledDepartureTime": "12:28",
                 "scheduledArrivalTime": "01:07"
               }
@@ -6544,6 +6840,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "CDG",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "11:22",
                 "scheduledArrivalTime": "13:02",
                 "codeshare": [
@@ -6570,6 +6867,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "CDG",
+                "trafficType": "International",
                 "scheduledDepartureTime": "15:51",
                 "scheduledArrivalTime": "05:31"
               }
@@ -6590,6 +6888,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:33",
                 "scheduledArrivalTime": "13:15",
                 "codeshare": [
@@ -6616,6 +6915,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "14:34",
                 "scheduledArrivalTime": "17:16"
               }
@@ -6636,6 +6936,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "09:59",
                 "scheduledArrivalTime": "15:09"
               }
@@ -6656,6 +6957,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "16:29",
                 "scheduledArrivalTime": "19:39",
                 "codeshare": [
@@ -6682,6 +6984,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "BOS",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "05:43",
                 "scheduledArrivalTime": "07:20",
                 "codeshare": [
@@ -6708,6 +7011,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "BOS",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "08:49",
                 "scheduledArrivalTime": "10:26",
                 "codeshare": [
@@ -6734,6 +7038,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "16:56",
                 "scheduledArrivalTime": "19:39"
               }
@@ -6754,6 +7059,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "20:54",
                 "scheduledArrivalTime": "23:37"
               }
@@ -6774,6 +7080,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "ORD",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "15:10",
                 "scheduledArrivalTime": "18:10"
               }
@@ -6794,6 +7101,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "ORD",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "19:42",
                 "scheduledArrivalTime": "20:42",
                 "codeshare": [
@@ -6820,6 +7128,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "FRA",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "11:05",
                 "scheduledArrivalTime": "13:13"
               }
@@ -6840,6 +7149,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "FRA",
+                "trafficType": "International",
                 "scheduledDepartureTime": "15:35",
                 "scheduledArrivalTime": "05:43"
               }
@@ -6860,6 +7170,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "12:11",
                 "scheduledArrivalTime": "17:23"
               }
@@ -6880,6 +7191,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "18:46",
                 "scheduledArrivalTime": "21:58",
                 "codeshare": [
@@ -6906,6 +7218,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "LHR",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "16:58",
                 "scheduledArrivalTime": "19:32",
                 "codeshare": [
@@ -6932,6 +7245,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "LHR",
+                "trafficType": "International",
                 "scheduledDepartureTime": "22:20",
                 "scheduledArrivalTime": "10:54",
                 "codeshare": [
@@ -6958,6 +7272,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:49",
                 "scheduledArrivalTime": "14:23"
               }
@@ -6978,6 +7293,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:35",
                 "scheduledArrivalTime": "18:09",
                 "codeshare": [
@@ -7004,6 +7320,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:44",
                 "scheduledArrivalTime": "18:30",
                 "codeshare": [
@@ -7030,6 +7347,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "19:59",
                 "scheduledArrivalTime": "22:45"
               }
@@ -7050,6 +7368,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:08",
                 "scheduledArrivalTime": "15:47"
               }
@@ -7070,6 +7389,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "17:24",
                 "scheduledArrivalTime": "20:03"
               }
@@ -7090,6 +7410,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YUL",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:08",
                 "scheduledArrivalTime": "11:21"
               }
@@ -7110,6 +7431,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YUL",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "12:47",
                 "scheduledArrivalTime": "14:00",
                 "codeshare": [
@@ -7136,6 +7458,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "14:13",
                 "scheduledArrivalTime": "15:14",
                 "codeshare": [
@@ -7162,6 +7485,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "16:51",
                 "scheduledArrivalTime": "19:52"
               }
@@ -7182,6 +7506,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "01:57",
                 "scheduledArrivalTime": "09:01"
               }
@@ -7202,6 +7527,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:21",
                 "scheduledArrivalTime": "13:25"
               }
@@ -7222,6 +7548,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "BOS",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "18:23",
                 "scheduledArrivalTime": "19:54",
                 "codeshare": [
@@ -7248,6 +7575,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "BOS",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "21:02",
                 "scheduledArrivalTime": "22:33"
               }
@@ -7268,6 +7596,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "03:12",
                 "scheduledArrivalTime": "08:29"
               }
@@ -7288,6 +7617,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "09:50",
                 "scheduledArrivalTime": "13:07",
                 "codeshare": [
@@ -7314,6 +7644,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "06:40",
                 "scheduledArrivalTime": "09:19",
                 "codeshare": [
@@ -7340,6 +7671,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "10:32",
                 "scheduledArrivalTime": "13:11",
                 "codeshare": [
@@ -7366,6 +7698,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "FRA",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "10:25",
                 "scheduledArrivalTime": "12:18"
               }
@@ -7386,6 +7719,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "FRA",
+                "trafficType": "International",
                 "scheduledDepartureTime": "14:54",
                 "scheduledArrivalTime": "04:47"
               }
@@ -7406,6 +7740,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "04:53",
                 "scheduledArrivalTime": "10:02"
               }
@@ -7426,6 +7761,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:07",
                 "scheduledArrivalTime": "14:16"
               }
@@ -7446,6 +7782,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "17:57",
                 "scheduledArrivalTime": "20:35",
                 "codeshare": [
@@ -7472,6 +7809,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "21:43",
                 "scheduledArrivalTime": "00:21"
               }
@@ -7492,6 +7830,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "DXB",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "04:23",
                 "scheduledArrivalTime": "09:06"
               }
@@ -7512,6 +7851,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "DXB",
+                "trafficType": "International",
                 "scheduledDepartureTime": "13:46",
                 "scheduledArrivalTime": "12:29",
                 "codeshare": [
@@ -7538,6 +7878,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "MCO",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "09:31",
                 "scheduledArrivalTime": "12:41",
                 "codeshare": [
@@ -7564,6 +7905,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "MCO",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "14:11",
                 "scheduledArrivalTime": "17:21"
               }
@@ -7584,6 +7926,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "MCO",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "13:34",
                 "scheduledArrivalTime": "16:36"
               }
@@ -7604,6 +7947,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "MCO",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "18:10",
                 "scheduledArrivalTime": "21:12",
                 "codeshare": [
@@ -7630,6 +7974,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "ORD",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "18:12",
                 "scheduledArrivalTime": "20:58"
               }
@@ -7650,6 +7995,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "ORD",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "22:23",
                 "scheduledArrivalTime": "23:09"
               }
@@ -7670,6 +8016,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "LHR",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "04:41",
                 "scheduledArrivalTime": "07:19",
                 "codeshare": [
@@ -7696,6 +8043,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "LHR",
+                "trafficType": "International",
                 "scheduledDepartureTime": "09:57",
                 "scheduledArrivalTime": "22:35"
               }
@@ -7716,6 +8064,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "14:52",
                 "scheduledArrivalTime": "20:08",
                 "codeshare": [
@@ -7742,6 +8091,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "21:37",
                 "scheduledArrivalTime": "00:53",
                 "codeshare": [
@@ -7768,6 +8118,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "12:06",
                 "scheduledArrivalTime": "17:11"
               }
@@ -7788,6 +8139,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "18:32",
                 "scheduledArrivalTime": "21:37",
                 "codeshare": [
@@ -7814,6 +8166,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "16:41",
                 "scheduledArrivalTime": "19:27",
                 "codeshare": [
@@ -7840,6 +8193,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "20:47",
                 "scheduledArrivalTime": "23:33",
                 "codeshare": [
@@ -7866,6 +8220,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YOW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "05:09",
                 "scheduledArrivalTime": "06:16"
               }
@@ -7886,6 +8241,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:31",
                 "scheduledArrivalTime": "08:38",
                 "codeshare": [
@@ -7912,6 +8268,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "03:40",
                 "scheduledArrivalTime": "10:41"
               }
@@ -7932,6 +8289,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:56",
                 "scheduledArrivalTime": "14:57",
                 "codeshare": [
@@ -7958,6 +8316,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "MSP",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "13:37",
                 "scheduledArrivalTime": "17:07",
                 "codeshare": [
@@ -7984,6 +8343,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "MSP",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "18:25",
                 "scheduledArrivalTime": "19:55",
                 "codeshare": [
@@ -8010,6 +8370,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YWG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "09:57",
                 "scheduledArrivalTime": "12:44"
               }
@@ -8030,6 +8391,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YWG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "14:14",
                 "scheduledArrivalTime": "17:01"
               }
@@ -8050,6 +8412,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YOW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:17",
                 "scheduledArrivalTime": "14:28",
                 "codeshare": [
@@ -8076,6 +8439,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YOW",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:51",
                 "scheduledArrivalTime": "17:02"
               }
@@ -8096,6 +8460,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:59",
                 "scheduledArrivalTime": "14:09",
                 "codeshare": [
@@ -8122,6 +8487,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:29",
                 "scheduledArrivalTime": "18:39",
                 "codeshare": [
@@ -8148,6 +8514,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:28",
                 "scheduledArrivalTime": "20:32"
               }
@@ -8168,6 +8535,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "21:35",
                 "scheduledArrivalTime": "00:39"
               }
@@ -8188,6 +8556,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "ORD",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "14:04",
                 "scheduledArrivalTime": "17:01"
               }
@@ -8208,6 +8577,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "ORD",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "18:17",
                 "scheduledArrivalTime": "19:14",
                 "codeshare": [
@@ -8234,6 +8604,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YVR",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:11",
                 "scheduledArrivalTime": "14:03",
                 "codeshare": [
@@ -8260,6 +8631,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YVR",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:33",
                 "scheduledArrivalTime": "18:25",
                 "codeshare": [
@@ -8286,6 +8658,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "CDG",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "14:25",
                 "scheduledArrivalTime": "15:57"
               }
@@ -8306,6 +8679,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "CDG",
+                "trafficType": "International",
                 "scheduledDepartureTime": "18:25",
                 "scheduledArrivalTime": "07:57"
               }
@@ -8326,6 +8700,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:01",
                 "scheduledArrivalTime": "14:08"
               }
@@ -8346,6 +8721,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:08",
                 "scheduledArrivalTime": "18:15"
               }
@@ -8366,6 +8742,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "18:07",
                 "scheduledArrivalTime": "19:14",
                 "codeshare": [
@@ -8392,6 +8769,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "20:43",
                 "scheduledArrivalTime": "23:50"
               }
@@ -8412,6 +8790,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "DFW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "14:09",
                 "scheduledArrivalTime": "18:42",
                 "codeshare": [
@@ -8438,6 +8817,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "DFW",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "20:21",
                 "scheduledArrivalTime": "22:54",
                 "codeshare": [
@@ -8464,6 +8844,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "JFK",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "14:12",
                 "scheduledArrivalTime": "15:43"
               }
@@ -8484,6 +8865,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "JFK",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "16:58",
                 "scheduledArrivalTime": "18:29"
               }
@@ -8504,6 +8886,7 @@
                 "originatingDate": "2026-11-06",
                 "departureStation": "SFO",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "21:37",
                 "scheduledArrivalTime": "06:08"
               }
@@ -8524,6 +8907,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "SFO",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "07:26",
                 "scheduledArrivalTime": "09:57"
               }
@@ -8544,6 +8928,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "DTW",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "09:42",
                 "scheduledArrivalTime": "10:56",
                 "codeshare": [
@@ -8570,6 +8955,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "DTW",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "12:29",
                 "scheduledArrivalTime": "13:43"
               }
@@ -8590,6 +8976,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:30",
                 "scheduledArrivalTime": "16:42"
               }
@@ -8610,6 +8997,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "18:15",
                 "scheduledArrivalTime": "21:27",
                 "codeshare": [
@@ -8636,6 +9024,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:47",
                 "scheduledArrivalTime": "09:54"
               }
@@ -8656,6 +9045,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "11:13",
                 "scheduledArrivalTime": "14:20"
               }
@@ -8676,6 +9066,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YHZ",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:29",
                 "scheduledArrivalTime": "14:33",
                 "codeshare": [
@@ -8702,6 +9093,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YHZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "15:57",
                 "scheduledArrivalTime": "19:01",
                 "codeshare": [
@@ -8728,6 +9120,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYC",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "02:28",
                 "scheduledArrivalTime": "07:34"
               }
@@ -8748,6 +9141,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YYC",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "08:37",
                 "scheduledArrivalTime": "11:43"
               }
@@ -8768,6 +9162,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "BOS",
                 "arrivalStation": "YYZ",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "07:54",
                 "scheduledArrivalTime": "09:30",
                 "codeshare": [
@@ -8794,6 +9189,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "BOS",
+                "trafficType": "Transborder",
                 "scheduledDepartureTime": "10:51",
                 "scheduledArrivalTime": "12:27"
               }
@@ -8814,6 +9210,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "LHR",
                 "arrivalStation": "YYZ",
+                "trafficType": "International",
                 "scheduledDepartureTime": "12:31",
                 "scheduledArrivalTime": "14:58"
               }
@@ -8834,6 +9231,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "LHR",
+                "trafficType": "International",
                 "scheduledDepartureTime": "17:42",
                 "scheduledArrivalTime": "06:09",
                 "codeshare": [
@@ -8860,6 +9258,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YEG",
                 "arrivalStation": "YYZ",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "07:07",
                 "scheduledArrivalTime": "12:29"
               }
@@ -8880,6 +9279,7 @@
                 "originatingDate": "2026-11-07",
                 "departureStation": "YYZ",
                 "arrivalStation": "YEG",
+                "trafficType": "Domestic",
                 "scheduledDepartureTime": "13:51",
                 "scheduledArrivalTime": "17:13"
               }
@@ -8890,130 +9290,367 @@
           {
             "carrier": "AC",
             "registration": "C-GJYA",
-            "aircraftType": "223"
+            "aircraftType": "223",
+            "gate": "D26"
           },
           {
             "carrier": "AC",
             "registration": "C-GMYU",
-            "aircraftType": "223"
+            "aircraftType": "223",
+            "gate": "D28"
           },
           {
             "carrier": "AC",
             "registration": "C-FLSU",
-            "aircraftType": "320"
+            "aircraftType": "320",
+            "gate": "D31"
           },
           {
             "carrier": "AC",
             "registration": "C-FKCO",
-            "aircraftType": "320"
+            "aircraftType": "320",
+            "gate": "D33"
           },
           {
             "carrier": "AC",
             "registration": "C-FSIQ",
-            "aircraftType": "7M8"
+            "aircraftType": "7M8",
+            "gate": "D35"
           },
           {
             "carrier": "AC",
             "registration": "C-GMIW",
-            "aircraftType": "7M8"
+            "aircraftType": "7M8",
+            "gate": "D42"
           },
           {
             "carrier": "AC",
             "registration": "C-FCUG",
-            "aircraftType": "320"
+            "aircraftType": "320",
+            "gate": "D44"
           },
           {
             "carrier": "AC",
             "registration": "C-GJWD",
-            "aircraftType": "321"
+            "aircraftType": "321",
+            "gate": "F60"
           },
           {
             "carrier": "AC",
             "registration": "C-GMZR",
-            "aircraftType": "223"
+            "aircraftType": "223",
+            "gate": "F61"
           },
           {
             "carrier": "AC",
             "registration": "C-GROV",
-            "aircraftType": "223"
+            "aircraftType": "223",
+            "gate": "F63"
           },
           {
             "carrier": "AC",
             "registration": "C-GJXV",
-            "aircraftType": "223"
+            "aircraftType": "223",
+            "gate": "F65"
           },
           {
             "carrier": "AC",
             "registration": "C-GIUE",
-            "aircraftType": "321"
+            "aircraftType": "321",
+            "gate": "D32"
           },
           {
             "carrier": "AC",
             "registration": "C-GEHI",
-            "aircraftType": "7M8"
+            "aircraftType": "7M8",
+            "gate": "D36"
           },
           {
             "carrier": "AC",
             "registration": "C-GVDQ",
-            "aircraftType": "223"
+            "aircraftType": "223",
+            "gate": "D51"
           },
           {
             "carrier": "AC",
             "registration": "C-FSEQ",
-            "aircraftType": "7M8"
+            "aircraftType": "7M8",
+            "gate": "D53"
           },
           {
             "carrier": "TS",
             "registration": "C-GTSO",
-            "aircraftType": "333"
+            "aircraftType": "333",
+            "gate": "C33"
           },
           {
             "carrier": "UA",
             "registration": "N37372",
-            "aircraftType": "7M8"
+            "aircraftType": "7M8",
+            "gate": "D34"
           },
           {
             "carrier": "AC",
             "registration": "C-FSBV",
-            "aircraftType": "789"
+            "aircraftType": "789",
+            "gate": "E76"
           },
           {
             "carrier": "DL",
             "registration": "N143DU",
-            "aircraftType": "221"
+            "aircraftType": "221",
+            "gate": "B37"
           },
           {
             "carrier": "WS",
             "registration": "C-FUJR",
-            "aircraftType": "738"
+            "aircraftType": "738",
+            "gate": "B39"
           },
           {
             "carrier": "LH",
             "registration": "D-ABYP",
-            "aircraftType": "74H"
+            "aircraftType": "74H",
+            "gate": "E75"
           },
           {
             "carrier": "WS",
             "registration": "C-FZWS",
-            "aircraftType": "7M8"
+            "aircraftType": "7M8",
+            "gate": "B40"
           },
           {
             "carrier": "AC",
             "registration": "C-FSLU",
-            "aircraftType": "7M8"
+            "aircraftType": "7M8",
+            "gate": "E67"
           },
           {
             "carrier": "AC",
             "registration": "C-FFWJ",
-            "aircraftType": "320"
+            "aircraftType": "320",
+            "gate": "E68"
           },
           {
             "carrier": "WS",
             "registration": "C-GAWS",
-            "aircraftType": "738"
+            "aircraftType": "738",
+            "gate": "A19"
           }
         ],
-        "gateOutages": []
+        "gateOutages": [],
+        "gateState": {
+          "D20": null,
+          "D22": null,
+          "D24": null,
+          "D26": {
+            "carrier": "AC",
+            "registration": "C-GJYA",
+            "aircraftType": "223"
+          },
+          "D28": {
+            "carrier": "AC",
+            "registration": "C-GMYU",
+            "aircraftType": "223"
+          },
+          "D31": {
+            "carrier": "AC",
+            "registration": "C-FLSU",
+            "aircraftType": "320"
+          },
+          "D33": {
+            "carrier": "AC",
+            "registration": "C-FKCO",
+            "aircraftType": "320"
+          },
+          "D35": {
+            "carrier": "AC",
+            "registration": "C-FSIQ",
+            "aircraftType": "7M8"
+          },
+          "D37": null,
+          "D38": null,
+          "D39": null,
+          "D40": null,
+          "D41": null,
+          "D42": {
+            "carrier": "AC",
+            "registration": "C-GMIW",
+            "aircraftType": "7M8"
+          },
+          "D43": null,
+          "D44": {
+            "carrier": "AC",
+            "registration": "C-FCUG",
+            "aircraftType": "320"
+          },
+          "D45": null,
+          "F60": {
+            "carrier": "AC",
+            "registration": "C-GJWD",
+            "aircraftType": "321"
+          },
+          "F61": {
+            "carrier": "AC",
+            "registration": "C-GMZR",
+            "aircraftType": "223"
+          },
+          "F62": null,
+          "F63": {
+            "carrier": "AC",
+            "registration": "C-GROV",
+            "aircraftType": "223"
+          },
+          "F64": null,
+          "F65": {
+            "carrier": "AC",
+            "registration": "C-GJXV",
+            "aircraftType": "223"
+          },
+          "E70": null,
+          "E71": null,
+          "E72": null,
+          "E73": null,
+          "E74": null,
+          "E75": {
+            "carrier": "LH",
+            "registration": "D-ABYP",
+            "aircraftType": "74H"
+          },
+          "E76": {
+            "carrier": "AC",
+            "registration": "C-FSBV",
+            "aircraftType": "789"
+          },
+          "E77": null,
+          "E78": null,
+          "E79": null,
+          "E80": null,
+          "E81": null,
+          "D32": {
+            "carrier": "AC",
+            "registration": "C-GIUE",
+            "aircraftType": "321"
+          },
+          "D34": {
+            "carrier": "UA",
+            "registration": "N37372",
+            "aircraftType": "7M8"
+          },
+          "D36": {
+            "carrier": "AC",
+            "registration": "C-GEHI",
+            "aircraftType": "7M8"
+          },
+          "D51": {
+            "carrier": "AC",
+            "registration": "C-GVDQ",
+            "aircraftType": "223"
+          },
+          "D53": {
+            "carrier": "AC",
+            "registration": "C-FSEQ",
+            "aircraftType": "7M8"
+          },
+          "D55": null,
+          "D57": null,
+          "E66": null,
+          "E67": {
+            "carrier": "AC",
+            "registration": "C-FSLU",
+            "aircraftType": "7M8"
+          },
+          "E68": {
+            "carrier": "AC",
+            "registration": "C-FFWJ",
+            "aircraftType": "320"
+          },
+          "E69": null,
+          "A7": null,
+          "A8": null,
+          "A10": null,
+          "A11": null,
+          "A12": null,
+          "A13": null,
+          "A14": null,
+          "A15": null,
+          "A16": null,
+          "B22": null,
+          "B24": null,
+          "B25": null,
+          "B26": null,
+          "B27": null,
+          "B28": null,
+          "B29": null,
+          "C30": null,
+          "C31": null,
+          "C32": null,
+          "C33": {
+            "carrier": "TS",
+            "registration": "C-GTSO",
+            "aircraftType": "333"
+          },
+          "C34": null,
+          "C35": null,
+          "C36": null,
+          "B37": {
+            "carrier": "DL",
+            "registration": "N143DU",
+            "aircraftType": "221"
+          },
+          "B38": null,
+          "B39": {
+            "carrier": "WS",
+            "registration": "C-FUJR",
+            "aircraftType": "738"
+          },
+          "B40": {
+            "carrier": "WS",
+            "registration": "C-FZWS",
+            "aircraftType": "7M8"
+          },
+          "B41": null,
+          "A17": null,
+          "A18": null,
+          "A19": {
+            "carrier": "WS",
+            "registration": "C-GAWS",
+            "aircraftType": "738"
+          },
+          "A20": null,
+          "Remote Stand H01": null,
+          "Remote Stand H01A": null,
+          "Remote Stand H01B": null,
+          "Remote Stand H02": null,
+          "Remote Stand H02A": null,
+          "Remote Stand H02B": null,
+          "Remote Stand H03": null,
+          "Remote Stand H03A": null,
+          "Remote Stand H03B": null,
+          "Remote Stand H04": null,
+          "Remote Stand H04A": null,
+          "Remote Stand H04B": null,
+          "Remote Stand H05": null,
+          "Remote Stand H05A": null,
+          "Remote Stand H05B": null,
+          "Remote Stand H06": null,
+          "Remote Stand H06A": null,
+          "Remote Stand H06B": null,
+          "Remote Stand H07": null,
+          "Remote Stand H08": null,
+          "Remote Stand H09": null,
+          "Remote Stand H10": null,
+          "Remote Stand H11": null,
+          "Remote Stand H11A": null,
+          "Remote Stand H11B": null,
+          "Remote Stand H12": null,
+          "Remote Stand H12A": null,
+          "Remote Stand H12B": null,
+          "Remote Stand H13": null,
+          "Remote Stand H13A": null,
+          "Remote Stand H13B": null,
+          "Remote Stand H14": null
+        }
       }
     },
     {
@@ -9033,6 +9670,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YQT",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "04:26",
             "scheduledArrivalTime": "05:40"
           }
@@ -9056,6 +9694,7 @@
             "originatingDate": "2026-11-06",
             "departureStation": "YVR",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "23:13",
             "scheduledArrivalTime": "05:54"
           }
@@ -9079,6 +9718,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YQT",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "08:52",
             "scheduledArrivalTime": "10:34"
           }
@@ -9102,6 +9742,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YOW",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "05:09",
             "scheduledArrivalTime": "06:08"
           }
@@ -9125,6 +9766,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YVR",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "07:58",
             "scheduledArrivalTime": "11:03",
             "codeshare": [
@@ -9154,6 +9796,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YQB",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "04:57",
             "scheduledArrivalTime": "06:16",
             "codeshare": [
@@ -9170,7 +9813,7 @@
       "timestamp": "2026-11-07T11:11:50Z",
       "message": {
         "action": "GateOutage",
-        "gate": "D45",
+        "gate": "F60",
         "scheduledStartTime": "06:31",
         "scheduledEndTime": "08:39"
       }
@@ -9192,6 +9835,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YQB",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "08:09",
             "scheduledArrivalTime": "09:37",
             "codeshare": [
@@ -9221,6 +9865,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YVR",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "08:20",
             "scheduledArrivalTime": "11:22"
           }
@@ -9242,7 +9887,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YOW"
+            "arrivalStation": "YOW",
+            "trafficType": "Domestic"
           }
         ],
         "cancelScope": {
@@ -9265,7 +9911,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YOW"
+            "arrivalStation": "YOW",
+            "trafficType": "Domestic"
           }
         ]
       }
@@ -9287,6 +9934,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "MIA",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "07:57",
             "scheduledArrivalTime": "11:16",
             "codeshare": [
@@ -9316,6 +9964,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "FRA",
             "arrivalStation": "YYZ",
+            "trafficType": "International",
             "scheduledDepartureTime": "05:24",
             "scheduledArrivalTime": "07:07"
           }
@@ -9339,6 +9988,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "CUN",
             "arrivalStation": "YYZ",
+            "trafficType": "International",
             "scheduledDepartureTime": "03:11",
             "scheduledArrivalTime": "07:11"
           }
@@ -9362,6 +10012,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YUL",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "05:57",
             "scheduledArrivalTime": "07:06"
           }
@@ -9385,6 +10036,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "MIA",
             "arrivalStation": "YYZ",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "04:25",
             "scheduledArrivalTime": "07:17"
           }
@@ -9406,7 +10058,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YYC"
+            "arrivalStation": "YYC",
+            "trafficType": "Domestic"
           }
         ],
         "cancelScope": {
@@ -9431,6 +10084,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "CUN",
+            "trafficType": "International",
             "scheduledDepartureTime": "09:27",
             "scheduledArrivalTime": "13:39"
           }
@@ -9452,7 +10106,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YYC"
+            "arrivalStation": "YYC",
+            "trafficType": "Domestic"
           }
         ]
       }
@@ -9474,6 +10129,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YUL",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "08:40",
             "scheduledArrivalTime": "10:00"
           }
@@ -9497,6 +10153,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YHZ",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "06:47",
             "scheduledArrivalTime": "07:46"
           }
@@ -9520,6 +10177,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YUL",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "10:12",
             "scheduledArrivalTime": "11:34",
             "codeshare": [
@@ -9547,7 +10205,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YWG"
+            "arrivalStation": "YWG",
+            "trafficType": "Domestic"
           }
         ],
         "cancelScope": {
@@ -9570,7 +10229,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "BOS"
+            "arrivalStation": "BOS",
+            "trafficType": "Transborder"
           }
         ],
         "cancelScope": {
@@ -9593,7 +10253,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "BOS"
+            "arrivalStation": "BOS",
+            "trafficType": "Transborder"
           }
         ]
       }
@@ -9615,6 +10276,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YWG",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "08:58",
             "scheduledArrivalTime": "11:48",
             "codeshare": [
@@ -9644,6 +10306,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "MIA",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "10:45",
             "scheduledArrivalTime": "14:04",
             "codeshare": [
@@ -9673,6 +10336,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "ORD",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "10:08",
             "scheduledArrivalTime": "10:53",
             "codeshare": [
@@ -9702,6 +10366,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "MCO",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "10:05",
             "scheduledArrivalTime": "13:08"
           }
@@ -9725,6 +10390,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YEG",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "04:02",
             "scheduledArrivalTime": "08:47"
           }
@@ -9748,6 +10414,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YYC",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "10:12",
             "scheduledArrivalTime": "13:29",
             "codeshare": [
@@ -9777,6 +10444,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YHZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "10:04",
             "scheduledArrivalTime": "13:11"
           }
@@ -9798,7 +10466,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YEG"
+            "arrivalStation": "YEG",
+            "trafficType": "Domestic"
           }
         ],
         "cancelScope": {
@@ -9823,6 +10492,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "DXB",
             "arrivalStation": "YYZ",
+            "trafficType": "International",
             "scheduledDepartureTime": "04:23",
             "scheduledArrivalTime": "08:55"
           }
@@ -9846,6 +10516,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YVR",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "02:23",
             "scheduledArrivalTime": "09:07"
           }
@@ -9867,7 +10538,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YVR"
+            "arrivalStation": "YVR",
+            "trafficType": "Domestic"
           }
         ],
         "cancelScope": {
@@ -9892,6 +10564,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YWG",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "11:04",
             "scheduledArrivalTime": "13:43",
             "codeshare": [
@@ -9921,6 +10594,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "LHR",
+            "trafficType": "International",
             "scheduledDepartureTime": "10:55",
             "scheduledArrivalTime": "23:33"
           }
@@ -9944,6 +10618,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYC",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "04:53",
             "scheduledArrivalTime": "09:32"
           }
@@ -9965,7 +10640,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "MSP"
+            "arrivalStation": "MSP",
+            "trafficType": "Transborder"
           }
         ],
         "cancelScope": {
@@ -9990,6 +10666,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "PHL",
             "arrivalStation": "YYZ",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "09:03",
             "scheduledArrivalTime": "10:20"
           }
@@ -10013,6 +10690,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YHZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "11:50",
             "scheduledArrivalTime": "14:57"
           }
@@ -10034,7 +10712,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "DEN"
+            "arrivalStation": "DEN",
+            "trafficType": "Transborder"
           }
         ],
         "cancelScope": {
@@ -10059,6 +10738,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "PHL",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "12:21",
             "scheduledArrivalTime": "14:04",
             "codeshare": [
@@ -10088,6 +10768,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "LHR",
+            "trafficType": "International",
             "scheduledDepartureTime": "13:40",
             "scheduledArrivalTime": "02:19"
           }
@@ -10111,6 +10792,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "MIA",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "13:04",
             "scheduledArrivalTime": "16:19"
           }
@@ -10134,6 +10816,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YVR",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "04:47",
             "scheduledArrivalTime": "11:40"
           }
@@ -10155,7 +10838,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "ORD"
+            "arrivalStation": "ORD",
+            "trafficType": "Transborder"
           }
         ],
         "cancelScope": {
@@ -10180,6 +10864,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "LHR",
             "arrivalStation": "YYZ",
+            "trafficType": "International",
             "scheduledDepartureTime": "10:04",
             "scheduledArrivalTime": "12:12"
           }
@@ -10203,6 +10888,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YUL",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "10:59",
             "scheduledArrivalTime": "12:16",
             "codeshare": [
@@ -10232,6 +10918,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YWG",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "09:57",
             "scheduledArrivalTime": "12:22"
           }
@@ -10255,6 +10942,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "FRA",
             "arrivalStation": "YYZ",
+            "trafficType": "International",
             "scheduledDepartureTime": "10:25",
             "scheduledArrivalTime": "12:15"
           }
@@ -10278,6 +10966,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "BOS",
             "arrivalStation": "YYZ",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "11:03",
             "scheduledArrivalTime": "12:19"
           }
@@ -10301,6 +10990,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "CDG",
             "arrivalStation": "YYZ",
+            "trafficType": "International",
             "scheduledDepartureTime": "11:22",
             "scheduledArrivalTime": "12:34",
             "codeshare": [
@@ -10330,6 +11020,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YVR",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "13:31",
             "scheduledArrivalTime": "16:38"
           }
@@ -10353,6 +11044,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYC",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "07:38",
             "scheduledArrivalTime": "12:44",
             "codeshare": [
@@ -10382,6 +11074,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YVR",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "05:50",
             "scheduledArrivalTime": "12:51",
             "codeshare": [
@@ -10411,6 +11104,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YQT",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "11:29",
             "scheduledArrivalTime": "13:01"
           }
@@ -10434,6 +11128,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "BOS",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "14:52",
             "scheduledArrivalTime": "16:26"
           }
@@ -10457,6 +11152,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "LAX",
             "arrivalStation": "YYZ",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "04:44",
             "scheduledArrivalTime": "13:00",
             "codeshare": [
@@ -10486,6 +11182,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "DFW",
             "arrivalStation": "YYZ",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "08:46",
             "scheduledArrivalTime": "13:01"
           }
@@ -10509,6 +11206,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "LGW",
             "arrivalStation": "YYZ",
+            "trafficType": "International",
             "scheduledDepartureTime": "10:51",
             "scheduledArrivalTime": "12:58"
           }
@@ -10532,6 +11230,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYC",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "08:30",
             "scheduledArrivalTime": "13:14",
             "codeshare": [
@@ -10559,7 +11258,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "MCO"
+            "arrivalStation": "MCO",
+            "trafficType": "Transborder"
           }
         ],
         "cancelScope": {
@@ -10584,6 +11284,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "CUN",
             "arrivalStation": "YYZ",
+            "trafficType": "International",
             "scheduledDepartureTime": "09:03",
             "scheduledArrivalTime": "13:20",
             "codeshare": [
@@ -10611,7 +11312,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YWG"
+            "arrivalStation": "YWG",
+            "trafficType": "Domestic"
           }
         ],
         "equipmentUpdate": {
@@ -10636,6 +11338,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YUL",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "12:24",
             "scheduledArrivalTime": "13:25"
           }
@@ -10657,7 +11360,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YYC"
+            "arrivalStation": "YYC",
+            "trafficType": "Domestic"
           }
         ],
         "equipmentUpdate": {
@@ -10682,6 +11386,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YUL",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "14:44",
             "scheduledArrivalTime": "16:13",
             "codeshare": [
@@ -10711,6 +11416,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "LAX",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "15:40",
             "scheduledArrivalTime": "18:09",
             "codeshare": [
@@ -10738,7 +11444,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "MCO"
+            "arrivalStation": "MCO",
+            "trafficType": "Transborder"
           }
         ]
       }
@@ -10760,6 +11467,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YVR",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "15:25",
             "scheduledArrivalTime": "18:30",
             "codeshare": [
@@ -10789,6 +11497,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YHZ",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "12:25",
             "scheduledArrivalTime": "13:27"
           }
@@ -10812,6 +11521,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "CDG",
             "arrivalStation": "YYZ",
+            "trafficType": "International",
             "scheduledDepartureTime": "12:47",
             "scheduledArrivalTime": "13:42"
           }
@@ -10835,6 +11545,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "DEN",
             "arrivalStation": "YYZ",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "07:54",
             "scheduledArrivalTime": "13:53",
             "codeshare": [
@@ -10864,6 +11575,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YWG",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "16:14",
             "scheduledArrivalTime": "18:44",
             "codeshare": [
@@ -10893,6 +11605,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "CUN",
+            "trafficType": "International",
             "scheduledDepartureTime": "16:35",
             "scheduledArrivalTime": "20:49"
           }
@@ -10916,6 +11629,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "IAD",
             "arrivalStation": "YYZ",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "12:53",
             "scheduledArrivalTime": "13:53"
           }
@@ -10937,7 +11651,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "ORD"
+            "arrivalStation": "ORD",
+            "trafficType": "Transborder"
           }
         ],
         "cancelScope": {
@@ -10962,6 +11677,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "FRA",
+            "trafficType": "International",
             "scheduledDepartureTime": "15:15",
             "scheduledArrivalTime": "05:08"
           }
@@ -10985,6 +11701,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YEG",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "08:59",
             "scheduledArrivalTime": "14:08",
             "codeshare": [
@@ -11014,6 +11731,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "SFO",
             "arrivalStation": "YYZ",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "05:59",
             "scheduledArrivalTime": "14:03"
           }
@@ -11037,6 +11755,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "DFW",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "15:30",
             "scheduledArrivalTime": "17:58",
             "codeshare": [
@@ -11066,6 +11785,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YWG",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "11:49",
             "scheduledArrivalTime": "14:21"
           }
@@ -11087,7 +11807,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YYC"
+            "arrivalStation": "YYC",
+            "trafficType": "Domestic"
           }
         ],
         "equipmentUpdate": {
@@ -11112,6 +11833,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YQT",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "15:15",
             "scheduledArrivalTime": "17:02",
             "codeshare": [
@@ -11139,7 +11861,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YOW"
+            "arrivalStation": "YOW",
+            "trafficType": "Domestic"
           }
         ],
         "cancelScope": {
@@ -11151,7 +11874,7 @@
       "timestamp": "2026-11-07T19:26:49Z",
       "message": {
         "action": "GateOutage",
-        "gate": "B4",
+        "gate": "C31",
         "scheduledStartTime": "14:41",
         "scheduledEndTime": "17:16"
       }
@@ -11171,7 +11894,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "DEN"
+            "arrivalStation": "DEN",
+            "trafficType": "Transborder"
           }
         ],
         "equipmentUpdate": {
@@ -11196,6 +11920,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YOW",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "16:06",
             "scheduledArrivalTime": "17:17"
           }
@@ -11219,6 +11944,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "CDG",
+            "trafficType": "International",
             "scheduledDepartureTime": "16:20",
             "scheduledArrivalTime": "06:00"
           }
@@ -11242,6 +11968,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YQT",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "17:03",
             "scheduledArrivalTime": "18:54"
           }
@@ -11263,7 +11990,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YEG"
+            "arrivalStation": "YEG",
+            "trafficType": "Domestic"
           }
         ],
         "cancelScope": {
@@ -11288,6 +12016,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YWG",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "13:08",
             "scheduledArrivalTime": "15:17"
           }
@@ -11311,6 +12040,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "FRA",
+            "trafficType": "International",
             "scheduledDepartureTime": "15:50",
             "scheduledArrivalTime": "05:58"
           }
@@ -11332,7 +12062,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "LGW"
+            "arrivalStation": "LGW",
+            "trafficType": "International"
           }
         ],
         "cancelScope": {
@@ -11357,6 +12088,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "FRA",
             "arrivalStation": "YYZ",
+            "trafficType": "International",
             "scheduledDepartureTime": "13:44",
             "scheduledArrivalTime": "15:22"
           }
@@ -11378,7 +12110,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "LGW"
+            "arrivalStation": "LGW",
+            "trafficType": "International"
           }
         ]
       }
@@ -11400,6 +12133,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "LAX",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "17:43",
             "scheduledArrivalTime": "20:13"
           }
@@ -11423,6 +12157,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "FRA",
+            "trafficType": "International",
             "scheduledDepartureTime": "16:59",
             "scheduledArrivalTime": "07:06"
           }
@@ -11446,6 +12181,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "CDG",
+            "trafficType": "International",
             "scheduledDepartureTime": "17:09",
             "scheduledArrivalTime": "06:29",
             "codeshare": [
@@ -11475,6 +12211,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YEG",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "10:44",
             "scheduledArrivalTime": "15:36"
           }
@@ -11496,7 +12233,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "CDG"
+            "arrivalStation": "CDG",
+            "trafficType": "International"
           }
         ],
         "equipmentUpdate": {
@@ -11521,6 +12259,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "MIA",
             "arrivalStation": "YYZ",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "12:50",
             "scheduledArrivalTime": "15:58"
           }
@@ -11544,6 +12283,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YWG",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "17:43",
             "scheduledArrivalTime": "20:18"
           }
@@ -11567,6 +12307,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "JFK",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "17:48",
             "scheduledArrivalTime": "19:19"
           }
@@ -11590,6 +12331,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YHZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "17:00",
             "scheduledArrivalTime": "20:01"
           }
@@ -11613,6 +12355,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYC",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "11:30",
             "scheduledArrivalTime": "16:13"
           }
@@ -11636,6 +12379,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "ORD",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "18:03",
             "scheduledArrivalTime": "18:48"
           }
@@ -11659,6 +12403,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "MSP",
             "arrivalStation": "YYZ",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "13:37",
             "scheduledArrivalTime": "16:47",
             "codeshare": [
@@ -11688,6 +12433,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "MIA",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "18:35",
             "scheduledArrivalTime": "22:00"
           }
@@ -11711,6 +12457,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "DFW",
             "arrivalStation": "YYZ",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "12:57",
             "scheduledArrivalTime": "17:09"
           }
@@ -11734,6 +12481,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YYC",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "18:38",
             "scheduledArrivalTime": "21:50",
             "codeshare": [
@@ -11761,7 +12509,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "FRA"
+            "arrivalStation": "FRA",
+            "trafficType": "International"
           }
         ],
         "equipmentUpdate": {
@@ -11784,7 +12533,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "CDG"
+            "arrivalStation": "CDG",
+            "trafficType": "International"
           }
         ],
         "cancelScope": {
@@ -11809,6 +12559,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYC",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "12:11",
             "scheduledArrivalTime": "17:20"
           }
@@ -11830,7 +12581,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "CDG"
+            "arrivalStation": "CDG",
+            "trafficType": "International"
           }
         ]
       }
@@ -11852,6 +12604,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YUL",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "16:44",
             "scheduledArrivalTime": "17:37",
             "codeshare": [
@@ -11881,6 +12634,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "ORD",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "18:33",
             "scheduledArrivalTime": "19:30",
             "codeshare": [
@@ -11908,7 +12662,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YYC"
+            "arrivalStation": "YYC",
+            "trafficType": "Domestic"
           }
         ],
         "equipmentUpdate": {
@@ -11933,6 +12688,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YVR",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "19:54",
             "scheduledArrivalTime": "22:46",
             "codeshare": [
@@ -11962,6 +12718,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YVR",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "10:48",
             "scheduledArrivalTime": "17:35",
             "codeshare": [
@@ -11978,7 +12735,7 @@
       "timestamp": "2026-11-07T22:33:43Z",
       "message": {
         "action": "GateOutage",
-        "gate": "A13",
+        "gate": "B24",
         "scheduledStartTime": "17:53",
         "scheduledEndTime": "18:44"
       }
@@ -12000,6 +12757,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "ORD",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "19:28",
             "scheduledArrivalTime": "20:13"
           }
@@ -12023,6 +12781,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YUL",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "16:43",
             "scheduledArrivalTime": "18:06",
             "codeshare": [
@@ -12052,6 +12811,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YEG",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "19:08",
             "scheduledArrivalTime": "22:13",
             "codeshare": [
@@ -12079,7 +12839,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YUL"
+            "arrivalStation": "YUL",
+            "trafficType": "Domestic"
           }
         ],
         "cancelScope": {
@@ -12104,6 +12865,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YUL",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "17:00",
             "scheduledArrivalTime": "18:02",
             "codeshare": [
@@ -12133,6 +12895,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YYC",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "19:09",
             "scheduledArrivalTime": "22:24"
           }
@@ -12156,6 +12919,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YEG",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "19:48",
             "scheduledArrivalTime": "23:11"
           }
@@ -12177,7 +12941,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YUL"
+            "arrivalStation": "YUL",
+            "trafficType": "Domestic"
           }
         ]
       }
@@ -12199,6 +12964,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YHZ",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "17:18",
             "scheduledArrivalTime": "18:23"
           }
@@ -12222,6 +12988,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YHZ",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "17:46",
             "scheduledArrivalTime": "18:24"
           }
@@ -12243,7 +13010,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YWG"
+            "arrivalStation": "YWG",
+            "trafficType": "Domestic"
           }
         ],
         "equipmentUpdate": {
@@ -12268,6 +13036,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YWG",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "16:22",
             "scheduledArrivalTime": "18:39",
             "codeshare": [
@@ -12297,6 +13066,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "EWR",
             "arrivalStation": "YYZ",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "17:23",
             "scheduledArrivalTime": "18:50"
           }
@@ -12320,6 +13090,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YHZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "20:56",
             "scheduledArrivalTime": "00:12"
           }
@@ -12343,6 +13114,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YHZ",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "17:59",
             "scheduledArrivalTime": "19:06"
           }
@@ -12366,6 +13138,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "MCO",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "20:48",
             "scheduledArrivalTime": "23:51"
           }
@@ -12389,6 +13162,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YYC",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "20:01",
             "scheduledArrivalTime": "23:11"
           }
@@ -12410,7 +13184,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YWG"
+            "arrivalStation": "YWG",
+            "trafficType": "Domestic"
           }
         ],
         "cancelScope": {
@@ -12435,6 +13210,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "EWR",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "21:22",
             "scheduledArrivalTime": "23:11"
           }
@@ -12458,6 +13234,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YHZ",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "18:44",
             "scheduledArrivalTime": "19:53"
           }
@@ -12479,7 +13256,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "DTW"
+            "arrivalStation": "DTW",
+            "trafficType": "Transborder"
           }
         ],
         "equipmentUpdate": {
@@ -12504,6 +13282,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYC",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "15:14",
             "scheduledArrivalTime": "20:15"
           }
@@ -12527,6 +13306,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YEG",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "15:30",
             "scheduledArrivalTime": "20:31",
             "codeshare": [
@@ -12556,6 +13336,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YYC",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "22:11",
             "scheduledArrivalTime": "01:17"
           }
@@ -12579,6 +13360,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYC",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "15:38",
             "scheduledArrivalTime": "20:28"
           }
@@ -12600,7 +13382,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YVR"
+            "arrivalStation": "YVR",
+            "trafficType": "Domestic"
           }
         ],
         "equipmentUpdate": {
@@ -12625,6 +13408,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YVR",
             "arrivalStation": "YYZ",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "13:28",
             "scheduledArrivalTime": "20:31"
           }
@@ -12646,7 +13430,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "BOS"
+            "arrivalStation": "BOS",
+            "trafficType": "Transborder"
           }
         ],
         "cancelScope": {
@@ -12671,6 +13456,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YYC",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "21:38",
             "scheduledArrivalTime": "00:54",
             "codeshare": [
@@ -12698,7 +13484,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YYC"
+            "arrivalStation": "YYC",
+            "trafficType": "Domestic"
           }
         ],
         "cancelScope": {
@@ -12723,6 +13510,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YEG",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "23:03",
             "scheduledArrivalTime": "02:24"
           }
@@ -12744,7 +13532,8 @@
             "flightSuffix": null,
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
-            "arrivalStation": "YYC"
+            "arrivalStation": "YYC",
+            "trafficType": "Domestic"
           }
         ]
       }
@@ -12766,6 +13555,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "DEN",
+            "trafficType": "Transborder",
             "scheduledDepartureTime": "22:10",
             "scheduledArrivalTime": "00:18",
             "codeshare": [
@@ -12795,6 +13585,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YVR",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "22:56",
             "scheduledArrivalTime": "01:49"
           }
@@ -12818,6 +13609,7 @@
             "originatingDate": "2026-11-07",
             "departureStation": "YYZ",
             "arrivalStation": "YOW",
+            "trafficType": "Domestic",
             "scheduledDepartureTime": "22:04",
             "scheduledArrivalTime": "23:13"
           }

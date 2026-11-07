@@ -242,3 +242,17 @@ the documented swing pairs, passenger walking-class coverage and shared-alias
 consistency, the closed Gate 272 exception, aircraft-code coverage,
 shared model groups, and representative passenger/cargo/combi classifications.
 It does not certify the underlying sources as current operational data.
+
+## Stream traffic profiles and historical aircraft
+
+[stream_profiles.json](stream_profiles.json) supplies the synthetic scenario
+generator with a Pearson-serving carrier subset, route groups, weighted aircraft
+types, explicit operator codes, registration validation patterns, and station time zones. It contains no gate
+assignments and is separate from the airport and aircraft reference datasets.
+[opensky_fleet_2025.json](opensky_fleet_2025.json) contains actual registration/type
+pairs extracted from OpenSky's August 2025 snapshot. It retains original operator
+ICAO/IATA codes and the complete source CSV's SHA-256. It excludes unknown types,
+conflicting tails, incompatible nationality formats, and records marked inactive
+or expired. Missing fields and historical ownership can still be stale. It is a
+simulation pool, not a current fleet or airworthiness register.
+See [generation and limitations](../docs/stream.md#generate-a-scenario).

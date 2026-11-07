@@ -1,0 +1,699 @@
+{
+  "reviewedOn": "2026-11-07",
+  "scope": "Synthetic Pearson passenger routes and scheduling weights. Aircraft registrations and equipment come from the checked-in OpenSky August 2025 fleet subset. No gate assignments.",
+  "sources": {
+    "departures": "https://www.torontopearson.com/en/departures",
+    "arrivals": "https://www.torontopearson.com/en/arrivals",
+    "airlines": "https://www.torontopearson.com/en/airlines/",
+    "nationalityMarks": "https://www.icao.int/nationality-marks",
+    "opensky": "https://opensky-network.org/datasets/#metadata/"
+  },
+  "sourceNote": "Pearson arrivals/departures inform route groups and carrier weights. Fleet membership comes only from explicit operator ICAO codes in OpenSky 2025-08, never owner-name guesses. POE and PTR are explicitly grouped under Porter public code PD; raw operator codes are retained. Registrations must match the operator country. Historical records may be stale or incomplete.",
+  "airports": {
+    "YYZ": {
+      "timeZone": "America/Toronto",
+      "minutes": 0,
+      "countryCode": "CA"
+    },
+    "YUL": {
+      "timeZone": "America/Toronto",
+      "minutes": 80,
+      "countryCode": "CA"
+    },
+    "YOW": {
+      "timeZone": "America/Toronto",
+      "minutes": 65,
+      "countryCode": "CA"
+    },
+    "YVR": {
+      "timeZone": "America/Vancouver",
+      "minutes": 300,
+      "countryCode": "CA"
+    },
+    "YYC": {
+      "timeZone": "America/Edmonton",
+      "minutes": 250,
+      "countryCode": "CA"
+    },
+    "YEG": {
+      "timeZone": "America/Edmonton",
+      "minutes": 255,
+      "countryCode": "CA"
+    },
+    "YWG": {
+      "timeZone": "America/Winnipeg",
+      "minutes": 160,
+      "countryCode": "CA"
+    },
+    "YHZ": {
+      "timeZone": "America/Halifax",
+      "minutes": 130,
+      "countryCode": "CA"
+    },
+    "YQB": {
+      "timeZone": "America/Toronto",
+      "minutes": 90,
+      "countryCode": "CA"
+    },
+    "YQT": {
+      "timeZone": "America/Toronto",
+      "minutes": 110,
+      "countryCode": "CA"
+    },
+    "JFK": {
+      "timeZone": "America/New_York",
+      "minutes": 100,
+      "countryCode": "US"
+    },
+    "EWR": {
+      "timeZone": "America/New_York",
+      "minutes": 100,
+      "countryCode": "US"
+    },
+    "ORD": {
+      "timeZone": "America/Chicago",
+      "minutes": 115,
+      "countryCode": "US"
+    },
+    "IAD": {
+      "timeZone": "America/New_York",
+      "minutes": 95,
+      "countryCode": "US"
+    },
+    "BOS": {
+      "timeZone": "America/New_York",
+      "minutes": 100,
+      "countryCode": "US"
+    },
+    "ATL": {
+      "timeZone": "America/New_York",
+      "minutes": 150,
+      "countryCode": "US"
+    },
+    "DTW": {
+      "timeZone": "America/Detroit",
+      "minutes": 80,
+      "countryCode": "US"
+    },
+    "MSP": {
+      "timeZone": "America/Chicago",
+      "minutes": 140,
+      "countryCode": "US"
+    },
+    "DFW": {
+      "timeZone": "America/Chicago",
+      "minutes": 210,
+      "countryCode": "US"
+    },
+    "MIA": {
+      "timeZone": "America/New_York",
+      "minutes": 200,
+      "countryCode": "US"
+    },
+    "MCO": {
+      "timeZone": "America/New_York",
+      "minutes": 185,
+      "countryCode": "US"
+    },
+    "PHL": {
+      "timeZone": "America/New_York",
+      "minutes": 95,
+      "countryCode": "US"
+    },
+    "LAX": {
+      "timeZone": "America/Los_Angeles",
+      "minutes": 320,
+      "countryCode": "US"
+    },
+    "SFO": {
+      "timeZone": "America/Los_Angeles",
+      "minutes": 325,
+      "countryCode": "US"
+    },
+    "DEN": {
+      "timeZone": "America/Denver",
+      "minutes": 240,
+      "countryCode": "US"
+    },
+    "CUN": {
+      "timeZone": "America/Cancun",
+      "minutes": 255,
+      "countryCode": "MX"
+    },
+    "LHR": {
+      "timeZone": "Europe/London",
+      "minutes": 450,
+      "countryCode": "GB"
+    },
+    "LGW": {
+      "timeZone": "Europe/London",
+      "minutes": 450,
+      "countryCode": "GB"
+    },
+    "CDG": {
+      "timeZone": "Europe/Paris",
+      "minutes": 450,
+      "countryCode": "FR"
+    },
+    "FRA": {
+      "timeZone": "Europe/Berlin",
+      "minutes": 480,
+      "countryCode": "DE"
+    },
+    "MUC": {
+      "timeZone": "Europe/Berlin",
+      "minutes": 480,
+      "countryCode": "DE"
+    },
+    "DXB": {
+      "timeZone": "Asia/Dubai",
+      "minutes": 820,
+      "countryCode": "AE"
+    }
+  },
+  "carriers": [
+    {
+      "carrier": "AC",
+      "name": "Air Canada",
+      "weight": 49,
+      "flightNumberStart": 100,
+      "fleetSource": "https://www.aircanada.com/ca/en/aco/home/fly/onboard/fleet.html",
+      "services": [
+        {
+          "weight": 36,
+          "stations": [
+            "YUL",
+            "YOW",
+            "YWG",
+            "YHZ"
+          ],
+          "aircraft": {
+            "223": 35,
+            "7M8": 25,
+            "320": 15,
+            "321": 25
+          }
+        },
+        {
+          "weight": 20,
+          "stations": [
+            "YVR",
+            "YYC",
+            "YEG"
+          ],
+          "aircraft": {
+            "7M8": 35,
+            "321": 30,
+            "333": 15,
+            "789": 20
+          }
+        },
+        {
+          "weight": 14,
+          "stations": [
+            "YUL",
+            "YOW",
+            "YQB",
+            "YQT"
+          ],
+          "aircraft": {
+            "DH4": 35,
+            "CR9": 35,
+            "E75": 30
+          }
+        },
+        {
+          "weight": 22,
+          "stations": [
+            "EWR",
+            "ORD",
+            "IAD",
+            "BOS",
+            "MIA",
+            "LAX",
+            "SFO"
+          ],
+          "aircraft": {
+            "223": 25,
+            "7M8": 30,
+            "320": 15,
+            "321": 20,
+            "E75": 10
+          }
+        },
+        {
+          "weight": 8,
+          "stations": [
+            "LHR",
+            "CDG",
+            "FRA"
+          ],
+          "aircraft": {
+            "789": 45,
+            "788": 10,
+            "77W": 30,
+            "333": 15
+          },
+          "arrivalHours": [
+            7,
+            9,
+            12,
+            14,
+            16
+          ],
+          "turnaroundMinutes": [
+            120,
+            180
+          ]
+        }
+      ],
+      "operatorIcaos": [
+        "ACA"
+      ],
+      "registrationPattern": "C-[FG][A-Z]{3}",
+      "operatorIatas": [
+        "AC"
+      ]
+    },
+    {
+      "carrier": "WS",
+      "name": "WestJet",
+      "weight": 16,
+      "flightNumberStart": 300,
+      "fleetSource": "https://www.westjet.com/en-ca/aircraft",
+      "services": [
+        {
+          "weight": 80,
+          "stations": [
+            "YVR",
+            "YYC",
+            "YEG",
+            "YWG",
+            "YHZ"
+          ],
+          "aircraft": {
+            "7M8": 55,
+            "738": 40,
+            "73G": 5
+          }
+        },
+        {
+          "weight": 20,
+          "stations": [
+            "MCO",
+            "CUN"
+          ],
+          "aircraft": {
+            "7M8": 60,
+            "738": 40
+          }
+        }
+      ],
+      "operatorIcaos": [
+        "WJA"
+      ],
+      "registrationPattern": "C-[FG][A-Z]{3}",
+      "operatorIatas": [
+        "WS"
+      ]
+    },
+    {
+      "carrier": "PD",
+      "name": "Porter",
+      "weight": 10,
+      "flightNumberStart": 2000,
+      "fleetSource": "https://www.flyporter.com/en-ca/about-porter/our-fleet/embraer-e195-e2",
+      "services": [
+        {
+          "weight": 1,
+          "stations": [
+            "YUL",
+            "YOW",
+            "YVR",
+            "YYC",
+            "YEG",
+            "YWG",
+            "YHZ",
+            "YQT",
+            "BOS"
+          ],
+          "aircraft": {
+            "295": 1
+          }
+        }
+      ],
+      "operatorIcaos": [
+        "POE",
+        "PTR"
+      ],
+      "registrationPattern": "C-[FG][A-Z]{3}",
+      "operatorIatas": [
+        "PD",
+        "P3"
+      ]
+    },
+    {
+      "carrier": "TS",
+      "name": "Air Transat",
+      "weight": 4,
+      "flightNumberStart": 400,
+      "fleetSource": "https://www.airtransat.com/en-CA/travel-information/our-fleet",
+      "services": [
+        {
+          "weight": 60,
+          "stations": [
+            "CUN"
+          ],
+          "aircraft": {
+            "321": 60,
+            "32Q": 30,
+            "333": 10
+          }
+        },
+        {
+          "weight": 40,
+          "stations": [
+            "LGW",
+            "CDG"
+          ],
+          "aircraft": {
+            "32Q": 50,
+            "332": 25,
+            "333": 25
+          },
+          "arrivalHours": [
+            11,
+            13,
+            15,
+            17
+          ],
+          "turnaroundMinutes": [
+            120,
+            180
+          ]
+        }
+      ],
+      "operatorIcaos": [
+        "TSC"
+      ],
+      "registrationPattern": "C-[FG][A-Z]{3}",
+      "operatorIatas": [
+        "TS"
+      ]
+    },
+    {
+      "carrier": "F8",
+      "name": "Flair",
+      "weight": 3,
+      "flightNumberStart": 600,
+      "fleetSource": "https://planefinder.net/data/airline/FLE/fleet",
+      "services": [
+        {
+          "weight": 1,
+          "stations": [
+            "YVR",
+            "YYC",
+            "YEG",
+            "YWG",
+            "YHZ",
+            "CUN"
+          ],
+          "aircraft": {
+            "7M8": 90,
+            "738": 10
+          }
+        }
+      ],
+      "operatorIcaos": [
+        "FLE"
+      ],
+      "registrationPattern": "C-[FG][A-Z]{3}",
+      "operatorIatas": [
+        "F8"
+      ]
+    },
+    {
+      "carrier": "UA",
+      "name": "United / United Express",
+      "weight": 6,
+      "flightNumberStart": 1000,
+      "fleetSource": "https://united.mediaroom.com/corporate-fact-sheet",
+      "services": [
+        {
+          "weight": 75,
+          "stations": [
+            "EWR",
+            "ORD",
+            "IAD"
+          ],
+          "aircraft": {
+            "E75": 45,
+            "319": 20,
+            "320": 15,
+            "738": 20
+          }
+        },
+        {
+          "weight": 25,
+          "stations": [
+            "SFO",
+            "DEN"
+          ],
+          "aircraft": {
+            "738": 60,
+            "7M8": 40
+          }
+        }
+      ],
+      "operatorIcaos": [
+        "UAL"
+      ],
+      "registrationPattern": "N(?:[1-9][0-9]{0,4}|[1-9][0-9]{0,3}[A-HJ-NP-Z]|[1-9][0-9]{0,2}[A-HJ-NP-Z]{2})",
+      "operatorIatas": [
+        "UA"
+      ]
+    },
+    {
+      "carrier": "AA",
+      "name": "American / American Eagle",
+      "weight": 5,
+      "flightNumberStart": 1500,
+      "fleetSource": "https://www.flightradar24.com/data/airlines/aa-aal/fleet",
+      "services": [
+        {
+          "weight": 1,
+          "stations": [
+            "DFW",
+            "MIA",
+            "ORD",
+            "PHL"
+          ],
+          "aircraft": {
+            "738": 40,
+            "319": 25,
+            "E75": 35
+          }
+        }
+      ],
+      "operatorIcaos": [
+        "AAL"
+      ],
+      "registrationPattern": "N(?:[1-9][0-9]{0,4}|[1-9][0-9]{0,3}[A-HJ-NP-Z]|[1-9][0-9]{0,2}[A-HJ-NP-Z]{2})",
+      "operatorIatas": [
+        "AA"
+      ]
+    },
+    {
+      "carrier": "DL",
+      "name": "Delta / Delta Connection",
+      "weight": 4,
+      "flightNumberStart": 1800,
+      "fleetSource": "https://www.delta.com/us/en/aircraft/overview",
+      "services": [
+        {
+          "weight": 1,
+          "stations": [
+            "ATL",
+            "DTW",
+            "MSP",
+            "JFK"
+          ],
+          "aircraft": {
+            "221": 30,
+            "717": 25,
+            "CR9": 30,
+            "E75": 15
+          }
+        }
+      ],
+      "operatorIcaos": [
+        "DAL"
+      ],
+      "registrationPattern": "N(?:[1-9][0-9]{0,4}|[1-9][0-9]{0,3}[A-HJ-NP-Z]|[1-9][0-9]{0,2}[A-HJ-NP-Z]{2})",
+      "operatorIatas": [
+        "DL"
+      ]
+    },
+    {
+      "carrier": "BA",
+      "name": "British Airways",
+      "weight": 1,
+      "maxRotations": 3,
+      "flightNumberStart": 91,
+      "fleetSource": "https://www.britishairways.com/content/en/information/about-ba/fleet-facts",
+      "services": [
+        {
+          "weight": 1,
+          "stations": [
+            "LHR"
+          ],
+          "aircraft": {
+            "789": 40,
+            "77W": 40,
+            "772": 20
+          },
+          "arrivalHours": [
+            12,
+            15,
+            17,
+            19
+          ],
+          "turnaroundMinutes": [
+            120,
+            180
+          ]
+        }
+      ],
+      "operatorIcaos": [
+        "BAW"
+      ],
+      "registrationPattern": "G-[A-Z]{4}",
+      "operatorIatas": [
+        "BA"
+      ]
+    },
+    {
+      "carrier": "LH",
+      "name": "Lufthansa",
+      "weight": 1,
+      "maxRotations": 3,
+      "flightNumberStart": 470,
+      "fleetSource": "https://www.lufthansagroup.com/en/company/fleet/lufthansa-and-regional-partners/",
+      "services": [
+        {
+          "weight": 2,
+          "stations": [
+            "FRA"
+          ],
+          "aircraft": {
+            "74H": 50,
+            "789": 50
+          },
+          "arrivalHours": [
+            13,
+            15,
+            17
+          ],
+          "turnaroundMinutes": [
+            120,
+            180
+          ]
+        },
+        {
+          "weight": 1,
+          "stations": [
+            "MUC"
+          ],
+          "aircraft": {
+            "359": 1
+          },
+          "arrivalHours": [
+            13,
+            15,
+            17
+          ],
+          "turnaroundMinutes": [
+            120,
+            180
+          ]
+        }
+      ],
+      "operatorIcaos": [
+        "DLH"
+      ],
+      "registrationPattern": "D-A[A-Z]{3}",
+      "operatorIatas": [
+        "LH"
+      ]
+    },
+    {
+      "carrier": "AF",
+      "name": "Air France",
+      "weight": 1,
+      "maxRotations": 3,
+      "flightNumberStart": 356,
+      "fleetSource": "https://wwws.airfrance.fr/en/information/prepare/nos-avions",
+      "services": [
+        {
+          "weight": 1,
+          "stations": [
+            "CDG"
+          ],
+          "aircraft": {
+            "359": 55,
+            "77W": 45
+          },
+          "arrivalHours": [
+            13,
+            15,
+            18
+          ],
+          "turnaroundMinutes": [
+            120,
+            180
+          ]
+        }
+      ],
+      "operatorIcaos": [
+        "AFR"
+      ],
+      "registrationPattern": "F-[A-Z]{4}",
+      "operatorIatas": [
+        "AF"
+      ]
+    },
+    {
+      "carrier": "EK",
+      "name": "Emirates",
+      "weight": 0.2,
+      "maxRotations": 1,
+      "flightNumberStart": 241,
+      "fleetSource": "https://www.emirates.com/ca/english/destinations/dxb/yyz/flights-from-dubai-to-toronto/",
+      "services": [
+        {
+          "weight": 1,
+          "stations": [
+            "DXB"
+          ],
+          "aircraft": {
+            "388": 1
+          },
+          "arrivalHours": [
+            9
+          ],
+          "turnaroundMinutes": [
+            270,
+            300
+          ]
+        }
+      ],
+      "operatorIcaos": [
+        "UAE"
+      ],
+      "registrationPattern": "A6-[A-Z]{3}",
+      "operatorIatas": [
+        "EK"
+      ]
+    }
+  ]
+}

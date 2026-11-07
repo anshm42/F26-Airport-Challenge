@@ -31,7 +31,7 @@ Usable capacity also depends on aircraft size and known outages; counting `null`
 entries alone does not establish available capacity.
 
 Occupants must be commercial passenger aircraft types configured in the stream's
-[traffic profiles](https://github.com/anshm42/F26-Airport-Challenge/blob/stream/data/stream_profiles.json),
+[traffic profiles](data/stream_profiles.json),
 with exactly `serviceTypes: ["Passenger"]` in
 [data/aircraft.json](data/aircraft.json). Cargo, combi, special-purpose, mixed-role,
 unknown, and GA/business types outside those profiles cannot occupy this object.

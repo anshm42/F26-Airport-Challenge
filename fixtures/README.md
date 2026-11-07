@@ -1,10 +1,5 @@
 # Matching test scenario
 
-This checked-in sample predates the [gate-state contract](../GateStateSpecification.md)
-and has no initial gate IDs. Regenerate it on the current `stream` branch for the
-new occupancy protocol. The original sample and counts below are retained for
-legacy comparisons; it must not be interpreted as an empty physical airport.
-
 [pearson-400-flights-seed42.json](pearson-400-flights-seed42.json) is a synthetic,
 seeded Pearson day for **2026-11-07**, using seed **42** and a default replay rate
 of **60**. It contains **400 scheduled flight legs**, **25 initially parked
@@ -29,10 +24,20 @@ Read `events[0].message` as the `InitializeAirport` snapshot. Its `flights` arra
 contains the full baseline schedule as `CreateFlight` messages; `parkedAircraft`
 lists aircraft already at YYZ, and `gateOutages` is empty at startup. The parked
 aircraft include twelve scheduled morning departures, three idle aircraft, and
-ten spares for later equipment swaps. The matcher chooses their gates or stands.
+ten spares for later equipment swaps. Each parked record includes its initial
+`gate`; the full `gateState` contains those occupants and `null` at all other
+positions. Future flights have no initial gate. The matcher returns future
+assignments separately, and they take effect at arrival time.
+The map contains 110 positions matched to IFATC and respects its size classes.
+Every flight leg and reference includes `trafficType` (`Domestic`, `Transborder`,
+or `International`).
+The full baseline fits passenger-gate capacity throughout the day; the peak is
+47 grounded aircraft, including idle aircraft and spares. Later updates can
+extend stays or remove gates and require the matcher to resolve new conflicts.
 
 After initial allocation, apply `events[1:]` in order at each event's UTC
-`timestamp`. Each event's `message` is the webhook body. Later flight modifications
+`timestamp`. The stream adds current `gateState` and `unassignedAircraft` to each
+event's `message` before delivering it as the webhook body. Later flight modifications
 reference the same flight identities as the baseline; the baseline flights are
 not sent again as separate creation events. Retain the initial snapshot separately
 if comparing the original plan with the final result.
@@ -45,25 +50,24 @@ and [webhook contract](../docs/webhook-api.md) for field and delivery rules.
 
 ## Replay through the update server
 
-The update server is on the `stream` branch. Run it from a separate checkout, or
-copy this scenario outside the checkout before changing branches. Then supply
-the scenario's absolute path in the run request:
+Run the update server from this checkout, then supply the scenario path
+in the run request:
 
 ```sh
 curl -sS -X POST http://127.0.0.1:8080/runs \
   -H 'Content-Type: application/json' \
-  -d '{"scenario_path":"/absolute/path/to/pearson-400-flights-seed42.json","webhook_url":"http://127.0.0.1:9000/updates","mode":"unpaced"}'
+  -d '{"scenario_path":"fixtures/pearson-400-flights-seed42.json","webhook_url":"http://127.0.0.1:9000/updates","mode":"unpaced"}'
 ```
 
-Replace both the scenario path and webhook URL with your local values. The
+Replace the webhook URL with your matcher's address. The
 matcher must finish initialization and return `200` or `204` before subsequent
 updates are sent. `unpaced` runs as quickly as acknowledgments allow; use `paced`
 to respect the fixture's 60× rate. Full commands are in the
-[server quick-start README](https://github.com/anshm42/F26-Airport-Challenge/blob/stream/README.md#dynamic-update-server).
+[server quick-start README](../README.md#dynamic-update-server).
 
 ## Reproduce
 
-From the `stream` branch, using generator commit `aa08d1c`:
+From the repository root:
 
 ```sh
 python3 -m smartgate_stream generate \
