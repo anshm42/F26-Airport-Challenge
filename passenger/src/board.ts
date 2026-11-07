@@ -102,7 +102,7 @@ function logo(code: string, airline: string): string {
 /** Primary code first, then codeshare alternates; scrolls sideways when they don't fit. */
 function flightCell(f: Flight): string {
   const items = f.flightCodes.map((code, i) => `<span class="code">${logo(code, i === 0 ? f.airline : code)}${escape(code)}</span>`);
-  return `<span class="flight" data-id="${escape(f.flightId)}">${items.join("")}</span>`;
+  return `<span class="flight-cell"><span class="flight" data-id="${escape(f.flightId)}">${items.join("")}</span></span>`;
 }
 
 // Codeshare lists that don't fit scroll on their own in a seamless loop: the codes are appended a second time,
@@ -112,6 +112,18 @@ const MARQUEE_PAUSE = 2000; // ms held on the primary code each time round
 const marqueePos = new Map<string, number>(); // flightId → offset, kept across re-renders
 const marqueeHold = new Map<string, number>(); // flightId → time the pause on the primary code ends
 let marquees: { el: HTMLElement; id: string; loop: number }[] = [];
+
+/** The thumb is the visible share of one copy and wraps round the track, so it never jumps back. */
+function drawBar(el: HTMLElement, bar: HTMLElement, loop: number) {
+  const track = el.clientWidth;
+  const size = (track * track) / loop;
+  const start = ((el.scrollLeft % loop) / loop) * track;
+  const [head, tail] = bar.children as HTMLCollectionOf<HTMLElement>;
+  head.style.left = `${start}px`;
+  head.style.width = `${Math.min(size, track - start)}px`;
+  tail.style.left = "0";
+  tail.style.width = `${Math.max(0, start + size - track)}px`;
+}
 
 function setUpMarquees() {
   marquees = [];
@@ -126,7 +138,13 @@ function setUpMarquees() {
     el.append(...copies);
     const id = el.dataset.id!;
     const loop = copies[0].offsetLeft - first.offsetLeft;
+    const bar = document.createElement("span");
+    bar.className = "bar";
+    bar.innerHTML = "<i></i><i></i>";
+    el.after(bar);
+    el.addEventListener("scroll", () => drawBar(el, bar, loop), { passive: true });
     el.scrollLeft = (marqueePos.get(id) ?? 0) % loop;
+    drawBar(el, bar, loop);
     marquees.push({ el, id, loop });
   });
 }
@@ -290,6 +308,8 @@ addEventListener("keydown", (e) => {
 setInterval(tickClock, 1000);
 tickClock();
 addEventListener("resize", render);
+// Codeshare loops are measured in rendered text, so measure again once the board font has loaded.
+document.fonts.ready.then(render);
 
 // Countdowns and the gate-change window depend on the current time.
 setInterval(() => {

@@ -81,19 +81,29 @@ main {
 
 .time { font-weight: 700; font-variant-numeric: tabular-nums; }
 .city .from { color: var(--muted); font-size: 0.75em; margin-right: 0.4em; }
-/* Codeshares scroll sideways inside the cell, with a visible thin scrollbar. */
-.row > .flight {
+/* Codeshares scroll sideways inside the cell. The native scrollbar can't wrap round, so looping cells draw their own. */
+.row > .flight-cell { position: relative; height: 100%; font-size: 0.85em; text-overflow: clip; }
+.flight {
   display: flex;
   align-items: center;
   gap: 0.9em;
   height: 100%;
-  font-size: 0.85em;
   overflow-x: auto;
   overflow-y: hidden;
-  text-overflow: clip;
-  scrollbar-width: thin;
-  scrollbar-color: var(--muted) transparent;
+  scrollbar-width: none;
 }
+.flight::-webkit-scrollbar { display: none; }
+.flight-cell .bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 3px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.12);
+  overflow: hidden;
+}
+.flight-cell .bar i { position: absolute; top: 0; bottom: 0; border-radius: 2px; background: var(--muted); }
 .flight .code { display: flex; align-items: center; gap: 0.35em; flex: none; }
 
 .gate { font-weight: 700; }
