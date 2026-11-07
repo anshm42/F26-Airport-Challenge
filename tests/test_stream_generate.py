@@ -46,6 +46,16 @@ class GeneratorTests(unittest.TestCase):
             with self.subTest(seed=seed, date=date, count=count), self.assertRaises(ValueError):
                 generate(seed, date, count)
 
+    def test_rate_changes_only_replay_metadata_and_rejects_invalid_numbers(self):
+        for rate in (0.5, 1, 60, 3600):
+            with self.subTest(rate=rate):
+                scenario = generate(42, "2026-11-07", rate=rate)
+                self.assertEqual(scenario["metadata"]["rate"], rate)
+                self.assertEqual(scenario["events"], self.scenario["events"])
+        for rate in (0, -1, True, None, "60", float("nan"), float("inf"), 10**400):
+            with self.subTest(rate=rate), self.assertRaises(ValueError):
+                generate(42, "2026-11-07", rate=rate)
+
     def test_profiles_use_pearson_carriers_known_aircraft_and_airports(self):
         carriers = {r["carrier"] for r in self.pearson["airlineTerminals"]["records"]}
         aircraft = json.loads((ROOT / "data" / "aircraft.json").read_text())["aircraftTypes"]["records"]
@@ -209,6 +219,21 @@ class GeneratorTests(unittest.TestCase):
                     scenario = load_scenario(path)
                     self.assertEqual(scenario["metadata"]["date"], expected_date)
                     self.assertEqual(scenario, generate(42, expected_date, 2))
+
+    def test_cli_rate_option_and_invalid_values(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "scenario.json"
+            command = [sys.executable, "-m", "smartgate_stream", "generate", "--date", "2026-11-07",
+                       "--flights", "2", "--output", str(path), "--rate", "2.5"]
+            result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(load_scenario(path)["metadata"]["rate"], 2.5)
+            path.unlink()
+            for rate in ("0", "-1", "nan", "inf", "not-a-number"):
+                with self.subTest(rate=rate):
+                    command[-1] = rate
+                    self.assertEqual(subprocess.run(command, cwd=ROOT, capture_output=True).returncode, 2)
+                    self.assertFalse(path.exists())
 
 
 if __name__ == "__main__":

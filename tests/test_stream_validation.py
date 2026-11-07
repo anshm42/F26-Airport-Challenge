@@ -55,6 +55,14 @@ class ValidationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     validate_scenario(scenario)
 
+    def test_optional_scenario_rate_and_invalid_metadata(self):
+        self.scenario["metadata"] = {"rate": 0.5, "extension": "preserved"}
+        validate_scenario(self.scenario)
+        for metadata in (None, [], "60", {"rate": None}, {"rate": True}, {"rate": "60"},
+                         {"rate": 0}, {"rate": -1}, {"rate": float("inf")}, {"rate": 10**400}):
+            with self.subTest(metadata=metadata), self.assertRaises(ValueError):
+                validate_scenario({**self.scenario, "metadata": metadata})
+
     def test_invalid_flight_fields(self):
         for key, value in (("carrier", "ac"), ("carrier", 12), ("aircraftType", "A321"),
                            ("registration", ""), ("registration", "c-fceu"), ("registration", "C FCEU")):

@@ -136,6 +136,23 @@ class HttpTests(unittest.TestCase):
         state = self.terminal(created["run_id"])
         self.assertEqual((state["status"], state["delivered"]), ("stopped", 1))
 
+    def test_generated_rate_is_used_unless_request_overrides_speed(self):
+        scenario = generate(42, "2026-11-07", 2, rate=0.5)
+        path = Path(self.temp.name) / "rated.json"
+        path.write_text(json.dumps(scenario))
+        self.options["scenario_path"] = str(path)
+        for override, expected in (({}, 0.5), ({"speed": 120}, 120)):
+            with self.subTest(override=override):
+                code, created = self.request("POST", "/runs", {**self.options, **override})
+                self.assertEqual(code, 201)
+                state = self.terminal(created["run_id"])
+                self.assertEqual(state["speed"], expected)
+        scenario["metadata"]["rate"] = 0
+        path.write_text(json.dumps(scenario))
+        before = len(self.webhook.received)
+        self.assertEqual(self.request("POST", "/runs", self.options)[0], 400)
+        self.assertEqual(len(self.webhook.received), before)
+
     def test_concurrent_starts_have_one_winner(self):
         self.webhook.release.clear()
         barrier = threading.Barrier(3)

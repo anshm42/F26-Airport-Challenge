@@ -11,11 +11,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from .validation import load_scenario, parse_utc, require
+from .validation import DEFAULT_RATE, load_scenario, parse_utc, positive_number, require
 
 
 WEBHOOK_TIMEOUT = 10
 ACTIVE_STATUSES = {"running", "stopping"}
+_USE_SCENARIO_RATE = object()
 
 
 def validate_webhook(url):
@@ -46,16 +47,13 @@ def post_message(url, message, headers):
 
 
 class Run:
-    def __init__(self, scenario_path, webhook_url, mode="paced", speed=60):
+    def __init__(self, scenario_path, webhook_url, mode="paced", speed=_USE_SCENARIO_RATE):
         require(mode in ("paced", "unpaced"), "mode must be paced or unpaced")
-        require(type(speed) in (int, float), "speed must be a finite positive number")
-        try:
-            speed = float(speed)
-        except OverflowError as error:
-            raise ValueError("speed must be a finite positive number") from error
-        require(math.isfinite(speed) and speed > 0, "speed must be a finite positive number")
         validate_webhook(webhook_url)
         self.scenario = load_scenario(scenario_path)
+        if speed is _USE_SCENARIO_RATE:
+            speed = self.scenario.get("metadata", {}).get("rate", DEFAULT_RATE)
+        speed = positive_number(speed, "speed")
         timestamps = [parse_utc(e["timestamp"]) for e in self.scenario["events"]]
         self.offsets = [(timestamp - timestamps[0]).total_seconds() / speed for timestamp in timestamps]
         require(all(math.isfinite(offset) for offset in self.offsets), "speed produces infinite deadlines")

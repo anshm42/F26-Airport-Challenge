@@ -1,6 +1,7 @@
 """Validate transport fixtures and the existing flight-message contract."""
 
 import json
+import math
 import re
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -11,11 +12,22 @@ ACTIONS = {
     "ReinstateFlight", "UpdateEquipment", "GateOutage", "DivertFlight",
 }
 COMPLETE_ACTIONS = {"CreateFlight", "ReplaceFlight", "UpdateTiming", "DivertFlight"}
+DEFAULT_RATE = 60
 
 
 def require(condition, message):
     if not condition:
         raise ValueError(message)
+
+
+def positive_number(value, name):
+    require(type(value) in (int, float), f"{name} must be a finite positive number")
+    try:
+        value = float(value)
+    except OverflowError as error:
+        raise ValueError(f"{name} must be a finite positive number") from error
+    require(math.isfinite(value) and value > 0, f"{name} must be a finite positive number")
+    return value
 
 
 def object_field(parent, key):
@@ -111,6 +123,10 @@ def read_json(text):
 
 def validate_scenario(scenario):
     require(isinstance(scenario, dict), "scenario must be an object")
+    if "metadata" in scenario:
+        metadata = object_field(scenario, "metadata")
+        if "rate" in metadata:
+            positive_number(metadata["rate"], "metadata.rate")
     events = scenario.get("events")
     require(isinstance(events, list) and len(events) > 0, "events must be a nonempty array")
     previous = None

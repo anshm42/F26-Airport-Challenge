@@ -3,11 +3,12 @@ import shutil
 import tempfile
 import threading
 import unittest
+from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
 
 from smartgate_stream.replay import Run, post_message
-from smartgate_stream.validation import load_scenario
+from smartgate_stream.validation import load_scenario, parse_utc
 
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "scripted.json"
@@ -82,6 +83,39 @@ class ReplayTests(unittest.TestCase):
         self.assertEqual(run.snapshot()["http_seconds"], 8)
         self.assertEqual(run.snapshot()["lateness_seconds"], 6)
 
+    def test_scenario_rate_scales_irregular_gaps_and_preserves_bursts(self):
+        scenario = load_scenario(FIXTURE)
+        scenario["events"] = scenario["events"][:5]
+        start = parse_utc(scenario["events"][0]["timestamp"])
+        for event, seconds in zip(scenario["events"], (0, 30, 330, 330, 900)):
+            event["timestamp"] = (start + timedelta(seconds=seconds)).isoformat()
+        scenario["metadata"] = {"rate": 60}
+        self.path.write_text(json.dumps(scenario))
+        run = self.run_for_test()
+        sent = []
+
+        def send(url, message, headers):
+            sent.append((self.clock(), message, headers["X-Stream-Simulated-Time"]))
+            return 204
+
+        run.execute(clock=self.clock, wait=self.clock.wait, send=send)
+        self.assertEqual([s[0] for s in sent], [100, 100.5, 105.5, 105.5, 115])
+        self.assertEqual([s[1] for s in sent], [e["message"] for e in scenario["events"]])
+        self.assertEqual([s[2] for s in sent], [e["timestamp"] for e in scenario["events"]])
+        self.assertEqual(run.snapshot()["speed"], 60)
+
+    def test_scenario_rate_default_explicit_override_and_unpaced_mode(self):
+        self.scenario["metadata"] = {"rate": 120}
+        self.path.write_text(json.dumps(self.scenario))
+        for options, elapsed, speed in (({}, 2.5, 120), ({"speed": 30}, 10, 30),
+                                        ({"mode": "unpaced"}, 0, 120)):
+            with self.subTest(options=options):
+                clock = Clock()
+                run = self.run_for_test(**options)
+                run.execute(clock=clock, wait=clock.wait, send=lambda *args: 204)
+                self.assertEqual(clock.now - 100, elapsed)
+                self.assertEqual(run.snapshot()["speed"], speed)
+
     def test_unpaced_and_custom_speed(self):
         for mode, speed, expected in (("unpaced", 60, 0), ("paced", 300, 1)):
             with self.subTest(mode=mode):
@@ -148,7 +182,7 @@ class ReplayTests(unittest.TestCase):
         self.assertEqual(run.snapshot()["delivered"], 1)
 
     def test_invalid_configuration_and_fixture_create_no_records(self):
-        for kwargs in ({"speed": 0}, {"speed": True}, {"speed": float("inf")},
+        for kwargs in ({"speed": 0}, {"speed": True}, {"speed": None}, {"speed": float("inf")},
                        {"speed": "60"}, {"speed": 10**400}, {"speed": 5e-324}, {"mode": "other"}):
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                 self.run_for_test(**kwargs)

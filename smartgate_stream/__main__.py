@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .generate import TORONTO, generate
 from .server import ControlServer
+from .validation import DEFAULT_RATE
 
 
 def main():
@@ -17,11 +18,13 @@ def main():
     scenario.add_argument("--date", default=datetime.now(TORONTO).date().isoformat(),
                           help="Toronto local date, YYYY-MM-DD (default: today in Toronto)")
     scenario.add_argument("--flights", type=int, default=1200, help="number of single-leg flight creations")
+    scenario.add_argument("--rate", type=float, default=DEFAULT_RATE,
+                          help="simulation speed multiplier for timestamp-paced replay (default: 60)")
     scenario.add_argument("--output", type=Path, required=True, help="new JSON file (must not already exist)")
     args = parser.parse_args()
     if args.command == "generate":
         try:
-            fixture = generate(args.seed, args.date, args.flights)
+            fixture = generate(args.seed, args.date, args.flights, rate=args.rate)
             with args.output.open("x", encoding="utf-8") as output:
                 output.write(json.dumps(fixture, indent=2, allow_nan=False) + "\n")
         except (ValueError, OSError, OverflowError) as error:

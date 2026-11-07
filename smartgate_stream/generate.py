@@ -8,7 +8,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from .validation import require, validate_scenario
+from .validation import DEFAULT_RATE, positive_number, require, validate_scenario
 
 
 DATA = Path(__file__).resolve().parents[1] / "data"
@@ -17,8 +17,9 @@ PARTNERS = {"AC": "UA", "UA": "AC", "WS": "DL", "DL": "WS", "PD": "TS",
             "TS": "PD", "AA": "BA", "BA": "AA", "LH": "AC", "AF": "DL", "EK": "WS"}
 
 
-def generate(seed, start_date, flight_count=1200):
+def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
     require(type(seed) is int, "seed must be an integer")
+    rate = positive_number(rate, "rate")
     require(isinstance(start_date, str), "date must be YYYY-MM-DD")
     day = date.fromisoformat(start_date)
     require(day.isoformat() == start_date, "date must be YYYY-MM-DD")
@@ -178,7 +179,7 @@ def generate(seed, start_date, flight_count=1200):
             outage["scheduledEndTime"] = (outage_start + timedelta(minutes=rng.randint(30, 180))).strftime("%H:%M")
         add(outage_start - timedelta(minutes=rng.randint(0, 30)), outage)
     events.sort(key=lambda event: event["timestamp"])
-    scenario = {"metadata": {"seed": seed, "date": start_date, "flight_count": flight_count,
+    scenario = {"metadata": {"seed": seed, "date": start_date, "flight_count": flight_count, "rate": rate,
                              "synthetic": True, "profiles": "data/stream_profiles.json",
                              "fleet_snapshot": fleet_snapshot["source"],
                              "fleet_source_sha256": fleet_snapshot["sourceSha256"]}, "events": events}

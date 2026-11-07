@@ -15,7 +15,7 @@ resource; choosing gates remains entirely the matcher's responsibility.
 
 ```sh
 python3 -m smartgate_stream generate --seed 42 \
-  --flights 1200 --output /tmp/pearson-scenario.json
+  --flights 1200 --rate 60 --output /tmp/pearson-scenario.json
 ```
 
 The output path must not already exist. The seed defaults to `1`, and flight count
@@ -24,6 +24,13 @@ Use `--date YYYY-MM-DD` to select a specific Toronto local calendar date.
 The same inputs and checked-in profiles reproduce the same scenario on the
 same Python version. Generate once and retain that fixture for comparisons across
 Python versions.
+
+`--rate` sets the default simulation speed for paced replay (default `60`). It
+must be finite and positive; fractional multipliers such as `0.5` are supported.
+At `60`, one real second represents one simulated minute. Generation writes the
+value to `metadata.rate`; it preserves event timestamps and flight schedules.
+Replay scales the actual gaps between events, so quiet periods, irregular updates,
+and bursts remain intact. There is no fixed update heartbeat.
 
 The count specifies single-leg `CreateFlight` messages. The generator adds timing
 changes, replacement schedules, equipment swaps, cancellations/reinstatements,
@@ -103,7 +110,9 @@ curl http://127.0.0.1:8080/runs/RUN_ID
 curl -X POST http://127.0.0.1:8080/runs/RUN_ID/stop
 ```
 
-`mode` defaults to `paced`; `speed` defaults to `60` and must be finite and positive.
+`mode` defaults to `paced`. An explicit request `speed` overrides the fixture's
+`metadata.rate`; when both are omitted, replay uses `60`. To use the generated
+`--rate`, omit `speed` from the run request. All rates must be finite and positive.
 Use `"mode":"unpaced"` to deliver as fast as acknowledgments allow. Only one run
 may be active. Statuses are `running`, `stopping`, `completed`, `stopped`, and
 `failed`. A stop returns `202`; stopping an already finished run returns `409`.
