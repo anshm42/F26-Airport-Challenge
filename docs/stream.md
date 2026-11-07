@@ -193,8 +193,9 @@ and optional microseconds, ending in `Z` or `+00:00`. Decreasing timestamps are
 rejected; equal timestamps preserve file order. Message validation follows the
 [flight-message contract](../JsonFlightMessageSpecification.md), including scopes,
 local dates/times, codeshares, and connected legs. Unknown extension fields are
-preserved. Gate/aircraft existence, existing-flight lookup, and operation feasibility
-belong to the matcher. Flight times are local to their stations; outage times are
+preserved. The stream validates known passenger gates, aircraft eligibility,
+flight references, and physical occupancy; the matcher plans future availability
+and applies its other allocation rules. Flight times are local to their stations; outage times are
 local to Toronto. For undated outage windows, the matcher uses the announcement's
 Toronto date; an earlier end time crosses midnight.
 
@@ -215,16 +216,23 @@ take five real seconds. Each paced deadline is computed from that original ancho
 `(event timestamp - first timestamp) / speed`. Requests are sequential. Late
 acknowledgments cause overdue events to send immediately; deadlines never shift.
 Unpaced mode advances the supplied simulated time with every event and does not
-wait for deadlines.
+wait for deadlines. Physical arrivals and departures also advance occupancy between
+announcements, without sending additional webhook messages. Initialized runs
+process remaining known movements before the next Toronto midnight, even after
+the final announcement; legacy incremental runs end at their last announcement.
 
 Each run retains a unique `smartgate-stream-*` directory in the system temporary
-directory, containing `scenario.json` and append-only `deliveries.jsonl`. Every
+directory, containing `scenario.json`, append-only `deliveries.jsonl`, and the
+atomically replaced current `gate-state.json`. Every
 attempt records its ID, simulated time, intended deadline (seconds from run start;
 null when unpaced), actual send time in UTC and seconds from start, HTTP duration,
-status/error, and lateness. Records flush after each attempt. Status reports totals
+status/error, parsed matcher response, and lateness. Records flush after each attempt. Status reports totals
 for attempted/delivered messages, elapsed time, HTTP time, and lateness. Its
-`simulated_time` is the last attempted event, initially null. Times describe
-transport and scheduling, not matcher computation.
+`simulated_time` is the last attempted announcement, initially null. The separate
+`gate_state_time` tracks physical movement processing and can advance after the
+last announcement. Status also exposes `gate_state`, `unassigned_aircraft`, and
+`planned_assignments`. HTTP duration includes the receiver's synchronous response
+time; it does not measure matcher computation separately.
 
 Remove retained directories when no longer needed. Run statuses are memory-only;
 the server does not restore them after restart. A logging failure also fails the

@@ -7,11 +7,15 @@ from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
 
-from smartgate_stream.replay import Run, post_message
+from smartgate_stream.replay import MAX_RESPONSE_BYTES, Run, post_message
 from smartgate_stream.validation import load_scenario, parse_utc
 
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "scripted.json"
+
+
+def message_fields(message):
+    return {key: value for key, value in message.items() if key not in ("gateState", "unassignedAircraft")}
 
 
 class Clock:
@@ -51,11 +55,12 @@ class ReplayTests(unittest.TestCase):
 
         def send(url, message, headers):
             sent.append((self.clock(), message, headers))
-            return 204
+            return 204, None
 
         run.execute(clock=self.clock, wait=self.clock.wait, send=send)
         self.assertEqual([s[0] for s in sent], [100, 105, 105])
-        self.assertEqual([s[1] for s in sent], [e["message"] for e in self.scenario["events"]])
+        self.assertEqual([message_fields(s[1]) for s in sent], [e["message"] for e in self.scenario["events"]])
+        self.assertTrue(all(len(s[1]["gateState"]) == 121 for s in sent))
         for index, (_, _, headers) in enumerate(sent):
             self.assertEqual(headers, {"X-Stream-Run-Id": run.id,
                                       "X-Stream-Event-Id": f"{run.id}:{index}",
@@ -75,7 +80,7 @@ class ReplayTests(unittest.TestCase):
             starts.append(self.clock())
             if len(starts) == 1:
                 self.clock.now += 8
-            return 200
+            return 200, None
 
         run.execute(clock=self.clock, wait=self.clock.wait, send=send)
         self.assertEqual(starts, [100, 108, 108])
@@ -84,8 +89,10 @@ class ReplayTests(unittest.TestCase):
         self.assertEqual(run.snapshot()["lateness_seconds"], 6)
 
     def test_initialization_must_finish_before_simulation_clock_starts(self):
+        original = self.scenario["events"][0]["message"]
         self.scenario["events"][0]["message"] = {
-            "action": "InitializeAirport", "flights": [], "parkedAircraft": [], "gateOutages": []}
+            "action": "InitializeAirport", "flights": [original],
+            "parkedAircraft": [{**original["flight"], "gate": "D20"}], "gateOutages": []}
         self.path.write_text(json.dumps(self.scenario))
         for response in (200, 204, 202, 503):
             with self.subTest(response=response):
@@ -96,8 +103,8 @@ class ReplayTests(unittest.TestCase):
                     sent.append(clock())
                     if len(sent) == 1:
                         clock.now += 8
-                        return response
-                    return 202
+                        return response, None
+                    return 202, None
 
                 run.execute(clock=clock, wait=clock.wait, send=send)
                 if response in (200, 204):
@@ -123,11 +130,11 @@ class ReplayTests(unittest.TestCase):
 
         def send(url, message, headers):
             sent.append((self.clock(), message, headers["X-Stream-Simulated-Time"]))
-            return 204
+            return 204, None
 
         run.execute(clock=self.clock, wait=self.clock.wait, send=send)
         self.assertEqual([s[0] for s in sent], [100, 100.5, 105.5, 105.5, 115])
-        self.assertEqual([s[1] for s in sent], [e["message"] for e in scenario["events"]])
+        self.assertEqual([message_fields(s[1]) for s in sent], [e["message"] for e in scenario["events"]])
         self.assertEqual([s[2] for s in sent], [e["timestamp"] for e in scenario["events"]])
         self.assertEqual(run.snapshot()["speed"], 60)
 
@@ -139,7 +146,7 @@ class ReplayTests(unittest.TestCase):
             with self.subTest(options=options):
                 clock = Clock()
                 run = self.run_for_test(**options)
-                run.execute(clock=clock, wait=clock.wait, send=lambda *args: 204)
+                run.execute(clock=clock, wait=clock.wait, send=lambda *args: (204, None))
                 self.assertEqual(clock.now - 100, elapsed)
                 self.assertEqual(run.snapshot()["speed"], speed)
 
@@ -148,7 +155,7 @@ class ReplayTests(unittest.TestCase):
             with self.subTest(mode=mode):
                 clock = Clock()
                 run = self.run_for_test(mode=mode, speed=speed)
-                run.execute(clock=clock, wait=clock.wait, send=lambda *args: 202)
+                run.execute(clock=clock, wait=clock.wait, send=lambda *args: (202, None))
                 self.assertEqual(clock.now - 100, expected)
                 self.assertEqual(run.snapshot()["delivered"], 3)
                 self.assertEqual(run.snapshot()["max_lateness_seconds"], 0)
@@ -163,7 +170,7 @@ class ReplayTests(unittest.TestCase):
                     calls.append(args)
                     if isinstance(result, Exception):
                         raise result
-                    return result
+                    return result, None
 
                 run.execute(send=send)
                 state = run.snapshot()
@@ -180,7 +187,7 @@ class ReplayTests(unittest.TestCase):
         def wait(seconds):
             run.stop()
 
-        run.execute(clock=self.clock, wait=wait, send=lambda *args: calls.append(args) or 200)
+        run.execute(clock=self.clock, wait=wait, send=lambda *args: calls.append(args) or (200, None))
         self.assertEqual(len(calls), 1)
         self.assertEqual(run.snapshot()["status"], "stopped")
         self.assertFalse(run.stop())
@@ -192,7 +199,7 @@ class ReplayTests(unittest.TestCase):
         def send(*args):
             entered.set()
             self.assertTrue(release.wait(2))
-            return 200
+            return 200, None
 
         worker = threading.Thread(target=run.execute, kwargs={"send": send})
         worker.start()
@@ -228,11 +235,38 @@ class ReplayTests(unittest.TestCase):
         with patch("smartgate_stream.replay.http.client.HTTPConnection") as factory:
             connection = factory.return_value
             connection.getresponse.return_value.status = 302
-            self.assertEqual(post_message("http://localhost:9000/updates?run=1", {"action": "test"}, {}), 302)
+            self.assertEqual(post_message("http://localhost:9000/updates?run=1", {"action": "test"}, {}), (302, None))
             factory.assert_called_once_with("localhost", 9000, timeout=10)
             self.assertEqual(connection.request.call_args.args[:2], ("POST", "/updates?run=1"))
             self.assertEqual(json.loads(connection.request.call_args.args[2]), {"action": "test"})
             connection.close.assert_called_once()
+
+    def test_matcher_json_is_bounded_and_rejects_ambiguous_responses(self):
+        cases = (
+            (200, "application/json; charset=utf-8", b'{"assignments":[]}', {"assignments": []}),
+            (204, "", b"", None),
+            (202, "application/json", b'{"assignments":[]}', ValueError),
+            (200, "text/plain", b'{"assignments":[]}', ValueError),
+            (200, "application/json", b'{"assignments":[],"assignments":[]}', ValueError),
+            (200, "application/json", b'{"value":NaN}', ValueError),
+            (200, "application/json", b'{', ValueError),
+            (200, "application/json", b' ' * (MAX_RESPONSE_BYTES + 1), ValueError),
+        )
+        for status, content_type, body, expected in cases:
+            with self.subTest(status=status, content_type=content_type, size=len(body)):
+                with patch("smartgate_stream.replay.http.client.HTTPConnection") as factory:
+                    connection = factory.return_value
+                    response = connection.getresponse.return_value
+                    response.status = status
+                    response.read.return_value = body
+                    response.getheader.return_value = content_type
+                    if expected is ValueError:
+                        with self.assertRaises(ValueError):
+                            post_message("http://localhost:9000/updates", {}, {})
+                    else:
+                        self.assertEqual(post_message("http://localhost:9000/updates", {}, {}), (status, expected))
+                    response.read.assert_called_once_with(MAX_RESPONSE_BYTES + 1)
+                    connection.close.assert_called_once()
 
 
 if __name__ == "__main__":

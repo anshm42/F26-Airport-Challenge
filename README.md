@@ -88,7 +88,9 @@ Only one run may be active. Statuses are `running`, `stopping`, `completed`,
 and overlapping starts or stopping a finished run `409`. An in-flight webhook may
 finish after a stop request.
 
-Each run saves `scenario.json` and `deliveries.jsonl` in the returned
+Status also includes `gate_state`, `gate_state_time`, `unassigned_aircraft`, and
+`planned_assignments`. Each run saves `scenario.json`, `deliveries.jsonl`, and
+the latest complete `gate-state.json` in the returned
 `records_directory`. Run-status lookup lasts until the server shuts down; saved
 records remain on disk.
 
@@ -105,13 +107,17 @@ X-Stream-Simulated-Time: <UTC-announcement-timestamp>
 ```
 
 Generated days start with `InitializeAirport`, containing `flights`,
-`parkedAircraft`, and `gateOutages`. The matcher replaces its previous dynamic
-state and makes its initial allocation, then returns **200 or 204** when ready.
+`parkedAircraft`, `gateOutages`, and `gateState`. The matcher loads the supplied
+initial positions and plans future assignments, then returns **200 or 204** when ready.
 Returning `202` fails initialization. The simulation clock starts after readiness;
 each generated day is independent.
 
-Later updates arrive sequentially, with the next request sent after the previous
-acknowledgment. Ordinary updates accept any `2xx` response. Redirects, other
+Every request includes current `gateState` and `unassignedAircraft`. Return
+synchronous `assignments` and `moves` as **200 application/json**; see the
+[gate-state contract](GateStateSpecification.md) for the response format. Future
+assignments become occupied at arrival time. Later updates arrive sequentially,
+after the preceding decisions have been applied. Empty ordinary `2xx`
+acknowledgments make no plan changes. Invalid decisions, redirects, other
 statuses, network errors, or a 10-second socket timeout fail the run. There are
 no retries. Evaluate schedules using the supplied simulated time.
 

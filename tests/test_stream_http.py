@@ -1,4 +1,5 @@
 import http.client
+import copy
 import json
 import shutil
 import tempfile
@@ -16,6 +17,10 @@ from smartgate_stream.validation import load_scenario
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "scripted.json"
 
 
+def message_fields(message):
+    return {key: value for key, value in message.items() if key not in ("gateState", "unassignedAircraft")}
+
+
 class Webhook(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
@@ -29,8 +34,17 @@ class Webhook(BaseHTTPRequestHandler):
             return
         status = (self.server.initialization_status if message["action"] == "InitializeAirport"
                   else self.server.response_status)
+        body = self.server.response_body
+        if callable(body):
+            body = body(message)
+        encoded = json.dumps(body).encode() if body is not None else b""
         self.send_response(status)
+        if encoded:
+            self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(encoded)))
         self.end_headers()
+        if encoded:
+            self.wfile.write(encoded)
 
 
 class HttpTests(unittest.TestCase):
@@ -44,6 +58,7 @@ class HttpTests(unittest.TestCase):
         self.webhook.release.set()
         self.webhook.response_status = 204
         self.webhook.initialization_status = 204
+        self.webhook.response_body = None
         self.control = ControlServer(0)
         self.threads = []
         for server in (self.webhook, self.control):
@@ -92,7 +107,7 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(code, 201)
         state = self.terminal(created["run_id"])
         self.assertEqual((state["status"], state["delivered"]), ("completed", len(expected)))
-        self.assertEqual([r[0] for r in self.webhook.received], [e["message"] for e in expected])
+        self.assertEqual([message_fields(r[0]) for r in self.webhook.received], [e["message"] for e in expected])
         for index, (_, headers) in enumerate(self.webhook.received):
             headers = {k.lower(): v for k, v in headers.items()}
             self.assertEqual(headers["x-stream-event-id"], f"{state['run_id']}:{index}")
@@ -137,7 +152,8 @@ class HttpTests(unittest.TestCase):
         state = self.terminal(created["run_id"], timeout=10)
         self.assertEqual(state["status"], "completed", state["error"])
         self.assertEqual(state["delivered"], len(scenario["events"]))
-        self.assertEqual([r[0] for r in self.webhook.received], [e["message"] for e in scenario["events"]])
+        self.assertEqual([message_fields(r[0]) for r in self.webhook.received],
+                         [message_fields(e["message"]) for e in scenario["events"]])
         for index, event in early_updates:
             headers = {k.lower(): v for k, v in self.webhook.received[index][1].items()}
             self.assertEqual(headers["x-stream-event-id"], f"{state['run_id']}:{index}")
@@ -156,7 +172,8 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(self.request("GET", f"/runs/{created['run_id']}")[1]["delivered"], 0)
         self.webhook.release.set()
         self.assertEqual(self.terminal(created["run_id"])["status"], "completed")
-        self.assertEqual([m for m, _ in self.webhook.received], [e["message"] for e in scenario["events"]])
+        self.assertEqual([message_fields(m) for m, _ in self.webhook.received],
+                         [message_fields(e["message"]) for e in scenario["events"]])
 
     def test_generated_initialization_rejection_sends_no_updates(self):
         scenario = generate(42, "2026-11-07", 24)
@@ -172,6 +189,71 @@ class HttpTests(unittest.TestCase):
                 state = self.terminal(created["run_id"])
                 self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("failed", 1, 0))
                 self.assertEqual([m["action"] for m, _ in self.webhook.received], ["InitializeAirport"])
+
+    def gate_scenario(self):
+        events = load_scenario(FIXTURE)["events"]
+        departure = copy.deepcopy(events[0]["message"])
+        arrival = copy.deepcopy(events[7]["message"])
+        arrival["action"] = "CreateFlight"
+        arrival.pop("emergencyState")
+        arrival.pop("reason")
+        initial = {"action": "InitializeAirport", "flights": [departure, arrival],
+                   "parkedAircraft": [{**departure["flight"], "gate": "D20"}], "gateOutages": []}
+        scenario = {"events": [
+            {"timestamp": "2026-11-07T05:00:00Z", "message": initial},
+            {"timestamp": "2026-11-07T12:30:00Z", "message": {
+                "action": "GateOutage", "gate": "D32", "scheduledStartTime": "08:00", "scheduledEndTime": "10:00"}},
+            {"timestamp": "2026-11-07T13:05:00Z", "message": {
+                "action": "GateOutage", "gate": "D24", "scheduledStartTime": "09:00", "scheduledEndTime": "10:00"}},
+        ]}
+        path = Path(self.temp.name) / "gates.json"
+        path.write_text(json.dumps(scenario))
+        self.options["scenario_path"] = str(path)
+        self.webhook.initialization_status = self.webhook.response_status = 200
+        return initial, arrival
+
+    def test_matcher_choices_wait_for_arrival_and_current_state_is_sent_next(self):
+        initial, arrival = self.gate_scenario()
+        leg = arrival["legs"][0]
+        choice = {"carrier": arrival["flight"]["carrier"], "leg": {key: leg.get(key) for key in (
+            "flightNumber", "flightSuffix", "originatingDate", "departureStation", "arrivalStation")}, "gate": "D22"}
+        self.webhook.response_body = lambda message: {
+            "assignments": [choice] if message["action"] == "InitializeAirport" else []}
+        code, created = self.request("POST", "/runs", self.options)
+        self.assertEqual(code, 201)
+        state = self.terminal(created["run_id"])
+        self.assertEqual((state["status"], state["delivered"]), ("completed", 3))
+        received = [message for message, _ in self.webhook.received]
+        self.assertTrue(all(len(message["gateState"]) == 121 for message in received))
+        self.assertEqual(received[0]["gateState"]["D20"], initial["flights"][0]["flight"])
+        self.assertIsNone(received[0]["gateState"]["D22"])
+        self.assertIsNone(received[1]["gateState"]["D22"])
+        self.assertEqual(received[2]["gateState"]["D22"], arrival["flight"])
+        self.assertIsNone(state["gate_state"]["D20"])
+        self.assertEqual(state["gate_state"]["D22"], arrival["flight"])
+        self.assertEqual(state["gate_state_time"], "2026-11-07T14:00:00Z")
+        saved = Path(state["records_directory"]) / "gate-state.json"
+        self.assertEqual(json.loads(saved.read_text()), state["gate_state"])
+        records = Path(state["records_directory"]) / "deliveries.jsonl"
+        self.assertEqual(json.loads(records.read_text().splitlines()[0])["matcher_response"], {"assignments": [choice]})
+
+    def test_invalid_matcher_batch_keeps_occupancy_and_stops_delivery(self):
+        initial, _ = self.gate_scenario()
+        tail = initial["parkedAircraft"][0]["registration"]
+        invalid = {"moves": [{"registration": tail, "gate": "D22"},
+                              {"registration": "C-UNKNOWN", "gate": "D24"}]}
+        self.webhook.response_body = invalid
+        code, created = self.request("POST", "/runs", self.options)
+        self.assertEqual(code, 201)
+        state = self.terminal(created["run_id"])
+        self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("failed", 1, 0))
+        self.assertEqual(len(self.webhook.received), 1)
+        self.assertEqual(state["gate_state"]["D20"], initial["flights"][0]["flight"])
+        self.assertIsNone(state["gate_state"]["D22"])
+        records = Path(state["records_directory"]) / "deliveries.jsonl"
+        record = json.loads(records.read_text().splitlines()[0])
+        self.assertEqual(record["http_status"], 200)
+        self.assertEqual(record["matcher_response"], invalid)
 
     def test_stop_wakes_paced_wait(self):
         self.options.update(mode="paced", speed=1)
