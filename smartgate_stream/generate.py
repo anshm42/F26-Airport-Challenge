@@ -1,4 +1,4 @@
-"""Seeded, synthetic Pearson traffic; no gate allocation or matcher state."""
+"""Seeded Pearson traffic and initial passenger parking; future gates belong to the matcher."""
 
 import copy
 import json
@@ -9,6 +9,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from .validation import DEFAULT_RATE, positive_number, require, validate_scenario
+from .inventory import initial_gate_state, passenger_aircraft
 
 
 DATA = Path(__file__).resolve().parents[1] / "data"
@@ -33,7 +34,8 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
     fleet_snapshot = json.loads((DATA / "opensky_fleet_2025.json").read_text(encoding="utf-8"))
     fleet = defaultdict(list)
     for aircraft in fleet_snapshot["records"]:
-        fleet[(aircraft["carrier"], aircraft["aircraftType"])].append(aircraft["registration"])
+        if passenger_aircraft(aircraft):
+            fleet[(aircraft["carrier"], aircraft["aircraftType"])].append(aircraft["registration"])
     start = datetime.combine(day, time(), TORONTO).astimezone(timezone.utc)
     next_day = datetime.combine(day + timedelta(days=1), time(), TORONTO).astimezone(timezone.utc)
     events, inbound_flights, outbound_flights = [], [], []
@@ -157,6 +159,10 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         initial_flights.append(outbound)
         outbound_flights.append((outbound, service, departure, departure + duration))
 
+    last_departure = {}
+    for message, _, departure, _ in outbound_flights:
+        tail = message["flight"]["registration"]
+        last_departure[tail] = max(last_departure.get(tail, departure), departure)
     for message, service, departure, arrival in outbound_flights:
         action = rng.choices([None, "UpdateTiming", "CancelFlight", "UpdateEquipment", "ReplaceFlight"],
                              weights=[50, 25, 8, 8, 9])[0]
@@ -175,6 +181,8 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
             update["legs"] = [{k: v for k, v in message["legs"][0].items()
                                if k in ("flightNumber", "flightSuffix", "originatingDate", "departureStation", "arrivalStation")}]
             if action == "UpdateEquipment":
+                if departure != last_departure[message["flight"]["registration"]]:
+                    continue
                 equipment = allocate(message["flight"]["carrier"], service, start, next_day, "YYZ")
                 if equipment is None:
                     continue
@@ -184,7 +192,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
             else:
                 update["cancelScope"] = {"type": rng.choice(["AllLegs", "SpecificLeg"])}
         add(when, update)
-        if action == "CancelFlight" and rng.random() < 0.5:
+        if action == "CancelFlight" and (rng.random() < 0.5 or departure != last_departure[message["flight"]["registration"]]):
             update["action"] = "ReinstateFlight"
             del update["cancelScope"]
             add(when + timedelta(seconds=rng.randint(5 * 60, 20 * 60)), update)
@@ -209,8 +217,9 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         update["legs"][0]["scheduledArrivalTime"] = early_arrival.astimezone(TORONTO).strftime("%H:%M")
         add(early_arrival - timedelta(seconds=rng.randint(5 * 60, 20 * 60)), update)
 
+    parked_aircraft, gates = initial_gate_state(parked_aircraft, assign=True)
     add(start, {"action": "InitializeAirport", "flights": initial_flights,
-                "parkedAircraft": parked_aircraft, "gateOutages": []})
+                "parkedAircraft": parked_aircraft, "gateOutages": [], "gateState": gates})
     events.sort(key=lambda event: event["timestamp"])
     scenario = {"metadata": {"seed": seed, "date": start_date, "flight_count": flight_count, "rate": rate,
                              "synthetic": True, "profiles": "data/stream_profiles.json",

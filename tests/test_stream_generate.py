@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo
 
 from smartgate_stream.__main__ import main
 from smartgate_stream.generate import generate
+from smartgate_stream.gates import GateState
 from smartgate_stream.validation import ACTIONS, load_scenario, parse_utc
 
 
@@ -80,13 +81,16 @@ class GeneratorTests(unittest.TestCase):
                 idle, departing = 0, 0
                 for aircraft in initial["parkedAircraft"]:
                     self.assertIn((aircraft["carrier"], aircraft["aircraftType"], aircraft["registration"]), known)
-                    self.assertNotIn("gate", aircraft)
+                    self.assertIn(aircraft["gate"], initial["gateState"])
+                    self.assertEqual(initial["gateState"][aircraft["gate"]],
+                                     {key: aircraft[key] for key in ("carrier", "registration", "aircraftType")})
                     self.assertNotIn("stand", aircraft)
                     flights = [m for m in initial["flights"] if m["flight"]["registration"] == aircraft["registration"]]
                     if flights:
                         departing += 1
                         self.assertEqual(len(flights), 1)
-                        self.assertEqual(flights[0]["flight"], aircraft)
+                        self.assertEqual(flights[0]["flight"],
+                                         {key: aircraft[key] for key in ("carrier", "registration", "aircraftType")})
                         leg = flights[0]["legs"][0]
                         self.assertEqual(leg["departureStation"], "YYZ")
                         self.assertEqual(leg["originatingDate"], day)
@@ -98,10 +102,27 @@ class GeneratorTests(unittest.TestCase):
                     self.assertTrue(all(m["action"] == "UpdateEquipment" for m in movements))
                 self.assertGreater(idle, 0)
                 self.assertGreater(departing, 0)
+                self.assertEqual(sum(plane is not None for plane in initial["gateState"].values()), len(initial["parkedAircraft"]))
+                self.assertEqual(len(initial["gateState"]), 121)
                 parked = {a["registration"] for a in initial["parkedAircraft"]}
                 for event in scenario["events"][1:]:
                     if event["message"]["action"] == "UpdateEquipment":
                         self.assertIn(event["message"]["flight"]["registration"], parked)
+
+    def test_generated_movements_preserve_aircraft_presence_through_day_end(self):
+        for seed, day, count in ((42, "2026-11-07", 400), (1, "2026-11-07", 1200),
+                                  (7, "2026-03-08", 120), (7, "2026-11-01", 120)):
+            with self.subTest(seed=seed, day=day, count=count):
+                scenario = generate(seed, day, count)
+                state = GateState()
+                for event in scenario["events"]:
+                    state.apply_message(event["message"], event["timestamp"])
+                while (when := state.next_movement()) is not None:
+                    state.advance(when)
+                occupied = [plane["registration"] for plane in state.gates.values() if plane is not None]
+                self.assertEqual(len(occupied), len(set(occupied)))
+                self.assertLessEqual(set(occupied), set(state.grounded))
+                self.assertLess(state.now, state.day_end)
 
     def test_updates_have_irregular_gaps_and_second_precision(self):
         events = self.scenario["events"]

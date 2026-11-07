@@ -1,8 +1,8 @@
 # SmartGate
 
 The dynamic update server replays synthetic Pearson flight updates to a matching
-algorithm over an HTTP(S) webhook. The matcher owns flight state and gate/stand
-allocation.
+algorithm over an HTTP(S) webhook. The matcher chooses future gates; the stream
+owns current passenger-gate occupancy and simulated aircraft movements.
 
 ## Dynamic update server
 
@@ -22,9 +22,14 @@ Defaults are seed `1`, `1200` flights, and rate `60`; flight counts must be 1–
 The flight count is the number of scheduled legs in the initial snapshot.
 Generation includes the known schedule, parked aircraft, and later updates,
 including early arrivals, delays, equipment changes, outages, and diversions.
+Only initially parked aircraft receive initial `gate` values. Future flights do
+not occupy initial gates. The `gateState` object covers terminal passenger gates
+and the H remote positions included for this simulation.
 
 To skip generation, use the checked-in
 [seeded daily scenario](fixtures/pearson-2026-11-07-seed42.json) as `scenario_path`.
+The [400-flight test scenario](fixtures/pearson-400-flights-seed42.json) is smaller;
+see its [usage notes](fixtures/README.md).
 
 ### 2. Start the control server
 

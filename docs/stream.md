@@ -8,9 +8,9 @@ python3 -m smartgate_stream serve --port 8080
 
 The control API listens on `127.0.0.1` only. The updater owns the
 [webhook API](#webhook-api); the matcher implements its receiving endpoint. The
-stream never assigns gates, tracks matcher flight
-state, or evaluates operational feasibility. `GateOutage` announces an unavailable
-resource; choosing gates remains entirely the matcher's responsibility.
+stream owns current passenger occupancy and simulates aircraft movements. It
+supplies initial positions for aircraft already at YYZ; the matcher chooses future
+assignments and explicit moves. See the [gate-state contract](../GateStateSpecification.md).
 
 ## Generate a scenario
 
@@ -43,8 +43,11 @@ no departure that day. Smaller scenarios scale these startup counts down; the
 maximum remains twelve departing and four idle aircraft. These aircraft use
 Air Canada's checked-in fleet and route profile. Spare aircraft needed for later
 equipment swaps also start parked; they come from each affected carrier's fleet
-and are reserved exclusively for that swap. The matcher chooses all initial
-gates/stands; the generator supplies no assignments.
+and are reserved exclusively for that swap. Every initially parked aircraft has a
+`gate`; the initial `gateState` contains those occupants and `null` at all other
+positions. Aircraft scheduled to arrive later have no initial gate. Placements
+use the carrier's terminal defaults, then H parking if needed; they are synthetic,
+not a verified aircraft/stand capability matrix.
 
 The generator then sends timing changes, replacement schedules, equipment swaps,
 cancellations/reinstatements, gate outages, and occasional diversions, including
@@ -76,7 +79,10 @@ When a carrier's pool cannot fit another rotation, generation tries other
 Pearson carriers; if no placement is found, it fails with a capacity error rather
 than inventing registrations. High flight counts may exceed this historical pool.
 Local station times use IANA time zones; event announcements are UTC, including on
-Toronto daylight-saving transitions. No flight contains a gate assignment.
+Toronto daylight-saving transitions. Scheduled flight/leg objects contain no
+initial gate; only the `parkedAircraft` records do. Equipment swaps use the tail's
+last rotation; an earlier cancelled departure is reinstated before departure so
+the same aircraft can perform its later rotations.
 
 Diversions carry the optional top-level `emergencyState` field: `"Turnback"` gets
 terminal-gate priority, while `"Emergency"` allows compatible remote stands. `reason`
@@ -123,12 +129,13 @@ source metadata and profiles.
 ## Start and inspect a run
 
 A scenario may start with `InitializeAirport`, containing its known schedule,
-parked aircraft, and active outages. The matcher loads this state and makes the
-initial gate/stand allocation before returning HTTP `200` or `204`; replay starts
+initially occupied gates, and active outages. The matcher loads those positions
+and plans future assignments before returning HTTP `200` or `204`; replay starts
 only after that response. HTTP `202` fails initialization. See
 [daily initialization](../JsonFlightMessageSpecification.md#daily-initialization).
-For older fixtures without this message, prepare the matcher before replay;
-`POST /runs` and a new run ID do not reset it. Days remain independent.
+Older initialized fixtures without gates for parked aircraft must be regenerated.
+Incremental fixtures without this message start with an empty gate map; scheduled
+flights alone never imply that an aircraft is already on the ground. Days remain independent.
 
 Start a matcher (or a test receiver) implementing the updater's
 [webhook API](#webhook-api), then:
@@ -193,33 +200,11 @@ Toronto date; an earlier end time crosses midnight.
 
 ## Webhook API
 
-This contract is owned by the updater. The matching algorithm must implement a
-receiver that accepts these requests and maps them into its own flight state.
-The run's `webhook_url` supplies the receiver's HTTP(S) address and path; examples
-use `POST /updates`. Changing that URL does not change the API's payload or semantics.
-
-Each event sends one `POST` with `Content-Type: application/json`, containing its
-`message` unchanged in value (JSON formatting may differ). The body follows the
-[JSON Flight Message Specification](../JsonFlightMessageSpecification.md); it has no
-`events`, `timestamp`, or `message` wrapper. The envelope stays outside the body, in
-required headers:
-
-- `X-Stream-Run-Id`: random run identifier.
-- `X-Stream-Event-Id`: `RUN_ID:INDEX`, with a zero-based file index.
-- `X-Stream-Simulated-Time`: the event's exact timestamp string.
-
-The receiver must accept the eight update actions and `InitializeAirport`, and use the supplied simulated
-time for schedule evaluation. Requests arrive sequentially in fixture order,
-including events with equal timestamps; the updater waits for each acknowledgment
-before sending the next event. An asynchronous matcher must preserve that order
-when applying updates.
-
-For ordinary updates, the receiver returns a 2xx status to acknowledge receipt (for example, `204 No
-Content` or `202 Accepted`). The updater ignores the response body. An acknowledgment
-does not prove matching computation finished. Measure
-matcher computation in matcher logs, correlated by event ID. Redirects, non-2xx
-responses, connection failures, and a 10-second socket timeout fail the run at the
-first affected event. There are no retries.
+See the [shared HTTP contract](webhook-api.md) and
+[gate-state/decision specification](../GateStateSpecification.md). Each request
+includes current `gateState` and `unassignedAircraft`; HTTP `200` JSON responses
+can return `assignments` and `moves`. Future assignments take effect at arrival,
+not when the matcher returns its choice. Empty acknowledgments make no plan changes.
 
 ## Clock and records
 

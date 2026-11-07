@@ -6,6 +6,8 @@ import re
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+from .inventory import AIRCRAFT_FIELDS, canonical_gate, catalog, initial_gate_state, passenger_aircraft
+
 
 ACTIONS = {
     "CreateFlight", "ReplaceFlight", "UpdateTiming", "CancelFlight",
@@ -56,12 +58,46 @@ def validate_aircraft(aircraft):
     string_field(aircraft, "carrier", r"[A-Z0-9]{2}")
     string_field(aircraft, "registration", r"[A-Z0-9]+(?:-[A-Z0-9]+)*")
     string_field(aircraft, "aircraftType", r"[A-Z0-9]{3}")
+    require(passenger_aircraft(aircraft), "aircraft type must be a configured commercial passenger type")
+
+
+def validate_leg_reference(leg):
+    require(isinstance(leg, dict), "each leg must be an object")
+    string_field(leg, "flightNumber", r"[0-9]{1,4}")
+    if leg.get("flightSuffix") is not None:
+        string_field(leg, "flightSuffix", r"[A-Za-z]")
+    date.fromisoformat(string_field(leg, "originatingDate", r"[0-9]{4}-[0-9]{2}-[0-9]{2}"))
+    string_field(leg, "departureStation", r"[A-Z]{3}")
+    string_field(leg, "arrivalStation", r"[A-Z]{3}")
+
+
+def flight_key(carrier, leg):
+    return (carrier, leg["flightNumber"], leg.get("flightSuffix"), leg["originatingDate"],
+            leg["departureStation"], leg["arrivalStation"])
+
+
+def validate_gate_state(gates):
+    require(isinstance(gates, dict) and set(gates) == set(catalog()["gates"]),
+            "gateState must contain every canonical passenger gate and H position")
+    registrations, footprints = set(), set()
+    for gate, aircraft in gates.items():
+        if aircraft is None:
+            continue
+        validate_aircraft(aircraft)
+        require(set(aircraft) == set(AIRCRAFT_FIELDS), "gateState occupants contain only aircraft identity fields")
+        require(aircraft["registration"] not in registrations, "aircraft occupies more than one gate")
+        registrations.add(aircraft["registration"])
+        footprint = catalog()["footprints"][gate]
+        require(footprint not in footprints, "overlapping H positions cannot be occupied simultaneously")
+        footprints.add(footprint)
 
 
 def validate_message(message):
     require(isinstance(message, dict), "message must be an object")
     action = message.get("action")
     require(isinstance(action, str) and action in ACTIONS, "unsupported action")
+    if "gateState" in message:
+        validate_gate_state(message["gateState"])
     if action == "InitializeAirport":
         aircraft, flights, gates = {}, set(), set()
         for field, expected in (("flights", "CreateFlight"), ("gateOutages", "GateOutage")):
@@ -93,6 +129,9 @@ def validate_message(message):
             registrations.add(tail)
             identity = (flight["carrier"], flight["aircraftType"])
             require(aircraft.get(tail, identity) == identity, "conflicting initial aircraft details")
+        _, expected_gates = initial_gate_state(parked)
+        if "gateState" in message:
+            require(message["gateState"] == expected_gates, "initial gateState must match parkedAircraft exactly")
         return
     if action == "GateOutage":
         require("flight" not in message and "legs" not in message,
@@ -110,19 +149,16 @@ def validate_message(message):
                 "invalid emergencyState")
     flight = object_field(message, "flight")
     validate_aircraft(flight)
+    require("gate" not in message and "gate" not in flight,
+            "initial gates belong only to parkedAircraft, not scheduled flights")
     legs = message.get("legs")
     require(isinstance(legs, list) and len(legs) > 0, "legs must be a nonempty array")
     complete = action in COMPLETE_ACTIONS
     if not complete or action == "DivertFlight":
         require(len(legs) == 1, f"{action} requires exactly one leg")
     for index, leg in enumerate(legs):
-        require(isinstance(leg, dict), "each leg must be an object")
-        string_field(leg, "flightNumber", r"[0-9]{1,4}")
-        if leg.get("flightSuffix") is not None:
-            string_field(leg, "flightSuffix", r"[A-Za-z]")
-        date.fromisoformat(string_field(leg, "originatingDate", r"[0-9]{4}-[0-9]{2}-[0-9]{2}"))
-        string_field(leg, "departureStation", r"[A-Z]{3}")
-        string_field(leg, "arrivalStation", r"[A-Z]{3}")
+        validate_leg_reference(leg)
+        require("gate" not in leg, "scheduled legs cannot carry an initial gate")
         if complete:
             require(leg.get("legType") == ("Originating" if index == 0 else "Through"),
                     "complete legs must start with Originating, followed by Through")
@@ -162,7 +198,13 @@ def reject_constant(value):
 
 
 def read_json(text):
-    return json.loads(text, parse_constant=reject_constant)
+    def unique_object(pairs):
+        value = {}
+        for key, item in pairs:
+            require(key not in value, f"duplicate JSON field: {key}")
+            value[key] = item
+        return value
+    return json.loads(text, parse_constant=reject_constant, object_pairs_hook=unique_object)
 
 
 def validate_scenario(scenario):
