@@ -56,6 +56,17 @@ class GeneratorTests(unittest.TestCase):
             with self.subTest(rate=rate), self.assertRaises(ValueError):
                 generate(42, "2026-11-07", rate=rate)
 
+    def test_announcements_have_irregular_gaps_second_precision_and_bursts(self):
+        events = self.scenario["events"]
+        timestamps = [parse_utc(event["timestamp"]) for event in events]
+        gaps = [(following - current).total_seconds() for current, following in zip(timestamps, timestamps[1:])]
+        self.assertIn(0, gaps)
+        self.assertGreater(len(set(gaps)), 10)
+        for action in ACTIONS:
+            with self.subTest(action=action):
+                times = [parse_utc(e["timestamp"]) for e in events if e["message"]["action"] == action]
+                self.assertTrue(any(t.second != 0 for t in times))
+
     def test_profiles_use_pearson_carriers_known_aircraft_and_airports(self):
         carriers = {r["carrier"] for r in self.pearson["airlineTerminals"]["records"]}
         aircraft = json.loads((ROOT / "data" / "aircraft.json").read_text())["aircraftTypes"]["records"]

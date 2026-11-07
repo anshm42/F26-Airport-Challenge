@@ -92,7 +92,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         divert = message_for(profile, aircraft, tail, "YUL", "YYZ",
                              arrival - timedelta(minutes=80), arrival)
         divert.update(action="DivertFlight", reason=rng.choice(["medical", "diversion"]))
-        add(arrival - timedelta(minutes=rng.randint(15, 30)), divert)
+        add(arrival - timedelta(seconds=rng.randint(15 * 60, 30 * 60)), divert)
 
     rotations = (flight_count + 1) // 2
     chosen = list(carriers) if rotations >= len(carriers) else []
@@ -127,7 +127,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
             raise ValueError(f"cannot fit {flight_count} flights into the snapshot fleet for {profile['carrier']}; reduce --flights")
         aircraft, tail = equipment
         inbound = message_for(profile, aircraft, tail, station, "YYZ", arrival - duration, arrival)
-        announcement = start + timedelta(minutes=rng.randrange(180))
+        announcement = start + timedelta(seconds=rng.randrange(180 * 60))
         add(announcement, inbound)
         if index * 2 + 1 >= flight_count:
             continue
@@ -140,7 +140,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
                              weights=[50, 25, 8, 8, 9])[0]
         if action is None:
             continue
-        when = departure - timedelta(minutes=rng.randint(30, 90))
+        when = departure - timedelta(seconds=rng.randint(30 * 60, 90 * 60))
         update = copy.deepcopy(message)
         update["action"] = action
         if action in ("UpdateTiming", "ReplaceFlight"):
@@ -166,7 +166,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
         if action == "CancelFlight" and rng.random() < 0.5:
             update["action"] = "ReinstateFlight"
             del update["cancelScope"]
-            add(when + timedelta(minutes=rng.randint(5, 20)), update)
+            add(when + timedelta(seconds=rng.randint(5 * 60, 20 * 60)), update)
 
     pearson = json.loads((DATA / "pearson.json").read_text(encoding="utf-8"))
     gates = [group[0] for terminal in pearson["passengerGateGroups"]["terminals"].values()
@@ -177,7 +177,7 @@ def generate(seed, start_date, flight_count=1200, rate=DEFAULT_RATE):
                   "scheduledStartTime": outage_start.strftime("%H:%M")}
         if rng.random() < 0.8:
             outage["scheduledEndTime"] = (outage_start + timedelta(minutes=rng.randint(30, 180))).strftime("%H:%M")
-        add(outage_start - timedelta(minutes=rng.randint(0, 30)), outage)
+        add(outage_start - timedelta(seconds=rng.randint(0, 30 * 60)), outage)
     events.sort(key=lambda event: event["timestamp"])
     scenario = {"metadata": {"seed": seed, "date": start_date, "flight_count": flight_count, "rate": rate,
                              "synthetic": True, "profiles": "data/stream_profiles.json",

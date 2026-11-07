@@ -39,6 +39,9 @@ arrivals/departures, plus those extra events. Odd counts leave one unpaired inbo
 Creates announce the initial schedule during the first three hours of the day;
 perturbations announce later, before affected departures. Some long-haul inbound
 legs depart their origin on the preceding local date.
+Announcements are sampled at second resolution within their notice windows.
+Related messages can arrive together, and gaps vary between events; flight and
+outage schedule fields retain their required `HH:MM` format.
 
 [Traffic profiles](../data/stream_profiles.json) use a weighted selection of twelve
 Pearson-serving carriers, with actual registration/type pairs from the
@@ -97,13 +100,13 @@ Start a matcher (or a test webhook) accepting JSON POSTs, then:
 ```sh
 curl -X POST http://127.0.0.1:8080/runs \
   -H 'Content-Type: application/json' \
-  -d '{"scenario_path":"fixtures/scripted.json","webhook_url":"http://127.0.0.1:9000/updates","mode":"paced","speed":60}'
+  -d '{"scenario_path":"/tmp/pearson-scenario.json","webhook_url":"http://127.0.0.1:9000/updates","mode":"paced"}'
 ```
 
 The `201` response includes `run_id`, status, counters, and `records_directory`.
 Paths are resolved by the server, relative to its working directory. Fixtures are
-fully loaded and validated before the worker starts. The scripted fixture covers
-all eight actions, including equal-time events.
+fully loaded and validated before the worker starts. Use `fixtures/scripted.json`
+as the path for a small fixed scenario covering all eight actions and equal-time events.
 
 ```sh
 curl http://127.0.0.1:8080/runs/RUN_ID
