@@ -12,25 +12,66 @@ The `flight` object holds the shared aircraft details: operating carrier, regist
 
 ## Daily Initialization
 
-Each day is an independent simulation. During modeled overnight downtime, the
-matcher is reinitialized before the next day's replay. Its initial state consists
-of the static gate, stand, and aircraft reference data, with an empty flight
-schedule and no dynamic aircraft occupancy or gate/stand assignments.
+An independent simulation can begin with `InitializeAirport`, sent to the same
+webhook as ordinary updates. It must be the first message and may occur only once
+in a scenario. `X-Stream-Simulated-Time` supplies the snapshot's UTC start time.
 
-The reset clears the previous day's flights, timing/equipment changes,
-cancellations, and dynamic gate outages. Static restrictions remain in effect,
-and prior run records are retained for audit. Aircraft and assignments are not
-carried between days.
+The message contains three required arrays:
 
-`CreateFlight` messages establish that day's baseline schedule. Subsequent update
-messages refer to flights already created; `DivertFlight` can introduce an
-unscheduled inbound. The generated baseline is announced during the first three
-simulated hours of the day.
+- `flights`: the complete known schedule, using existing `CreateFlight` messages.
+- `parkedAircraft`: aircraft already on the ground at YYZ, each containing the
+  same `carrier`, `registration`, and `aircraftType` fields as a `flight` object.
+  A parked aircraft may have no departure scheduled. No gate or stand is supplied.
+- `gateOutages`: already known restrictions, using existing `GateOutage` messages.
+  Outage windows use the snapshot's Toronto date and the usual midnight rules.
 
-The matcher or test harness performs initialization before starting delivery.
-Starting an updater run does not reset the receiver, and `X-Stream-Run-Id` is a
-correlation identifier, not a reset instruction. Overnight downtime is a simulation
-assumption; it does not represent an airport-wide closure at Pearson.
+The matcher loads static airport/aircraft references, replaces its previous
+dynamic state with this snapshot, and allocates compatible gates or stands for
+parked aircraft. Those placements become occupied positions; idle aircraft remain
+parked until a later movement. The matcher also builds its initial plan for the
+known flights. Prior run records remain available for audit.
+
+Only after initialization and allocation finish successfully may the receiver
+return `200 OK` or `204 No Content`. It must reject an invalid or infeasible
+snapshot with a non-2xx status; partial initialization must not become active.
+`202 Accepted` is insufficient for initialization and fails the run. The same
+10-second socket timeout applies. The replay clock starts after successful
+initialization, so allocation time does not consume the simulated day's gaps.
+
+```json
+{
+  "action": "InitializeAirport",
+  "flights": [
+    {
+      "action": "CreateFlight",
+      "flight": {"carrier": "AC", "registration": "C-FCEU", "aircraftType": "321"},
+      "legs": [
+        {
+          "legType": "Originating",
+          "flightNumber": "456",
+          "flightSuffix": null,
+          "originatingDate": "2026-11-07",
+          "departureStation": "YYZ",
+          "arrivalStation": "YUL",
+          "scheduledDepartureTime": "07:00",
+          "scheduledArrivalTime": "08:15"
+        }
+      ]
+    }
+  ],
+  "parkedAircraft": [
+    {"carrier": "AC", "registration": "C-FCEU", "aircraftType": "321"}
+  ],
+  "gateOutages": []
+}
+```
+
+Subsequent updates refer to baseline flights. `CreateFlight` can add a newly
+announced schedule, and `DivertFlight` can introduce an unscheduled inbound.
+Fixtures without `InitializeAirport` retain the earlier incremental behavior:
+the matcher or harness prepares their initial state before replay, and ordinary
+`CreateFlight` events build their schedule. A new run ID alone never resets the
+matcher. Generated days are independent; cross-day state transfer is not provided.
 
 ## Key Industry Terms
 
@@ -56,6 +97,7 @@ assumption; it does not represent an airport-wide closure at Pearson.
 
 ## Message Actions
 
+- **InitializeAirport** = Load the initial schedule and parked aircraft, then allocate their starting positions
 - **CreateFlight** = Create a new flight schedule
 - **ReplaceFlight** = Replace an existing flight schedule
 - **UpdateTiming** = Update only timing information
@@ -718,6 +760,7 @@ the gate or stand.
 - `flight` object containing `carrier`, `registration`, and `aircraftType`, for every flight message
 - `legs` array for every flight message, using complete leg objects or a leg reference as described above
 - `GateOutage` is a resource message and has neither `flight` nor `legs`
+- `InitializeAirport` uses `flights`, `parkedAircraft`, and `gateOutages` arrays instead of a top-level `flight` or `legs`
 
 **Conditionally Required:**
 - Complete leg objects with `legType` and scheduled times - Required for `CreateFlight`, `ReplaceFlight`, `UpdateTiming`, and `DivertFlight`
