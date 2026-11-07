@@ -108,6 +108,15 @@ source metadata and profiles.
 
 ## Start and inspect a run
 
+Each day is an independent simulation. During modeled overnight downtime,
+reinitialize the matcher with static reference data and clear the previous day's
+flights, dynamic outages, aircraft occupancy, and gate/stand assignments. Retain
+prior run records for audit. The day's `CreateFlight` messages build its baseline
+schedule, as defined under
+[daily initialization](../JsonFlightMessageSpecification.md#daily-initialization).
+Complete this reset before starting replay: `POST /runs` and a new run ID do not
+reset the matcher. The stream does not carry aircraft or assignments between days.
+
 Start a matcher (or a test receiver) implementing the updater's
 [webhook API](#webhook-api), then:
 
