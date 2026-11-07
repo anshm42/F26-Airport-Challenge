@@ -118,6 +118,10 @@ class HttpTests(unittest.TestCase):
 
     def test_generated_day_delivers_every_message_in_order(self):
         scenario = generate(42, "2026-11-07")
+        early_updates = [(index, event) for index, event in enumerate(scenario["events"])
+                         if event["message"]["action"] == "UpdateTiming"
+                         and event["message"]["legs"][0]["arrivalStation"] == "YYZ"]
+        self.assertTrue(early_updates, "generated day must exercise early inbound arrivals")
         path = Path(self.temp.name) / "generated.json"
         path.write_text(json.dumps(scenario))
         self.options["scenario_path"] = str(path)
@@ -127,6 +131,10 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(state["status"], "completed", state["error"])
         self.assertEqual(state["delivered"], len(scenario["events"]))
         self.assertEqual([r[0] for r in self.webhook.received], [e["message"] for e in scenario["events"]])
+        for index, event in early_updates:
+            headers = {k.lower(): v for k, v in self.webhook.received[index][1].items()}
+            self.assertEqual(headers["x-stream-event-id"], f"{state['run_id']}:{index}")
+            self.assertEqual(headers["x-stream-simulated-time"], event["timestamp"])
 
     def test_stop_wakes_paced_wait(self):
         self.options.update(mode="paced", speed=1)
