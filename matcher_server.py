@@ -1196,7 +1196,8 @@ def build_stream_decisions(
         start = float(session["start"])
         gate_start = float(gate_starts.get(sid, start))
         registration = str(session.get("registration", ""))
-        is_current = registration in occupied_now or registration in unassigned_now
+        is_grounded = registration in occupied_now or registration in unassigned_now
+        is_current = is_grounded and start <= now_minute < float(session["end"])
         # The stream does not schedule delayed tow-in times. Do not send a gate
         # choice before its actual gate-entry time; send it when the aircraft is
         # on the ground and the reserved slot has become usable.
