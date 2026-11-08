@@ -702,6 +702,7 @@ class ScenarioState:
         sessions[session_id] = {
             "id": session_id,
             "registration": registration,
+            "carrier": norm(aircraft.get("carrier")),
             "aircraftType": aircraft_type,
             "widthClass": width_class,
             "start": minutes_from_epoch(start, self.epoch),
@@ -1282,10 +1283,7 @@ def dashboard_snapshot() -> dict[str, Any]:
         gate_assignments.append({
             "session_id": sid,
             "registration": session.get("registration"),
-            "carrier": next((route["carrier"] for route in STATE.routes.values()
-                             for entry in route["legs"]
-                             if entry["token"] in (session.get("start_token"), session.get("end_token"))),
-                            session.get("carrier")),
+            "carrier": session.get("carrier"),
             "aircraft_type": session.get("aircraftType"),
             "gate": gate,
             "arrival_minute": session.get("start"),
@@ -1308,6 +1306,7 @@ def dashboard_snapshot() -> dict[str, Any]:
         "unassigned": status["unassigned_sessions"],
         "unassigned_details": status["unassigned_details"],
         "gate_state": copy.deepcopy(LATEST_GATE_STATE),
+        "gate_state_source": "latest stream snapshot received before the current matcher decision",
         "unassigned_aircraft": copy.deepcopy(LATEST_UNASSIGNED_AIRCRAFT),
         "gates": gates,
         "outages": copy.deepcopy(STATE.outages),
@@ -1716,7 +1715,8 @@ def broadcast_passenger_assignments(*, force: bool = False) -> None:
 
 
 class MatcherHandler(BaseHTTPRequestHandler):
-    server_version = "SmartGateMatcher/1.0"
+    server_version = "SmartGateMatcher/2.0"
+    protocol_version = "HTTP/1.1"
 
     def log_message(self, fmt: str, *args) -> None:
         sys.stdout.write("[%s] %s\n" % (self.log_date_time_string(), fmt % args))
@@ -1740,16 +1740,18 @@ class MatcherHandler(BaseHTTPRequestHandler):
 
         selectors = parse_passenger_gate_selectors(parse_qs(query).get("gates", [None])[0])
         sock = self.connection
-        with PASSENGER_CLIENT_LOCK:
-            PASSENGER_CLIENTS[sock] = selectors
         try:
+            # Serialize initial snapshot + registration with stream updates so
+            # a client cannot miss an update between its snapshot and subscribe.
             with STATE_LOCK:
                 message = build_passenger_message()
-            outgoing = {
-                **message,
-                "flights": filter_passenger_flights(message["flights"], selectors),
-            }
-            _ws_send(sock, json.dumps(outgoing, separators=(",", ":"), allow_nan=False).encode("utf-8"))
+                with PASSENGER_CLIENT_LOCK:
+                    PASSENGER_CLIENTS[sock] = selectors
+                    outgoing = {
+                        **message,
+                        "flights": filter_passenger_flights(message["flights"], selectors),
+                    }
+                    _ws_send(sock, json.dumps(outgoing, separators=(",", ":"), allow_nan=False).encode("utf-8"))
             while True:
                 opcode, payload = _ws_read_frame(sock)
                 if opcode is None:
