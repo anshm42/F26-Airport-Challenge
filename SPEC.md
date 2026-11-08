@@ -59,6 +59,9 @@ The operator and passenger gate views read from the matching algorithm's API and
 - Algorithm improvements
 	- Includes benchmarking to show empirically
 	- Stress testing, scaling, argue that it'll handle load
+- Dynamic updates under load (second pass)
+	- Slow webhook partners: a fixed 10 s socket timeout with no retries fails the whole run at the first slow response, so a stress test can't show degradation. Make the timeout configurable and record late responses instead of aborting.
+	- Per-decision overhead: each response deep-copies the full gate state, and the visit-consistency check scans every flight per inbound leg, which caps unpaced throughput
 - More data stored
 	- Gate information
 	- Plane information

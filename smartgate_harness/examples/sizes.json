@@ -1,0 +1,28 @@
+{
+  "output_dir": "harness-results",
+  "parallel": true,
+  "run_timeout_seconds": 1800,
+  "algorithms": {
+    "matcher": {
+      "webhook_url": "http://127.0.0.1:9000/updates",
+      "websocket_url": "ws://127.0.0.1:9000/passenger/ws",
+      "health_url": "http://127.0.0.1:9000/health",
+      "stream_port": 8701
+    },
+    "naive": {
+      "command": ["{python}", "-m", "smartgate_naive", "--port", "9100"],
+      "webhook_url": "http://127.0.0.1:9100/updates",
+      "websocket_url": "ws://127.0.0.1:9100/passenger/ws",
+      "health_url": "http://127.0.0.1:9100/health",
+      "stream_port": 8702
+    }
+  },
+  "runs": [
+    {"name": "flights-200", "generate": {"flights": 200, "seed": 42, "date": "2026-11-07"}, "mode": "unpaced"},
+    {"name": "flights-400", "scenario": "fixtures/pearson-400-flights-seed42.json", "mode": "unpaced"},
+    {"name": "flights-600", "generate": {"flights": 600, "seed": 42, "date": "2026-11-07"}, "mode": "unpaced"},
+    {"name": "flights-800", "generate": {"flights": 800, "seed": 42, "date": "2026-11-07"}, "mode": "unpaced"},
+    {"name": "flights-1000", "generate": {"flights": 1000, "seed": 42, "date": "2026-11-07"}, "mode": "unpaced"},
+    {"name": "flights-1200", "scenario": "fixtures/pearson-2026-11-07-seed42.json", "mode": "unpaced"}
+  ]
+}

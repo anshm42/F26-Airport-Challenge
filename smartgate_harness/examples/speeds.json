@@ -1,0 +1,27 @@
+{
+  "output_dir": "harness-results",
+  "parallel": true,
+  "run_timeout_seconds": 1800,
+  "algorithms": {
+    "matcher": {
+      "webhook_url": "http://127.0.0.1:9000/updates",
+      "websocket_url": "ws://127.0.0.1:9000/passenger/ws",
+      "health_url": "http://127.0.0.1:9000/health",
+      "stream_port": 8701
+    },
+    "naive": {
+      "command": ["{python}", "-m", "smartgate_naive", "--port", "9100"],
+      "webhook_url": "http://127.0.0.1:9100/updates",
+      "websocket_url": "ws://127.0.0.1:9100/passenger/ws",
+      "health_url": "http://127.0.0.1:9100/health",
+      "stream_port": 8702
+    }
+  },
+  "runs": [
+    {"name": "1200-at-240x", "scenario": "fixtures/pearson-2026-11-07-seed42.json", "mode": "paced", "speed": 240},
+    {"name": "1200-at-960x", "scenario": "fixtures/pearson-2026-11-07-seed42.json", "mode": "paced", "speed": 960},
+    {"name": "1200-at-3840x", "scenario": "fixtures/pearson-2026-11-07-seed42.json", "mode": "paced", "speed": 3840},
+    {"name": "1200-at-15360x", "scenario": "fixtures/pearson-2026-11-07-seed42.json", "mode": "paced", "speed": 15360},
+    {"name": "1200-unpaced", "scenario": "fixtures/pearson-2026-11-07-seed42.json", "mode": "unpaced"}
+  ]
+}
