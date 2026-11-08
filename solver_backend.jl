@@ -162,6 +162,10 @@ function solve_initial(payload)
             add_to_expression!(expr, 1.0, x[(i, gate_id)])
         end
         unassigned[i] = @variable(model, binary=true)
+        # A physical occupant cannot be dropped to make room for future visits.
+        if !isempty(as_string(field(sessions[i], "fixedGate", "")))
+            fix(unassigned[i], 0.0; force=true)
+        end
         add_to_expression!(expr, 1.0, unassigned[i])
         @constraint(model, expr == 1.0)
     end

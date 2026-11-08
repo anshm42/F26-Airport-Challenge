@@ -49,6 +49,27 @@ as a stand authorization matrix.
 message on connect and on each one-second tick with changes, `heartbeat`
 otherwise. Both currently send the same messages; the board filters by gate.
 The sections below describe the older passenger message and are superseded.
+## Occupied gates and outages
+
+Each request's `gateState` is the source of physical occupancy. The matcher
+reserves each occupied gate for the remaining ground stay, including idle
+aircraft and aircraft whose flight assignment is missing. Cancelling a
+departure extends that stay to the next departure or the simulation horizon.
+An equipment change changes the flight's aircraft; it does not replace the
+aircraft physically parked at a gate.
+
+An outage blocks its whole conflict group for the specified time window.
+The matcher places current aircraft before future bookings. It can send an
+explicit immediate move, including an atomic swap, when all destinations are
+valid. Future bookings that conflict with those reservations are repaired.
+If a future booking is removed or delayed, `gate: null` clears its previous
+choice in the updater. The existing waiting and remote-stand rules still apply.
+
+The matcher checks the complete reservation plan and immediate move batch
+before it saves any state. If a current aircraft has no valid immediate gate,
+or the batch is invalid, the request fails and the last accepted matcher state
+is retained. A failed move never releases a physically occupied source gate.
+The stream stops on this failure; it does not retry the request.
 
 ## Passenger dashboard
 
