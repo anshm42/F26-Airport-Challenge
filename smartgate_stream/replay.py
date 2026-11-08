@@ -1,5 +1,6 @@
 """Sequential webhook delivery on an anchored simulation clock."""
 
+import copy
 import http.client
 import json
 import math
@@ -83,6 +84,9 @@ class Run:
         self._save_gates()
         self.stop_event = threading.Event()
         self.lock = threading.Lock()
+        self.events_condition = threading.Condition(self.lock)
+        self.decision_events = []
+        self.latest_decision = None
         self.thread = None
         self.clock = time.monotonic
         self.started = None
@@ -98,7 +102,40 @@ class Run:
     def snapshot(self):
         with self.lock:
             elapsed = 0 if self.started is None else (self.finished if self.finished is not None else self.clock()) - self.started
-            return {**self.state, "elapsed_seconds": elapsed, **self.gate_state.snapshot()}
+            return {
+                **self.state,
+                "elapsed_seconds": elapsed,
+                "decision_event_count": len(self.decision_events),
+                "latest_decision": copy.deepcopy(self.latest_decision),
+                **self.gate_state.snapshot(),
+            }
+
+    def publish_decision_event(self, event):
+        """Publish one completed event result for dashboard/API consumers."""
+        with self.events_condition:
+            event = copy.deepcopy(event)
+            event["sequence"] = len(self.decision_events) + 1
+            self.decision_events.append(event)
+            self.latest_decision = event
+            self.events_condition.notify_all()
+            return copy.deepcopy(event)
+
+    def events_after(self, sequence=0):
+        with self.lock:
+            return copy.deepcopy([
+                event for event in self.decision_events
+                if event["sequence"] > sequence
+            ])
+
+    def wait_for_events(self, sequence=0, timeout=15):
+        with self.events_condition:
+            if not any(event["sequence"] > sequence for event in self.decision_events):
+                if self.state["status"] in ACTIVE_STATUSES:
+                    self.events_condition.wait(timeout)
+            return copy.deepcopy([
+                event for event in self.decision_events
+                if event["sequence"] > sequence
+            ])
 
     def _save_gates(self):
         temporary = self.directory / ".gate-state.json.tmp"
@@ -111,6 +148,8 @@ class Run:
                 return False
             self.state["status"] = "stopping"
             self.stop_event.set()
+            with self.events_condition:
+                self.events_condition.notify_all()
             return True
 
     def start(self):
@@ -160,6 +199,7 @@ class Run:
                         if event["message"]["action"] != "InitializeAirport":
                             self.gate_state.apply_message(event["message"], timestamp)
                         payload = self.gate_state.request(event["message"])
+                        gate_state_before_decision = copy.deepcopy(self.gate_state.gates)
                         self._save_gates()
                         sent = clock()
                         self.state["attempted"] += 1
@@ -173,6 +213,7 @@ class Run:
                         "lateness_seconds": lateness, "http_status": None, "error": None, "matcher_response": None,
                     }
                     received_at = None
+                    response = None
                     try:
                         record["http_status"], response = send(self.webhook_url, payload, {
                             "X-Stream-Run-Id": self.id,
@@ -198,6 +239,40 @@ class Run:
                         self.state["max_lateness_seconds"] = max(self.state["max_lateness_seconds"], lateness)
                         if record["error"] is None:
                             self.state["delivered"] += 1
+
+                    after_state = self.gate_state.snapshot()
+                    response_object = response if isinstance(response, dict) else {}
+                    before_gates = gate_state_before_decision
+                    after_gates = after_state["gate_state"]
+                    gate_changes = [
+                        {
+                            "gate": gate,
+                            "before": before_gates.get(gate),
+                            "after": after_gates.get(gate),
+                        }
+                        for gate in after_gates
+                        if before_gates.get(gate) != after_gates.get(gate)
+                    ]
+                    self.publish_decision_event({
+                        "event_id": event_id,
+                        "event_type": event["message"]["action"],
+                        "event_timestamp": event["timestamp"],
+                        # Simulation time is paused while the synchronous matcher
+                        # handles this event, so its decision belongs to this instant.
+                        "decision_made_at": event["timestamp"],
+                        "decision_received_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                        "decision_duration_seconds": record["http_seconds"],
+                        "http_status": record["http_status"],
+                        "decision_status": "applied" if record["error"] is None else "failed",
+                        "error": record["error"],
+                        "assignments": copy.deepcopy(response_object.get("assignments", [])),
+                        "moves": copy.deepcopy(response_object.get("moves", [])),
+                        "gate_changes": gate_changes,
+                        "gate_state": after_gates,
+                        "gate_state_time": after_state["gate_state_time"],
+                        "unassigned_aircraft": after_state["unassigned_aircraft"],
+                        "planned_assignments": after_state["planned_assignments"],
+                    })
                     records.write(json.dumps(record, allow_nan=False) + "\n")
                     records.flush()
                     if record["error"]:
@@ -209,8 +284,10 @@ class Run:
             with self.lock:
                 self.state["status"] = "stopped" if self.stop_event.is_set() else "completed"
                 self.finished = clock()
+                self.events_condition.notify_all()
         except Exception as error:
-            with self.lock:
+            with self.events_condition:
                 self.state.update(status="failed", failed_event_id=event_id,
                                   error=f"{type(error).__name__}: {error}")
                 self.finished = clock()
+                self.events_condition.notify_all()
