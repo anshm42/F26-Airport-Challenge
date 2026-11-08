@@ -1011,6 +1011,9 @@ def _json_response(handler: BaseHTTPRequestHandler, status: int, payload: dict[s
     body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
     handler.send_response(status)
     handler.send_header("Content-Type", "application/json; charset=utf-8")
+    handler.send_header("Access-Control-Allow-Origin", "*")
+    handler.send_header("Access-Control-Allow-Headers", "Content-Type")
+    handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     handler.send_header("Content-Length", str(len(body)))
     handler.end_headers()
     handler.wfile.write(body)
@@ -1517,6 +1520,18 @@ def build_passenger_message() -> dict[str, Any]:
                 cancelled_time = datetime.fromisoformat(cancelled_at.replace("Z", "+00:00"))
                 if now_utc - cancelled_time > timedelta(hours=1):
                     continue
+            else:
+                # Keep completed YYZ movements on the board for roughly one hour.
+                last_movement = max(
+                    [value for value in (dep_yyz, arr_yyz) if value is not None],
+                    default=None,
+                )
+                if last_movement is not None:
+                    last_movement_utc = last_movement.replace(
+                        tzinfo=STATE.airport_tz
+                    ).astimezone(timezone.utc)
+                    if now_utc - last_movement_utc > timedelta(hours=1):
+                        continue
 
             token = entry["token"]
             gate = _passenger_gate_object(gate_by_token.get(token))
@@ -1725,6 +1740,9 @@ class MatcherHandler(BaseHTTPRequestHandler):
         if self.headers.get("Upgrade", "").lower() != "websocket":
             _json_response(self, 426, {"error": "WebSocket upgrade required"})
             return
+        if self.headers.get("Sec-WebSocket-Version") != "13":
+            _json_response(self, 400, {"error": "WebSocket version 13 is required"})
+            return
         key = self.headers.get("Sec-WebSocket-Key", "").strip()
         if not key:
             _json_response(self, 400, {"error": "Missing Sec-WebSocket-Key"})
@@ -1766,6 +1784,14 @@ class MatcherHandler(BaseHTTPRequestHandler):
         finally:
             with PASSENGER_CLIENT_LOCK:
                 PASSENGER_CLIENTS.pop(sock, None)
+
+    def do_OPTIONS(self) -> None:
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def do_GET(self) -> None:
         parsed = urlsplit(self.path)
