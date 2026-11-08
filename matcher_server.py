@@ -513,11 +513,31 @@ class ScenarioState:
 
         elif action == "UpdateEquipment":
             scope = norm((message.get("equipmentUpdate") or {}).get("scope"))
+            old_tail = norm(entry["aircraft"].get("registration"))
+            new_plane = dict(flight)
+            new_tail = norm(new_plane.get("registration"))
             if scope == "ALLLEGS":
                 for item in self.routes[route_id]["legs"]:
-                    item["aircraft"] = dict(flight)
+                    item["aircraft"] = new_plane.copy()
             else:
-                entry["aircraft"] = dict(flight)
+                entry["aircraft"] = new_plane.copy()
+
+            # Preserve an initialization parking session if the equipment
+            # update changes the registration of an aircraft that was parked.
+            gate_state = message.get("gateState", {})
+            unassigned = message.get("unassignedAircraft", [])
+            currently_grounded = (
+                any(plane is not None and norm(plane.get("registration")) == old_tail
+                    for plane in gate_state.values())
+                or any(norm(plane.get("registration")) == old_tail for plane in unassigned)
+            )
+            if (old_tail and new_tail and old_tail != new_tail and old_tail in self.parked
+                    and (scope == "ALLLEGS" or currently_grounded)):
+                parked_plane = self.parked.pop(old_tail)
+                parked_plane.update(new_plane)
+                self.parked[new_tail] = parked_plane
+                if old_tail in self.parked_gates:
+                    self.parked_gates[new_tail] = self.parked_gates.pop(old_tail)
 
         return action
 
