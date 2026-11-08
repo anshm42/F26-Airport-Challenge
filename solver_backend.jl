@@ -122,14 +122,14 @@ function solve_initial(payload)
 
     # Canonical gates sharing a conflictGroup are one physical resource.
     # Build only overlapping session pairs using a start-time sweep.
-    group_ids = unique(as_string(field(gate, "conflictGroup", "")) for gate in gates)
+    group_ids = unique([as_string(field(gate, "conflictGroup", "")) for gate in gates])
     gate_by_id = Dict(as_string(field(g, "id", "")) => g for g in gates)
     for group_id in group_ids
         isempty(group_id) && continue
         possible = Int[]
         for i in 1:n
-            any(gate_by_id[c[1]] |> g -> as_string(field(g, "conflictGroup", "")) == group_id
-                for c in candidates[i]) && push!(possible, i)
+            any(c -> as_string(field(gate_by_id[c[1]], "conflictGroup", "")) == group_id,
+                candidates[i]) && push!(possible, i)
         end
         sort!(possible, by=i -> Float64(field(sessions[i], "start", 0.0)))
         active = Int[]
