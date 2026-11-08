@@ -252,6 +252,12 @@ class ScenarioState:
         }
         global_iata_timezones = load_global_iata_timezones()
         self.station_timezones.update(global_iata_timezones)
+        if STREAM_PROFILES_JSON.is_file():
+            profiles = json.loads(STREAM_PROFILES_JSON.read_text(encoding="utf-8"))
+            for code, airport in profiles.get("airports", {}).items():
+                zone = str(airport.get("timeZone") or "").strip()
+                if zone:
+                    self.station_timezones[norm(code)] = ZoneInfo(zone)
         for code, zone in timezone_data.get("timeZones", {}).items():
             self.station_timezones[norm(code)] = ZoneInfo(zone)
         # YYZ always uses the airport timezone in pearson.json, not a second
@@ -263,50 +269,18 @@ class ScenarioState:
             "project_overrides": sorted(norm(code) for code in timezone_data.get("timeZones", {})),
         }
         self.gate_ids = {norm(g["id"]): g["id"] for g in gates}
-
-        # Passenger-facing gate labels are a separate naming system in
-        # pearson.json. Resolve them from passengerGateGroups without guessing
-        # a relationship to IFATC stand names.
-        pearson_data = json.loads(PEARSON_JSON.read_text(encoding="utf-8"))
-        self.passenger_gate_groups: dict[str, dict[str, Any]] = {}
-        terminals = (
-            pearson_data.get("passengerGateGroups", {})
-            .get("terminals", {})
-        )
-        for terminal, terminal_data in terminals.items():
-            for group in terminal_data.get("groups", []):
-                labels = [str(label).strip() for label in group if str(label).strip()]
-                group_record = {
-                    "terminal": str(terminal),
-                    "labels": labels,
-                }
-                for label in labels:
-                    self.passenger_gate_groups[norm(label)] = group_record
-
-        # Only use an explicitly documented passenger-label -> IFATC-stand
-        # crosswalk. The source snapshot currently has no such crosswalk, so
-        # labels remain unresolved until this field is populated from an
-        # authoritative GTAA/IFATC mapping. Values must be exact IFATC names.
-        raw_crosswalk = pearson_data.get("passengerGateCrosswalk", {})
-        self.passenger_gate_crosswalk: dict[str, str] = {}
-        if isinstance(raw_crosswalk, dict):
-            for passenger_label, ifatc_name in raw_crosswalk.items():
-                label_key = norm(passenger_label)
-                stand_key = norm(ifatc_name)
-                if label_key not in self.passenger_gate_groups:
-                    raise ValueError(
-                        f"Passenger gate crosswalk key {passenger_label!r} is not "
-                        "listed in passengerGateGroups.terminals."
-                    )
-                if stand_key not in self.gate_ids:
-                    raise ValueError(
-                        f"Passenger gate crosswalk target {ifatc_name!r} is not "
-                        "an exact usable IFATC stand ID."
-                    )
-                self.passenger_gate_crosswalk[label_key] = self.gate_ids[stand_key]
-        elif raw_crosswalk:
-            raise ValueError("pearson.json passengerGateCrosswalk must be an object.")
-
+        self.gate_by_id = {g["id"]: g for g in gates}
+        self.stand_to_gate = {
+            norm(stand): gate["id"]
+            for gate in gates for stand in gate.get("ifatcStandNames", [])
+        }
+        self.stand_to_conflict_group = {
+            norm(stand): gate["conflictGroup"]
+            for gate in gates for stand in gate.get("ifatcStandNames", [])
+        }
+        self.airline_terminals = dict(AIRLINE_TERMINALS)
+        self.token_legs: dict[str, dict[str, Any]] = {}
+        self.parked_gates: dict[str, str] = {}
         self.routes: dict[tuple[str, str, str, str], dict[str, Any]] = {}
         self.parked: dict[str, dict[str, str]] = {}
         self.outages: list[dict[str, Any]] = []
