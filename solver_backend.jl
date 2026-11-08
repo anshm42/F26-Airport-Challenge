@@ -34,11 +34,12 @@ function width_compatible(aircraft_class, stand_class)
     stand_class in WIDTH_CLASSES || return false
     ai = findfirst(==(aircraft_class), WIDTH_CLASSES)
     gi = findfirst(==(stand_class), WIDTH_CLASSES)
-    return gi == ai || gi == ai + 1
+    return gi >= ai
 end
 
-function overlaps_outage(session, gate_id, outages)
-    windows = field(outages, gate_id, Any[])
+function overlaps_outage(session, gate, outages)
+    group = as_string(field(gate, "conflictGroup", ""))
+    windows = field(outages, group, Any[])
     s = Float64(field(session, "start", 0.0))
     e = Float64(field(session, "end", 0.0))
     for window in windows
@@ -54,32 +55,30 @@ function gate_cost(session, gate, index::Int)
     ac_class = as_string(field(session, "widthClass", nothing))
     gate_class = as_string(field(gate, "widthClass", nothing))
     cost = ac_class == gate_class ? 0.0 : NEXT_LARGER_CLASS_PENALTY
-    kind = as_string(field(gate, "kind", "gate"))
-    remote_allowed = as_bool(field(session, "remoteAllowed", false))
-    turnback = as_bool(field(session, "turnback", false))
-    if kind == "remote"
-        cost += turnback ? TURNBACK_REMOTE_PENALTY : 0.0
-    elseif remote_allowed && !turnback
-        # For non-turnback emergencies, prefer a remote position where feasible
-        # so ordinary passenger gates remain available.
-        cost += EMERGENCY_GATE_PENALTY
+    # Remote H positions are valid passenger resources in the checked-in
+    # crosswalk, but remain a last resort when a terminal gate is feasible.
+    if as_string(field(gate, "kind", "gate")) == "remote"
+        cost += TURNBACK_REMOTE_PENALTY
     end
-    # Stable deterministic tie-break without materially changing the objective.
+    preferred = as_string(field(session, "preferredTerminal", ""))
+    terminal = as_string(field(gate, "terminal", ""))
+    if !isempty(preferred) && !isempty(terminal) && preferred != terminal
+        cost += 75.0 # soft preference only; terminals are not exclusive
+    end
     return cost + index * 0.001
 end
 
 function candidate_gates(session, gates, outages)
     result = Tuple{String,Int}[]
     ac_class = as_string(field(session, "widthClass", nothing))
-    remote_allowed = as_bool(field(session, "remoteAllowed", false))
+    fixed_gate = as_string(field(session, "fixedGate", ""))
     for (index, gate) in enumerate(gates)
         gate_id = as_string(field(gate, "id", ""))
         isempty(gate_id) && continue
-        kind = as_string(field(gate, "kind", "gate"))
-        kind == "remote" && !remote_allowed && continue
+        !isempty(fixed_gate) && gate_id != fixed_gate && continue
         gate_class = as_string(field(gate, "widthClass", nothing))
         width_compatible(ac_class, gate_class) || continue
-        overlaps_outage(session, gate_id, outages) && continue
+        overlaps_outage(session, gate, outages) && continue
         push!(result, (gate_id, index))
     end
     return result
@@ -121,24 +120,30 @@ function solve_initial(payload)
         @constraint(model, expr == 1.0)
     end
 
-    # A physical position cannot host overlapping parking sessions.
-    gate_ids = String[]
-    for i in 1:n, (gate_id, _) in candidates[i]
-        gate_id in gate_ids || push!(gate_ids, gate_id)
-    end
-    for gate_id in gate_ids
-        possible = [i for i in 1:n if any(c[1] == gate_id for c in candidates[i])]
-        for a in 1:(length(possible) - 1)
-            for b in (a + 1):length(possible)
-                i, j = possible[a], possible[b]
-                si, sj = sessions[i], sessions[j]
-                if intervals_overlap(
-                    Float64(field(si, "start", 0.0)), Float64(field(si, "end", 0.0)),
-                    Float64(field(sj, "start", 0.0)), Float64(field(sj, "end", 0.0))
-                )
-                    @constraint(model, x[(i, gate_id)] + x[(j, gate_id)] <= 1)
-                end
+    # Canonical gates sharing a conflictGroup are one physical resource.
+    # Build only overlapping session pairs using a start-time sweep.
+    group_ids = unique(as_string(field(gate, "conflictGroup", "")) for gate in gates)
+    gate_by_id = Dict(as_string(field(g, "id", "")) => g for g in gates)
+    for group_id in group_ids
+        isempty(group_id) && continue
+        possible = Int[]
+        for i in 1:n
+            any(gate_by_id[c[1]] |> g -> as_string(field(g, "conflictGroup", "")) == group_id
+                for c in candidates[i]) && push!(possible, i)
+        end
+        sort!(possible, by=i -> Float64(field(sessions[i], "start", 0.0)))
+        active = Int[]
+        for i in possible
+            start_i = Float64(field(sessions[i], "start", 0.0))
+            filter!(j -> Float64(field(sessions[j], "end", 0.0)) > start_i, active)
+            vars_i = [x[(i, c[1])] for c in candidates[i]
+                      if as_string(field(gate_by_id[c[1]], "conflictGroup", "")) == group_id]
+            for j in active
+                vars_j = [x[(j, c[1])] for c in candidates[j]
+                          if as_string(field(gate_by_id[c[1]], "conflictGroup", "")) == group_id]
+                @constraint(model, sum(vars_i) + sum(vars_j) <= 1)
             end
+            push!(active, i)
         end
     end
 
