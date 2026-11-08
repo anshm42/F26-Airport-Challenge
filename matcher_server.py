@@ -1320,11 +1320,17 @@ def dashboard_snapshot() -> dict[str, Any]:
             "run_id": CURRENT_RUN_ID,
             "last_event_id": LAST_EVENT_ID,
             "simulated_time": LATEST_SIMULATED_TIME,
+            "airport_timezone": None,
+            "schedule_epoch": None,
+            "current_minute": 0,
             "assignments": [],
             "gate_assignments": [],
             "gate_state": {},
+            "gate_state_source": None,
             "unassigned_aircraft": [],
             "gates": [],
+            "last_decision_response": copy.deepcopy(LAST_DECISION_RESPONSE),
+            "last_decision_timestamp": None,
         }
 
     sessions = STATE.build_sessions()
