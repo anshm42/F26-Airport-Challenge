@@ -609,6 +609,42 @@ class ScenarioState:
                    if arr_station == "YYZ" else None)
         return dep_yyz, arr_yyz
 
+    def _leg_aware_datetimes(self, leg: dict[str, Any]) -> tuple[datetime | None, datetime | None]:
+        """Return YYZ-local aware datetimes for the passenger wire format."""
+        day = date.fromisoformat(leg["originatingDate"])
+        dep_station = norm(leg.get("departureStation"))
+        arr_station = norm(leg.get("arrivalStation"))
+        if dep_station != "YYZ" and arr_station != "YYZ":
+            return None, None
+        dep_tz = self.airport_tz if dep_station == "YYZ" else self.station_timezones.get(dep_station)
+        arr_tz = self.airport_tz if arr_station == "YYZ" else self.station_timezones.get(arr_station)
+        if dep_tz is None or arr_tz is None:
+            missing = dep_station if dep_tz is None else arr_station
+            raise TimezoneCoverageError(
+                f"No IANA timezone is available for station {missing!r} on "
+                f"YYZ-relevant route {dep_station}->{arr_station}."
+            )
+        dep_local = datetime.combine(
+            day, parse_hhmm(leg["scheduledDepartureTime"])
+        ).replace(tzinfo=dep_tz)
+        dep_utc = dep_local.astimezone(timezone.utc)
+        arr_clock = parse_hhmm(leg["scheduledArrivalTime"])
+        arrival_candidates = [
+            datetime.combine(day + timedelta(days=offset), arr_clock).replace(tzinfo=arr_tz)
+            for offset in range(0, 3)
+        ]
+        valid_arrivals = [
+            candidate for candidate in arrival_candidates
+            if candidate.astimezone(timezone.utc) > dep_utc
+        ]
+        if not valid_arrivals:
+            raise RuntimeError(f"Could not determine arrival date for {dep_station}->{arr_station}.")
+        arr_local = min(valid_arrivals, key=lambda candidate: candidate.astimezone(timezone.utc))
+        return (
+            dep_local if dep_station == "YYZ" else None,
+            arr_local.astimezone(self.airport_tz) if arr_station == "YYZ" else None,
+        )
+
     def _all_yyz_event_times(self) -> list[datetime]:
         values: list[datetime] = []
         for route in self.routes.values():
@@ -1544,7 +1580,7 @@ def build_passenger_message() -> dict[str, Any]:
         for entry in route["legs"]:
             leg = entry["leg"]
             try:
-                dep_yyz, arr_yyz = STATE._leg_datetimes(leg)
+                dep_yyz, arr_yyz = STATE._leg_aware_datetimes(leg)
             except (KeyError, ValueError, TimezoneCoverageError):
                 continue
             if dep_yyz is None and arr_yyz is None:
@@ -1565,9 +1601,7 @@ def build_passenger_message() -> dict[str, Any]:
                     default=None,
                 )
                 if last_movement is not None:
-                    last_movement_utc = last_movement.replace(
-                        tzinfo=STATE.airport_tz
-                    ).astimezone(timezone.utc)
+                    last_movement_utc = last_movement.astimezone(timezone.utc)
                     if now_utc - last_movement_utc > timedelta(hours=1):
                         continue
 
@@ -1583,10 +1617,10 @@ def build_passenger_message() -> dict[str, Any]:
                     codes.append(share_code)
 
             time_departure = (
-                dep_yyz.replace(tzinfo=STATE.airport_tz).isoformat() if dep_yyz is not None else None
+                dep_yyz.isoformat() if dep_yyz is not None else None
             )
             time_arrival = (
-                arr_yyz.replace(tzinfo=STATE.airport_tz).isoformat() if arr_yyz is not None else None
+                arr_yyz.isoformat() if arr_yyz is not None else None
             )
             fields = {
                 "gate": gate,
