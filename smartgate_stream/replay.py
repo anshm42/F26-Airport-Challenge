@@ -13,13 +13,21 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from .gates import GateState
-from .validation import DEFAULT_RATE, load_scenario, parse_utc, positive_number, read_json, require
+from .validation import DEFAULT_RATE, flight_key, load_scenario, parse_utc, positive_number, read_json, require
 
 
 WEBHOOK_TIMEOUT = 10
 MAX_RESPONSE_BYTES = 1024 * 1024
 ACTIVE_STATUSES = {"running", "stopping"}
 _USE_SCENARIO_RATE = object()
+
+# Transport failures and 5xx are retried under the same X-Stream-Event-Id, which the
+# matcher uses as an idempotency key; other failures would only repeat.
+RETRYABLE_ERRORS = (OSError, http.client.HTTPException)
+UPDATE_ATTEMPTS = 3
+# The matcher may still be starting its solver; keep offering the initialization.
+INITIALIZE_RETRY_SECONDS = 180
+RETRY_BACKOFF_SECONDS = (0.5, 1, 2, 5)
 
 
 def validate_webhook(url):
@@ -58,6 +66,60 @@ def post_message(url, message, headers):
         connection.close()
 
 
+def apply_valid_decisions(gate_state, response, *, initializing=False):
+    """Apply the valid part of a matcher response; return the rejected groups instead of raising.
+
+    GateState.apply_decisions is atomic. The whole response is tried first. If it is
+    invalid, each aircraft's leg assignments and move form their own atomic group, so
+    one infeasible aircraft cannot block the others. Failed groups are retried once the
+    rest are applied, since a tow into a gate can depend on another tow out of it.
+    """
+    try:
+        gate_state.apply_decisions(response, initializing=initializing)
+        return []
+    except Exception as error:
+        whole_error = str(error)
+    if not (isinstance(response, dict) and set(response) <= {"assignments", "moves"}
+            and isinstance(response.get("assignments", []), list)
+            and isinstance(response.get("moves", []), list)):
+        return [{"assignments": [], "moves": [], "error": whole_error}]
+    groups = {}
+    for decision in response.get("assignments", []):
+        try:
+            tail = gate_state.flights[flight_key(decision["carrier"], decision["leg"])]["aircraft"]["registration"]
+        except Exception:
+            tail = ("unknown", len(groups))
+        groups.setdefault(tail, {"assignments": [], "moves": []})["assignments"].append(decision)
+    for move in response.get("moves", []):
+        tail = move.get("registration") if isinstance(move, dict) else None
+        if not isinstance(tail, str):
+            tail = ("unknown", len(groups))
+        groups.setdefault(tail, {"assignments": [], "moves": []})["moves"].append(move)
+
+    def salvage(pending):
+        # Bisect so a few bad groups cost O(bad * log n) state copies, not one per group.
+        if not pending:
+            return []
+        try:
+            gate_state.apply_decisions({"assignments": [d for g in pending for d in g["assignments"]],
+                                        "moves": [m for g in pending for m in g["moves"]]},
+                                       initializing=initializing)
+            return []
+        except Exception as error:
+            if len(pending) == 1:
+                return [(pending[0], str(error))]
+        middle = len(pending) // 2
+        return salvage(pending[:middle]) + salvage(pending[middle:])
+
+    rejected = salvage(list(groups.values()))
+    while rejected:
+        retried = salvage([group for group, _ in rejected])
+        if len(retried) == len(rejected):
+            break
+        rejected = retried
+    return [{**group, "error": error} for group, error in rejected]
+
+
 class Run:
     def __init__(self, scenario_path, webhook_url, mode="paced", speed=_USE_SCENARIO_RATE):
         require(mode in ("paced", "unpaced"), "mode must be paced or unpaced")
@@ -93,9 +155,15 @@ class Run:
         self.clock = time.monotonic
         self.started = None
         self.finished = None
+        self.update_attempts = UPDATE_ATTEMPTS
+        self.initialize_retry_seconds = INITIALIZE_RETRY_SECONDS
+        # Set when an event's decisions were never applied, so the next request asks
+        # the matcher for its full plan instead of only what changed.
+        self.resync_pending = False
         self.state = {
             "run_id": self.id, "status": "running", "mode": mode, "speed": speed,
             "total_events": len(timestamps), "attempted": 0, "delivered": 0,
+            "retries": 0, "skipped": 0, "skipped_event_ids": [], "rejected_decisions": 0,
             "simulated_time": None, "http_seconds": 0, "lateness_seconds": 0,
             "max_lateness_seconds": 0, "failed_event_id": None, "error": None,
             "records_directory": str(self.directory),
@@ -160,6 +228,44 @@ class Run:
         self.thread = threading.Thread(target=self.execute, name=f"stream-{self.id}", daemon=True)
         self.thread.start()
 
+    def _deliver(self, send, payload, headers, *, initializing, clock, wait):
+        """Send one event, retrying transport failures under the same event ID.
+
+        A response is applied only from the attempt that returns it, so the stream
+        applies each event's decisions at most once even when the matcher saw it twice.
+        Returns (status, response, attempts, error).
+        """
+        attempts = []
+        first_sent = clock()
+        while True:
+            attempt_headers = dict(headers)
+            if attempts:
+                attempt_headers["X-Stream-Attempt"] = str(len(attempts) + 1)
+            sent = clock()
+            status, response, error, retryable = None, None, None, False
+            try:
+                status, response = send(self.webhook_url, payload, attempt_headers)
+                if not 200 <= status < 300:
+                    error, retryable = f"webhook returned HTTP {status}", status >= 500
+                elif initializing and status not in (200, 204):
+                    error = "InitializeAirport requires HTTP 200 or 204 after initial allocation is ready"
+            except RETRYABLE_ERRORS as exc:
+                error, retryable = f"{type(exc).__name__}: {exc}", True
+            except Exception as exc:
+                error = f"{type(exc).__name__}: {exc}"
+            attempts.append({"http_status": status, "error": error, "seconds": clock() - sent})
+            if error is None:
+                return status, response, attempts, None
+            exhausted = (clock() - first_sent >= self.initialize_retry_seconds if initializing
+                         else len(attempts) >= self.update_attempts)
+            if not retryable or exhausted or self.stop_event.is_set():
+                return status, None, attempts, error
+            wait(RETRY_BACKOFF_SECONDS[min(len(attempts), len(RETRY_BACKOFF_SECONDS)) - 1])
+            if self.stop_event.is_set():
+                return status, None, attempts, error
+            with self.lock:
+                self.state["retries"] += 1
+
     def execute(self, *, clock=time.monotonic, wait=None, send=post_message):
         self.clock = clock
         wait = wait or self.stop_event.wait
@@ -209,6 +315,7 @@ class Run:
                         self.state["attempted"] += 1
                         self.state["simulated_time"] = event["timestamp"]
                     lateness = 0 if deadline is None else max(0, sent - self.started - deadline)
+                    initializing = event["message"]["action"] == "InitializeAirport"
                     record = {
                         "event_id": event_id, "simulated_time": event["timestamp"],
                         "intended_deadline_seconds": deadline,
@@ -216,33 +323,54 @@ class Run:
                         "actual_send_time": datetime.now(timezone.utc).isoformat(),
                         "lateness_seconds": lateness, "http_status": None, "error": None, "matcher_response": None,
                     }
-                    received_at = None
-                    response = None
-                    try:
-                        record["http_status"], response = send(self.webhook_url, payload, {
-                            "X-Stream-Run-Id": self.id,
-                            "X-Stream-Event-Id": event_id,
-                            "X-Stream-Simulated-Time": event["timestamp"],
-                        })
-                        received_at = clock()
-                        record["matcher_response"] = response
-                        if not 200 <= record["http_status"] < 300:
-                            record["error"] = f"webhook returned HTTP {record['http_status']}"
-                        elif event["message"]["action"] == "InitializeAirport" and record["http_status"] not in (200, 204):
-                            record["error"] = "InitializeAirport requires HTTP 200 or 204 after initial allocation is ready"
-                        if record["error"] is None:
+                    headers = {
+                        "X-Stream-Run-Id": self.id,
+                        "X-Stream-Event-Id": event_id,
+                        "X-Stream-Simulated-Time": event["timestamp"],
+                    }
+                    if self.mode == "paced":
+                        # Lets dashboards advance the simulated clock between events.
+                        headers["X-Stream-Speed"] = str(self.speed)
+                    if self.resync_pending:
+                        headers["X-Stream-Resync"] = "true"
+                    record["http_status"], response, attempts, record["error"] = self._deliver(
+                        send, payload, headers, initializing=initializing, clock=clock, wait=wait)
+                    received_at = clock()
+                    record["matcher_response"] = response
+                    record["attempts"] = attempts
+                    rejected = []
+                    if record["error"] is None:
+                        try:
                             with self.lock:
-                                self.gate_state.apply_decisions(response, initializing=event["message"]["action"] == "InitializeAirport")
+                                rejected = apply_valid_decisions(self.gate_state, response, initializing=initializing)
                                 self._save_gates()
-                    except Exception as error:
-                        record["error"] = f"{type(error).__name__}: {error}"
-                    record["http_seconds"] = (received_at if received_at is not None else clock()) - sent
+                        except Exception as error:
+                            record["error"] = f"{type(error).__name__}: {error}"
+                    record["rejected_decisions"] = rejected
+                    if record["error"] is not None:
+                        decision_status = "failed" if initializing else "skipped"
+                    elif not rejected:
+                        decision_status = "applied"
+                    else:
+                        # An empty rejected group means the response itself was malformed.
+                        whole = any(not group["assignments"] and not group["moves"] for group in rejected)
+                        decided = sum(len(response.get(key) or []) for key in ("assignments", "moves")) if not whole else 0
+                        refused = sum(len(group["assignments"]) + len(group["moves"]) for group in rejected)
+                        decision_status = "rejected" if whole or refused >= decided else "partial"
+                    record["http_seconds"] = received_at - sent
                     with self.lock:
                         self.state["http_seconds"] += record["http_seconds"]
                         self.state["lateness_seconds"] += lateness
                         self.state["max_lateness_seconds"] = max(self.state["max_lateness_seconds"], lateness)
+                        self.state["rejected_decisions"] += sum(
+                            len(group["assignments"]) + len(group["moves"]) or 1 for group in rejected)
                         if record["error"] is None:
                             self.state["delivered"] += 1
+                            self.resync_pending = False
+                        elif not initializing:
+                            self.state["skipped"] += 1
+                            self.state["skipped_event_ids"].append(event_id)
+                            self.resync_pending = True
 
                     after_state = self.gate_state.snapshot()
                     response_object = response if isinstance(response, dict) else {}
@@ -267,8 +395,10 @@ class Run:
                         "decision_received_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                         "decision_duration_seconds": record["http_seconds"],
                         "http_status": record["http_status"],
-                        "decision_status": "applied" if record["error"] is None else "failed",
+                        "decision_status": decision_status,
                         "error": record["error"],
+                        "attempts": len(attempts),
+                        "rejected_decisions": copy.deepcopy(rejected),
                         "assignments": copy.deepcopy(response_object.get("assignments", [])),
                         "moves": copy.deepcopy(response_object.get("moves", [])),
                         "gate_changes": gate_changes,
@@ -279,9 +409,11 @@ class Run:
                     })
                     records.write(json.dumps(record, allow_nan=False) + "\n")
                     records.flush()
-                    if record["error"]:
+                    # Without an initialized matcher nothing later can be planned. A failed
+                    # update is skipped instead; the next request asks for a resync.
+                    if record["error"] and initializing:
                         raise RuntimeError(record["error"])
-                    if event["message"]["action"] == "InitializeAirport":
+                    if initializing:
                         initialization_seconds = clock() - self.started
                 if self.gate_state.initialized and not self.stop_event.is_set():
                     advance_movements()

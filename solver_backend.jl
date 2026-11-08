@@ -148,9 +148,10 @@ function solve_initial(payload)
 
     model = Model(Gurobi.Optimizer)
     set_optimizer_attribute(model, "OutputFlag", 0)
-    set_optimizer_attribute(model, "TimeLimit", SOLVER_TIME_LIMIT)
+    # Python passes its configured limits; the constants are only defaults.
+    set_optimizer_attribute(model, "TimeLimit", Float64(field(payload, "timeLimit", SOLVER_TIME_LIMIT)))
     set_optimizer_attribute(model, "MIPGap", 0.02)
-    set_optimizer_attribute(model, "Threads", 1)
+    set_optimizer_attribute(model, "Threads", Int(field(payload, "threads", 1)))
 
     x = Dict{Tuple{Int,String},VariableRef}()
     unassigned = Dict{Int,VariableRef}()

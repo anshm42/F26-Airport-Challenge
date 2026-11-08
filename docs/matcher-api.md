@@ -42,6 +42,14 @@ as `["Passenger"]` in `data/aircraft.json`. Airline terminal is a soft
 preference only. `trafficType` is preserved for dashboards but is not treated
 as a stand authorization matrix.
 
+## Dashboard WebSockets
+
+`ws://HOST:9000/operator/ws` and `ws://HOST:9000/passenger/ws` implement
+`operator/SPEC.md` and `passenger/SPEC.md` on `main`: the full `assignments`
+message on connect and on each one-second tick with changes, `heartbeat`
+otherwise. Both currently send the same messages; the board filters by gate.
+The sections below describe the older passenger message and are superseded.
+
 ## Passenger dashboard
 
 Connect to:
@@ -143,7 +151,13 @@ the subsequent local repair.
 - `GMS_JULIA`: Julia executable (default `julia`).
 - `GMS_JL_BACKEND`: JuMP/Gurobi backend path (default
   `solver_backend.jl` in the repository root).
-- `GMS_JL_TIMEOUT`: Python's subprocess timeout for Julia (default 9 seconds).
+- `GMS_GUROBI_TIME_LIMIT` (default 60 s) and `GMS_GUROBI_THREADS` (default: all
+  cores) for the initial solve. There is no greedy fallback: the stream retries
+  `InitializeAirport` until the solve commits.
+- `GMS_JL_TIMEOUT`: hard limit for one Julia request (default Gurobi limit + 60 s).
+- `GMS_TOW_PENALTY` (default 2000): cost of towing an aircraft already on a gate.
+
+The matcher only listens once Julia has started and finished a warm-up solve.
 
 The initial allocation uses a joint JuMP/Gurobi ILP. Later stream updates retain
 unaffected reservations and repair only changed, waiting, or unassigned sessions.

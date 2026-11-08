@@ -12,25 +12,24 @@ from __future__ import annotations
 
 import subprocess
 import argparse
-import base64
 import copy
-import hashlib
 import json
-import re
-import socket
-import struct
 import os
 import sys
 import threading
+import traceback
 import queue
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from datetime import date, datetime, timedelta, time, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from time import monotonic as _monotonic
 from typing import Any
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import urlsplit
 
 from zoneinfo import ZoneInfo
+
+from matcher_views import ENDPOINTS as VIEW_ENDPOINTS, SimClock, ViewFeed, ViewSnapshot
 
 HERE = Path(__file__).resolve().parent
 JULIA = os.environ.get("GMS_JULIA", "julia")
@@ -45,7 +44,13 @@ STATION_TZ_JSON = Path(os.environ.get("GMS_STATION_TIMEZONES_JSON", STATION_TZ_D
 STREAM_PROFILES_JSON = _DATA_DIR / "stream_profiles.json"
 AIRLINE_TERMINALS: dict[str, str] = {}
 AIRLINE_NAMES: dict[str, str] = {}
-JULIA_TIMEOUT = float(os.environ.get("GMS_JL_TIMEOUT", "9.0"))
+# The initial plan is always solved by Gurobi. A full day takes ~40 s, longer than
+# the stream's 10 s per attempt: the stream retries InitializeAirport and receives
+# the cached answer once the solve commits.
+GUROBI_TIME_LIMIT = float(os.environ.get("GMS_GUROBI_TIME_LIMIT", "60"))
+GUROBI_THREADS = int(os.environ.get("GMS_GUROBI_THREADS", str(os.cpu_count() or 1)))
+# Covers JuMP model building on top of Gurobi's own limit.
+JULIA_TIMEOUT = float(os.environ.get("GMS_JL_TIMEOUT", str(GUROBI_TIME_LIMIT + 60)))
 WIDTH_CLASSES = ("A", "B", "C", "D", "E", "F")
 
 # Assignment policy weights. Walking classes are ordinal effort scores from
@@ -55,6 +60,9 @@ WAITING_PENALTY_PER_MINUTE = float(os.environ.get("GMS_WAITING_PENALTY_PER_MINUT
 WALKING_DISTANCE_PENALTY_PER_CLASS = float(os.environ.get("GMS_WALKING_PENALTY_PER_CLASS", "10.0"))
 DOMESTIC_TO_INTERNATIONAL_PENALTY = float(os.environ.get("GMS_DOMESTIC_TO_INTERNATIONAL_PENALTY", "1000.0"))
 EMERGENCY_GATE_PENALTY = float(os.environ.get("GMS_EMERGENCY_GATE_PENALTY", "1000.0"))
+# Cost of towing an aircraft that is already at a gate. Below the remote-stand
+# penalty, so an aircraft parked remotely still moves in when a terminal gate frees.
+TOW_PENALTY = float(os.environ.get("GMS_TOW_PENALTY", "2000.0"))
 
 # Built-in fallback mappings. The global airportsdata database supplies broad
 # coverage for other IATA stations; this fallback keeps common routes working
@@ -605,6 +613,8 @@ class ScenarioState:
             "end": minutes_from_epoch(end_dt, self.epoch),
             "lookup_status": "matched_exact_ifatc_stand",
             "resource_type": "passenger_conflict_group",
+            "untilFurtherNotice": not end_raw,
+            "reason": message.get("reason"),
         }
         self.outages.append(record)
         self.recognized_passenger_gate_outages.append(record.copy())
@@ -645,8 +655,8 @@ class ScenarioState:
                    if arr_station == "YYZ" else None)
         return dep_yyz, arr_yyz
 
-    def _leg_aware_datetimes(self, leg: dict[str, Any]) -> tuple[datetime | None, datetime | None]:
-        """Return YYZ-local aware datetimes for the passenger wire format."""
+    def leg_local_datetimes(self, leg: dict[str, Any]) -> tuple[datetime | None, datetime | None]:
+        """Return each end's aware datetime in its own station's time zone, for the dashboards."""
         day = date.fromisoformat(leg["originatingDate"])
         dep_station = norm(leg.get("departureStation"))
         arr_station = norm(leg.get("arrivalStation"))
@@ -676,10 +686,7 @@ class ScenarioState:
         if not valid_arrivals:
             raise RuntimeError(f"Could not determine arrival date for {dep_station}->{arr_station}.")
         arr_local = min(valid_arrivals, key=lambda candidate: candidate.astimezone(timezone.utc))
-        return (
-            dep_local if dep_station == "YYZ" else None,
-            arr_local.astimezone(self.airport_tz) if arr_station == "YYZ" else None,
-        )
+        return dep_local, arr_local
 
     def _all_yyz_event_times(self) -> list[datetime]:
         values: list[datetime] = []
@@ -865,8 +872,21 @@ class ScenarioState:
 
 
 
+WARMUP_PAYLOAD = {
+    "mode": "initial",
+    "sessions": [{"id": "warmup", "widthClass": "C", "start": 0, "end": 1}],
+    "gates": [{"id": "warmup-gate", "conflictGroup": "warmup-group", "widthClass": "C", "kind": "gate"}],
+    "outages": {},
+}
+
+
 class JuliaWorker:
-    """Keeps one Julia process alive and sends it one JSON request at a time."""
+    """Keeps one Julia process alive and sends it one JSON request at a time.
+
+    Startup blocks until Julia is ready. A process lost later (timeout, crash) is
+    restarted in the background; requests made meanwhile fail fast so callers can
+    fall back instead of waiting out Julia's package loading.
+    """
 
     def __init__(self, backend: Path, julia_executable: str, timeout: float):
         self.backend = backend
@@ -875,7 +895,15 @@ class JuliaWorker:
         self.process = None
         self.responses = None
         self.lock = threading.Lock()
+        self.restarting = False
+        self.closed = False
         self.start()
+
+    @property
+    def status(self) -> str:
+        if self.process is not None and self.process.poll() is None:
+            return "ready"
+        return "restarting" if self.restarting else "unavailable"
 
     def _read_stdout(self, process, responses):
         try:
@@ -884,6 +912,26 @@ class JuliaWorker:
         finally:
             responses.put(None)
 
+    def _discard_process(self) -> None:
+        """Kill the current process and start a replacement in the background."""
+        process, self.process = self.process, None
+        if process is not None and process.poll() is None:
+            process.kill()
+            process.wait()
+        if self.restarting or self.closed:
+            return
+        self.restarting = True
+
+        def restart():
+            try:
+                self.start()
+            except Exception as exc:
+                print(f"Julia solver restart failed: {exc}", file=sys.stderr, flush=True)
+            finally:
+                self.restarting = False
+
+        threading.Thread(target=restart, name="julia-restart", daemon=True).start()
+
     def start(self):
         if not self.backend.is_file():
             raise FileNotFoundError(
@@ -891,7 +939,7 @@ class JuliaWorker:
             )
 
         try:
-            self.process = subprocess.Popen(
+            process = subprocess.Popen(
                 [self.julia_executable, str(self.backend)],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
@@ -907,29 +955,27 @@ class JuliaWorker:
                 "was not found. Check that Julia is installed and on PATH."
             ) from exc
 
-        self.responses = queue.Queue()
+        responses = queue.Queue()
 
         reader = threading.Thread(
             target=self._read_stdout,
-            args=(self.process, self.responses),
+            args=(process, responses),
             daemon=True,
         )
         reader.start()
 
         # Wait for Julia to finish loading packages and announce readiness.
         try:
-            line = self.responses.get(timeout=120)
+            line = responses.get(timeout=120)
         except queue.Empty:
-            self.process.kill()
-            self.process.wait()
-            self.process = None
+            process.kill()
+            process.wait()
             raise RuntimeError(
                 "Julia did not become ready within 120 seconds."
             )
 
         if line is None:
-            return_code = self.process.poll()
-            self.process = None
+            return_code = process.poll()
             raise RuntimeError(
                 f"Julia exited during startup. Exit code: {return_code}"
             )
@@ -937,21 +983,40 @@ class JuliaWorker:
         try:
             ready_message = json.loads(line)
         except json.JSONDecodeError as exc:
-            self.process.kill()
-            self.process.wait()
-            self.process = None
+            process.kill()
+            process.wait()
             raise RuntimeError(
                 f"Unexpected Julia startup response: {line!r}"
             ) from exc
 
         if ready_message.get("ready") is not True:
-            self.process.kill()
-            self.process.wait()
-            self.process = None
+            process.kill()
+            process.wait()
             raise RuntimeError(
                 f"Julia did not send its ready signal: {ready_message}"
             )
 
+        # Compile the solve path now, not during the first webhook's time budget.
+        try:
+            process.stdin.write(json.dumps(WARMUP_PAYLOAD) + "\n")
+            process.stdin.flush()
+            while True:
+                line = responses.get(timeout=120)
+                if line is None:
+                    raise RuntimeError(f"Julia exited during warm-up. Exit code: {process.poll()}")
+                if line.startswith("{") and ('"assignments"' in line or '"error"' in line):
+                    break
+        except (queue.Empty, OSError, RuntimeError) as exc:
+            process.kill()
+            process.wait()
+            raise RuntimeError(f"Julia warm-up solve failed: {exc}") from exc
+
+        with self.lock:
+            if self.closed:
+                process.kill()
+                process.wait()
+                return
+            self.process, self.responses = process, responses
         print("Persistent Julia solver is ready.", flush=True)
 
     def run(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -962,28 +1027,30 @@ class JuliaWorker:
         )
 
         with self.lock:
-            # Restart Julia if it exited unexpectedly.
             if self.process is None or self.process.poll() is not None:
-                self.start()
+                self._discard_process()
+                raise RuntimeError("Julia solver is not running; a restart is in progress.")
 
             try:
                 self.process.stdin.write(encoded + "\n")
                 self.process.stdin.flush()
             except (BrokenPipeError, OSError) as exc:
-                self.process = None
+                self._discard_process()
                 raise RuntimeError(
                     "Could not send the request to the Julia solver."
                 ) from exc
 
             # Gurobi may print informational messages to stdout.
             # Ignore those lines and wait for the actual JSON response.
+            # The timeout covers the whole request; each log line must not extend it.
+            deadline = _monotonic() + self.timeout
             while True:
                 try:
-                    line = self.responses.get(timeout=self.timeout)
+                    line = self.responses.get(timeout=max(0.0, deadline - _monotonic()))
                 except queue.Empty:
-                    self.process.kill()
-                    self.process.wait()
-                    self.process = None
+                    # A late answer would be read as the next request's, so the
+                    # process cannot be reused.
+                    self._discard_process()
                     raise RuntimeError(
                         f"Julia solver exceeded the "
                         f"{self.timeout:g}-second timeout."
@@ -991,7 +1058,7 @@ class JuliaWorker:
 
                 if line is None:
                     return_code = self.process.poll()
-                    self.process = None
+                    self._discard_process()
                     raise RuntimeError(
                         f"Julia solver exited unexpectedly. "
                         f"Exit code: {return_code}"
@@ -1026,6 +1093,7 @@ class JuliaWorker:
 
     def close(self):
         with self.lock:
+            self.closed = True
             if self.process is None:
                 return
 
@@ -1232,7 +1300,8 @@ def repair_assignments_python(
     }
 
     decision_ids.sort(key=lambda sid: (
-        0 if by_id[sid].get("initiallyParked", False) else 1,
+        # Aircraft already on a gate claim first; arrivals plan around them.
+        0 if by_id[sid].get("initiallyParked", False) or "physicalGate" in by_id[sid] else 1,
         0 if by_id[sid].get("priority", False) else 1,
         len(terminal_candidate_map[sid]),
         0 if sid in previous else 1,
@@ -1263,9 +1332,26 @@ def repair_assignments_python(
         selected: str | None = None
         selected_start: float | None = None
 
+        physical_gate = session.get("physicalGate")
+        if physical_gate is not None and physical_gate in gate_by_id:
+            # Already on a gate: it holds that gate until towed, and a tow can only
+            # go somewhere free now. Staying put saves the tow.
+            now = float(session["physicalSince"])
+            from_now = {**session, "start": now}
+            options = []
+            for gate in terminal_candidate_map[sid] + remote_candidate_map[sid]:
+                available = _earliest_gate_start(from_now, str(gate["conflictGroup"]), occupied, outages)
+                if available is not None and available <= now:
+                    cost = ranked_cost(gate, preserve_old=False)
+                    if str(gate["id"]) != physical_gate:
+                        cost += TOW_PENALTY
+                    options.append((cost, str(gate["id"])))
+            # With nowhere to go (e.g. its own gate just closed), it physically stays.
+            selected = min(options)[1] if options else physical_gate
+            selected_start = start if selected == physical_gate else now
         # Initially parked aircraft already occupy the apron. They cannot
         # remain on the taxiway/tarmac waiting for a later slot.
-        if initially_parked:
+        elif initially_parked:
             immediate_options = []
             for gate in terminal_candidate_map[sid] + remote_candidate_map[sid]:
                 available = _earliest_gate_start(
@@ -1547,12 +1633,28 @@ LATEST_UNASSIGNED_AIRCRAFT: list[dict[str, Any]] = []
 LATEST_SIMULATED_TIME: str | None = None
 LAST_SOLVER_SUMMARY: dict[str, Any] = {}
 LAST_DECISION_RESPONSE: dict[str, Any] = {"assignments": [], "moves": []}
-PASSENGER_CLIENTS: dict[Any, list[dict[str, Any]] | None] = {}
-PASSENGER_CLIENT_LOCK = threading.RLock()
-PASSENGER_LAST_FIELDS: dict[str, dict[str, Any]] = {}
-PASSENGER_PREVIOUS_FIELDS: dict[str, dict[str, Any]] = {}
-LAST_PASSENGER_FLIGHTS_JSON: str | None = None
-WEBSOCKET_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+# Dashboard history, replaced (never mutated) on each commit.
+ASSIGNED_AT: dict[str, str] = {}  # session -> simulated UTC time its current gate was chosen
+VISIT_POSITIONS: dict[str, tuple[tuple[float, str, str | None], ...]] = {}  # session -> (minute, gate, assignedAt)
+UNASSIGNED_REASONS: dict[str, str] = {}
+DEFERRED_SESSIONS: dict[str, str] = {}  # current-visit tows held back because the stream would refuse them
+MISSED_EVENTS: list[list[int]] = []  # inclusive event index ranges the stream skipped
+
+# Every global a webhook may assign; restored together if the event fails.
+_EVENT_GLOBALS = (
+    "STATE", "ASSIGNMENTS", "GATE_STARTS", "CURRENT_RUN_ID", "LAST_EVENT_INDEX", "LAST_EVENT_ID",
+    "LATEST_GATE_STATE", "PREDICTED_GATE_STATE", "PREDICTED_UNASSIGNED_AIRCRAFT",
+    "LATEST_UNASSIGNED_AIRCRAFT", "LATEST_SIMULATED_TIME", "LAST_SOLVER_SUMMARY",
+    "LAST_DECISION_RESPONSE", "ASSIGNED_AT", "VISIT_POSITIONS", "UNASSIGNED_REASONS",
+    "DEFERRED_SESSIONS", "MISSED_EVENTS",
+)
+
+# Idempotency: X-Stream-Event-Id -> the committed response. A retried delivery gets
+# the same answer without applying the event twice.
+RESPONSE_CACHE: OrderedDict[str, dict[str, Any]] = OrderedDict()
+RESPONSE_CACHE_SIZE = 32
+
+VIEW_CLOCK = SimClock()
 
 
 def active_token_legs(state: ScenarioState) -> dict[str, dict[str, Any]]:
@@ -1586,7 +1688,8 @@ def build_stream_decisions(
     """Translate internal parking-session choices into the stream's exact contract."""
     selected = set(sessions) if include_all else set(session_ids or ())
     active_refs = active_token_legs(state)
-    decision_map: dict[tuple[Any, ...], dict[str, Any]] = {}
+    decision_map: dict[tuple[Any, ...], tuple[int, dict[str, Any]]] = {}
+    conflicting: set[tuple[Any, ...]] = set()
     move_map: dict[str, dict[str, str]] = {}
     occupied_now = {
         str(plane.get("registration")): gate
@@ -1615,7 +1718,7 @@ def build_stream_decisions(
         if respect_gate_start and gate_start > effective_time:
             continue
 
-        for token in (session.get("start_token"), session.get("end_token")):
+        for role, token in ((0, session.get("start_token")), (1, session.get("end_token"))):
             if not token or token not in active_refs:
                 continue
             reference = active_refs[token]
@@ -1636,10 +1739,18 @@ def build_stream_decisions(
                 )},
                 "gate": gate,
             }
+            # A YYZ->YYZ leg ends one visit and starts the next. The stream places an
+            # arriving aircraft by that leg's assignment, so the arrival role wins.
             previous = decision_map.get(identity)
-            if previous is not None and previous["gate"] != gate:
-                raise RuntimeError("One flight leg was assigned to two different passenger gates.")
-            decision_map[identity] = decision
+            if previous is not None and previous[1]["gate"] != gate:
+                if previous[0] == role:
+                    print(f"DECISION SKIPPED: leg {identity} has two {('arrival', 'departure')[role]} "
+                          f"gates ({previous[1]['gate']}, {gate})", file=sys.stderr, flush=True)
+                    conflicting.add(identity)
+                    continue
+                if previous[0] < role:
+                    continue
+            decision_map[identity] = (role, decision)
 
         # A currently grounded aircraft may need an immediate tow. Emit the
         # explicit move as well as leg assignments so sessions without a
@@ -1650,8 +1761,122 @@ def build_stream_decisions(
                 move_map[registration] = {"registration": registration, "gate": gate}
 
     return {
-        "assignments": list(decision_map.values()),
+        "assignments": [
+            decision for identity, (_, decision) in decision_map.items()
+            if identity not in conflicting
+        ],
         "moves": list(move_map.values()),
+    }
+
+
+def defer_blocked_current_visits(
+    state: ScenarioState,
+    sessions: dict[str, dict[str, Any]],
+    assignments: dict[str, str],
+    gate_starts: dict[str, float],
+    session_ids: set[str],
+) -> tuple[set[str], dict[str, str]]:
+    """Hold back current-visit tows the stream would refuse right now.
+
+    The plan can disagree with physical occupancy (late departures, refused
+    arrivals). The stream rejects a tow into an occupied, overlapping, or closed
+    position, so those sessions are left out of this response and returned with a
+    reason; the next event repairs them again. Everything else is still sent.
+    """
+    occupied_now = {
+        str(plane.get("registration")): gate
+        for gate, plane in LATEST_GATE_STATE.items() if plane is not None
+    }
+    grounded = set(occupied_now) | {
+        str(plane.get("registration"))
+        for plane in LATEST_UNASSIGNED_AIRCRAFT if plane.get("registration")
+    }
+    now_minute = current_minute(state)
+    outages = state.outage_payload()
+    targets: dict[str, tuple[str, str]] = {}
+    for sid in session_ids:
+        session, gate = sessions.get(sid), assignments.get(sid)
+        if session is None or gate is None:
+            continue
+        registration = str(session.get("registration", ""))
+        if registration not in grounded:
+            continue
+        if not (float(session["start"]) <= now_minute < float(session["end"])):
+            continue
+        if float(gate_starts.get(sid, session["start"])) > now_minute:
+            continue
+        targets[sid] = (registration, gate)
+
+    deferred: dict[str, str] = {}
+    changed = True
+    while changed:
+        changed = False
+        # Deferred aircraft stay where they are and may now block someone else.
+        movers = {
+            registration for sid, (registration, gate) in targets.items()
+            if sid not in deferred and occupied_now.get(registration) != gate
+        }
+        holders: dict[str, str] = {}
+        for gate_id, plane in LATEST_GATE_STATE.items():
+            record = state.gate_by_id.get(gate_id)
+            if plane is not None and record and str(plane.get("registration")) not in movers:
+                holders[str(record["conflictGroup"])] = str(plane.get("registration"))
+        claimed: dict[str, str] = {}
+        for sid, (registration, gate) in sorted(targets.items()):
+            if sid in deferred:
+                continue
+            record = state.gate_by_id.get(gate)
+            reason = None
+            if record is None:
+                reason = f"unknown gate {gate!r}"
+            else:
+                group = str(record["conflictGroup"])
+                holder = holders.get(group)
+                if holder is not None and holder != registration:
+                    reason = f"{gate} is physically occupied by {holder}"
+                elif claimed.get(group, registration) != registration:
+                    reason = f"{gate} is also the target of {claimed[group]}"
+                elif occupied_now.get(registration) != gate and any(
+                    float(start) <= now_minute < float(end) for start, end in outages.get(group, [])
+                ):
+                    reason = f"{gate} is out of service"
+                else:
+                    claimed[group] = registration
+            if reason is not None:
+                deferred[sid] = reason
+                changed = True
+    for sid, reason in sorted(deferred.items()):
+        print(f"TOW DEFERRED: {sid} ({targets[sid][0]}): {reason}", file=sys.stderr, flush=True)
+    return {sid for sid in session_ids if sid not in deferred}, deferred
+
+
+def stranded_current_visits(
+    state: ScenarioState,
+    sessions: dict[str, dict[str, Any]],
+    assignments: dict[str, str],
+    gate_starts: dict[str, float],
+) -> set[str]:
+    """Current visits whose aircraft is not at its planned gate although it could be.
+
+    Covers decisions the stream refused or never received; resending them lets
+    the plan converge on physical occupancy without a full resync.
+    """
+    position = {
+        str(plane.get("registration")): gate
+        for gate, plane in LATEST_GATE_STATE.items() if plane is not None
+    }
+    grounded = set(position) | {
+        str(plane.get("registration"))
+        for plane in LATEST_UNASSIGNED_AIRCRAFT if plane.get("registration")
+    }
+    now_minute = current_minute(state)
+    return {
+        sid for sid, session in sessions.items()
+        if sid in assignments
+        and str(session.get("registration", "")) in grounded
+        and float(session["start"]) <= now_minute < float(session["end"])
+        and float(gate_starts.get(sid, session["start"])) <= now_minute
+        and position.get(str(session.get("registration", ""))) != assignments[sid]
     }
 
 
@@ -1695,7 +1920,8 @@ def predict_post_decision_gate_state(
         }
         previous = targets.get(registration)
         if previous is not None and previous[0] != gate:
-            raise RuntimeError("Current aircraft visit received conflicting gate targets.")
+            print(f"PREDICTION SKIPPED: {registration} has two current gate targets", file=sys.stderr, flush=True)
+            continue
         targets[registration] = (gate, plane)
 
     target_registrations = set(targets)
@@ -1713,12 +1939,12 @@ def predict_post_decision_gate_state(
 
     for registration, (gate_id, plane) in targets.items():
         gate_record = state.gate_by_id.get(gate_id)
-        if gate_record is None:
-            raise RuntimeError(f"Matcher selected unknown passenger gate {gate_id!r}.")
-        group = str(gate_record["conflictGroup"])
+        group = str(gate_record["conflictGroup"]) if gate_record else None
         blocker = group_occupants.get(group)
-        if blocker is not None and blocker != registration:
-            raise RuntimeError(f"Matcher selected occupied passenger conflict group {group!r}.")
+        if gate_record is None or (blocker is not None and blocker != registration):
+            # defer_blocked_current_visits keeps these out of responses; never fail the event.
+            print(f"PREDICTION SKIPPED: {registration} cannot enter {gate_id!r}", file=sys.stderr, flush=True)
+            continue
         group_occupants[group] = registration
         predicted[gate_id] = plane
 
@@ -1842,16 +2068,58 @@ def dashboard_snapshot() -> dict[str, Any]:
     }
 
 
+def track_assignment_history(
+    state: ScenarioState,
+    sessions: dict[str, dict[str, Any]],
+    assignments: dict[str, str],
+    gate_state: dict[str, Any],
+    simulated_time: str,
+    previous_assignments: dict[str, str],
+    previous_assigned_at: dict[str, str],
+    previous_positions: dict[str, tuple[tuple[float, str, str | None], ...]],
+) -> tuple[dict[str, str], dict[str, tuple[tuple[float, str, str | None], ...]]]:
+    """Return when each current gate was chosen, and the gates each visit physically held.
+
+    Positions come from the post-decision gate state, so a tow at this event
+    appears as a new segment starting now.
+    """
+    assigned_at = {
+        sid: (previous_assigned_at.get(sid) or simulated_time)
+        if previous_assignments.get(sid) == gate else simulated_time
+        for sid, gate in assignments.items()
+    }
+    position = {
+        str(plane.get("registration")): gate
+        for gate, plane in gate_state.items() if plane is not None
+    }
+    now_minute = current_minute(state)
+    positions = {}
+    for sid, session in sessions.items():
+        segments = previous_positions.get(sid, ())
+        gate = position.get(str(session.get("registration", "")))
+        if (gate is not None and float(session["start"]) <= now_minute < float(session["end"])
+                and (not segments or segments[-1][1] != gate)):
+            chosen = assigned_at.get(sid) if assignments.get(sid) == gate else simulated_time
+            segments = (*segments, (now_minute, gate, chosen))
+        if segments:
+            positions[sid] = segments
+    return assigned_at, positions
+
+
+def _empty_repair_result() -> dict[str, Any]:
+    return {
+        "assignments": [], "reassignments": [], "retained_assignments": [],
+        "unassigned": [], "unassigned_reasons": {}, "gate_starts": {}, "waiting": {},
+    }
+
+
 def _handle_initialize(message: dict[str, Any], simulated_time: str) -> dict[str, Any]:
     global STATE, ASSIGNMENTS, GATE_STARTS
     global LATEST_GATE_STATE, PREDICTED_GATE_STATE, PREDICTED_UNASSIGNED_AIRCRAFT
     global LATEST_UNASSIGNED_AIRCRAFT, LATEST_SIMULATED_TIME, LAST_SOLVER_SUMMARY
-    global PASSENGER_LAST_FIELDS, PASSENGER_PREVIOUS_FIELDS, LAST_PASSENGER_FLIGHTS_JSON
-    global LAST_DECISION_RESPONSE
+    global LAST_DECISION_RESPONSE, ASSIGNED_AT, VISIT_POSITIONS, UNASSIGNED_REASONS
+    global DEFERRED_SESSIONS
 
-    PASSENGER_LAST_FIELDS = {}
-    PASSENGER_PREVIOUS_FIELDS = {}
-    LAST_PASSENGER_FLIGHTS_JSON = None
     aircraft_classes, gates, airport_timezone = load_references()
     candidate = ScenarioState({}, aircraft_classes, gates, airport_timezone)
     candidate.initialize({"timestamp": simulated_time, "message": message})
@@ -1868,24 +2136,25 @@ def _handle_initialize(message: dict[str, Any], simulated_time: str) -> dict[str
 
     payload = build_solver_payload(sessions, gates, candidate.outage_payload())
     payload["mode"] = "initial"
+    payload["timeLimit"] = GUROBI_TIME_LIMIT
+    payload["threads"] = GUROBI_THREADS
+    # No greedy fallback: if Julia fails, initialization fails, nothing is committed,
+    # and the stream retries it (by then Julia has restarted).
     result = run_julia(SOLVER_BACKEND, payload)
-    assignments = assignment_map(result.get("assignments", []))
-    gate_starts = {
-        sid: float(sessions[sid]["start"])
-        for sid in assignments if sid in sessions
+    assignments = {
+        sid: gate for sid, gate in assignment_map(result.get("assignments", [])).items()
+        if sid in sessions and gate in candidate.gate_by_id
     }
+    gate_starts = {sid: float(sessions[sid]["start"]) for sid in assignments}
 
     # Keep the existing local repair fallback for sessions the joint model
     # cannot place. Conflict-group occupancy and crosswalk capacity are used
     # by the repair path too.
-    initial_unassigned = [sid for sid in result.get("unassigned", []) if sid in sessions]
+    initial_unassigned = [sid for sid in sessions if sid not in assignments]
     waiting_result = repair_assignments_python(
         sessions, gates, candidate.outage_payload(), assignments,
         set(initial_unassigned), gate_starts,
-    ) if initial_unassigned else {
-        "assignments": [], "reassignments": [], "retained_assignments": [],
-        "unassigned": [], "unassigned_reasons": {}, "gate_starts": {}, "waiting": {},
-    }
+    ) if initial_unassigned else _empty_repair_result()
     for pair in waiting_result.get("assignments", []):
         assignments[str(pair[0])] = str(pair[1])
     for pair in waiting_result.get("reassignments", []):
@@ -1898,8 +2167,25 @@ def _handle_initialize(message: dict[str, Any], simulated_time: str) -> dict[str
     LATEST_GATE_STATE = copy.deepcopy(message.get("gateState", {}))
     LATEST_UNASSIGNED_AIRCRAFT = copy.deepcopy(message.get("unassignedAircraft", []))
     LATEST_SIMULATED_TIME = simulated_time
+
+    decision_ids, deferred = defer_blocked_current_visits(
+        candidate, sessions, assignments, gate_starts, set(sessions)
+    )
+    decisions = build_stream_decisions(candidate, sessions, assignments, gate_starts, decision_ids)
+    PREDICTED_GATE_STATE, PREDICTED_UNASSIGNED_AIRCRAFT = predict_post_decision_gate_state(
+        candidate, sessions, assignments, gate_starts, decision_ids
+    )
+    ASSIGNED_AT, VISIT_POSITIONS = track_assignment_history(
+        candidate, sessions, assignments, PREDICTED_GATE_STATE, simulated_time, {}, {}, {}
+    )
+    UNASSIGNED_REASONS = {
+        sid: reason for sid, reason in waiting_result.get("unassigned_reasons", {}).items()
+        if sid not in assignments
+    }
+    DEFERRED_SESSIONS = deferred
     LAST_SOLVER_SUMMARY = {
         "mode": "initial",
+        "solver": "julia",
         "termination_status": result.get("termination_status"),
         "objective": result.get("objective"),
         "sessions": len(sessions),
@@ -1907,27 +2193,23 @@ def _handle_initialize(message: dict[str, Any], simulated_time: str) -> dict[str
         "unassigned_sessions": sorted(sid for sid in sessions if sid not in assignments),
         "waiting_sessions": waiting_result.get("waiting", {}),
         "waiting_count": len(waiting_result.get("waiting", {})),
+        "deferred_tows": deferred,
     }
-
-    decisions = build_stream_decisions(
-        candidate, sessions, assignments, gate_starts, include_all=True
-    )
-    PREDICTED_GATE_STATE, PREDICTED_UNASSIGNED_AIRCRAFT = predict_post_decision_gate_state(
-        candidate, sessions, assignments, gate_starts, set(sessions)
-    )
     LAST_DECISION_RESPONSE = copy.deepcopy(decisions)
     return decisions
 
 
-def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, Any]:
+def _handle_update(message: dict[str, Any], simulated_time: str, *, resync: bool = False) -> dict[str, Any]:
     global STATE, ASSIGNMENTS, GATE_STARTS
     global LATEST_GATE_STATE, PREDICTED_GATE_STATE, PREDICTED_UNASSIGNED_AIRCRAFT
     global LATEST_UNASSIGNED_AIRCRAFT, LATEST_SIMULATED_TIME, LAST_SOLVER_SUMMARY
-    global LAST_DECISION_RESPONSE
+    global LAST_DECISION_RESPONSE, ASSIGNED_AT, VISIT_POSITIONS, UNASSIGNED_REASONS
+    global DEFERRED_SESSIONS
 
     if STATE is None or not STATE.initialized:
         raise RuntimeError("Matcher has not received InitializeAirport.")
 
+    previous_assignments = ASSIGNMENTS
     candidate = copy.deepcopy(STATE)
     before = candidate.build_sessions()
     action = candidate.apply_message({"timestamp": simulated_time, "message": message})
@@ -1947,18 +2229,47 @@ def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, An
             assignments.pop(sid, None)
             gate_starts.pop(sid, None)
 
+    # Aircraft physically on a gate keep it until towed. Re-plan any that diverge
+    # from the plan, and any future booking that overlaps an incumbent's stay.
+    now_minute = minutes_from_epoch(local_event_time(simulated_time, candidate.airport_tz), candidate.epoch)
+    physical = {
+        str(plane.get("registration")): gate
+        for gate, plane in (message.get("gateState") or {}).items()
+        if plane is not None and gate in candidate.gate_by_id
+    }
+    grounded_ids = set()
+    for sid, session in after.items():
+        gate = physical.get(str(session.get("registration", "")))
+        if gate is not None and float(session["start"]) <= now_minute < float(session["end"]):
+            session["physicalGate"], session["physicalSince"] = gate, now_minute
+            grounded_ids.add(sid)
+    diverged_ids = {sid for sid in grounded_ids if assignments.get(sid) != after[sid]["physicalGate"]}
+    incumbent_blocks = defaultdict(list)
+    for sid in grounded_ids:
+        group = candidate.gate_by_id[after[sid]["physicalGate"]]["conflictGroup"]
+        incumbent_blocks[group].append((sid, now_minute, float(after[sid]["end"])))
+    bumped_ids = set()
+    for sid, gate in assignments.items():
+        if sid in grounded_ids or sid not in after or gate not in candidate.gate_by_id:
+            continue
+        booking_start = float(gate_starts.get(sid, after[sid]["start"]))
+        for other, block_start, block_end in incumbent_blocks.get(candidate.gate_by_id[gate]["conflictGroup"], []):
+            if other != sid and booking_start < block_end and block_start < float(after[sid]["end"]):
+                bumped_ids.add(sid)
+                break
+
     waiting_ids = {
         sid for sid, gate in assignments.items()
         if sid in after
         and float(gate_starts.get(sid, after[sid]["start"])) > float(after[sid]["start"])
+        and sid not in grounded_ids
     }
     unassigned_ids = {sid for sid in after if sid not in assignments}
-    repair_ids = set(changed) | waiting_ids | unassigned_ids
+    # Tows the stream could not take last time are planned again.
+    deferred_ids = set(DEFERRED_SESSIONS) & set(after)
+    repair_ids = set(changed) | waiting_ids | unassigned_ids | deferred_ids | diverged_ids | bumped_ids
 
-    solver_result: dict[str, Any] = {
-        "assignments": [], "reassignments": [], "retained_assignments": [],
-        "unassigned": [], "unassigned_reasons": {}, "gate_starts": {}, "waiting": {},
-    }
+    solver_result: dict[str, Any] = _empty_repair_result()
     if repair_ids:
         solver_result = repair_assignments_python(
             after, candidate.gates, outages, assignments, repair_ids, gate_starts
@@ -1978,7 +2289,6 @@ def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, An
             assignments[str(pair[0])] = str(pair[1])
         gate_starts.update(solver_result.get("gate_starts", {}))
 
-    # Commit the candidate only after the complete schedule repair succeeds.
     STATE = candidate
     ASSIGNMENTS = assignments
     GATE_STARTS = gate_starts
@@ -1989,11 +2299,41 @@ def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, An
     decision_sessions = set()
     for key in ("assignments", "reassignments", "retained_assignments"):
         decision_sessions.update(str(pair[0]) for pair in solver_result.get(key, []))
+    # Resend current visits the stream never applied (refused, or lost with a skipped event).
+    stranded = stranded_current_visits(candidate, after, assignments, gate_starts)
+    decision_sessions |= stranded
+    if resync:
+        # The stream missed at least one response; send the whole plan again.
+        decision_sessions = set(after)
+    decision_ids, deferred = defer_blocked_current_visits(
+        candidate, after, assignments, gate_starts, decision_sessions
+    )
+    decisions = build_stream_decisions(candidate, after, assignments, gate_starts, decision_ids)
+    PREDICTED_GATE_STATE, PREDICTED_UNASSIGNED_AIRCRAFT = predict_post_decision_gate_state(
+        candidate, after, assignments, gate_starts, decision_ids
+    )
+    ASSIGNED_AT, VISIT_POSITIONS = track_assignment_history(
+        candidate, after, assignments, PREDICTED_GATE_STATE, simulated_time,
+        previous_assignments, ASSIGNED_AT, VISIT_POSITIONS,
+    )
+    UNASSIGNED_REASONS = {
+        sid: reason for sid, reason in {
+            **{sid: reason for sid, reason in UNASSIGNED_REASONS.items() if sid not in repair_ids},
+            **solver_result.get("unassigned_reasons", {}),
+        }.items()
+        if sid in after and sid not in assignments
+    }
+    DEFERRED_SESSIONS = deferred
     LAST_SOLVER_SUMMARY = {
         "mode": "repair",
         "action": action,
+        "resync": resync,
         "changed_sessions": sorted(changed),
         "reconsidered_waiting_sessions": sorted(waiting_ids),
+        "reconsidered_deferred_sessions": sorted(deferred_ids),
+        "replanned_diverged_grounded_sessions": sorted(diverged_ids),
+        "replanned_bookings_overlapping_incumbents": sorted(bumped_ids),
+        "resent_stranded_sessions": sorted(stranded),
         "removed_sessions": removed,
         "sessions": len(after),
         "assigned_sessions": len(assignments),
@@ -2002,272 +2342,91 @@ def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, An
         "reassignments": len(solver_result.get("reassignments", [])),
         "waiting_sessions": solver_result.get("waiting", {}),
         "waiting_count": len(solver_result.get("waiting", {})),
+        "deferred_tows": deferred,
     }
-    decisions = build_stream_decisions(
-        candidate, after, assignments, gate_starts, decision_sessions
-    )
-    PREDICTED_GATE_STATE, PREDICTED_UNASSIGNED_AIRCRAFT = predict_post_decision_gate_state(
-        candidate, after, assignments, gate_starts, decision_sessions
-    )
     LAST_DECISION_RESPONSE = copy.deepcopy(decisions)
     return decisions
 
-def _passenger_gate_object(gate_id: str | None) -> dict[str, str] | None:
-    if not gate_id or STATE is None:
-        return None
-    record = STATE.gate_by_id.get(gate_id)
-    if record is None:
-        return None
-    terminal = record.get("terminal")
-    if terminal is None and record.get("kind") == "remote":
-        terminal = "Remote"
-    if terminal is None:
-        return None
-    terminal_label = str(terminal)
-    if terminal_label.startswith("T") and terminal_label[1:].isdigit():
-        terminal_label = terminal_label[1:]
-    return {"terminal": terminal_label, "gate": str(gate_id)}
 
-
-def build_passenger_message() -> dict[str, Any]:
-    """Build the passenger branch's documented full-list WebSocket payload."""
-    global PASSENGER_LAST_FIELDS, PASSENGER_PREVIOUS_FIELDS
-    if STATE is None:
-        return {"type": "assignments", "generatedAt": datetime.now(timezone.utc).isoformat(), "flights": []}
-
-    sessions = STATE.build_sessions()
-    gate_by_token: dict[str, str] = {}
-    for sid, session in sessions.items():
-        gate = ASSIGNMENTS.get(sid)
-        if gate:
-            for token in (session.get("start_token"), session.get("end_token")):
-                if token:
-                    gate_by_token[token] = gate
-
-    now_utc = (datetime.fromisoformat(LATEST_SIMULATED_TIME.replace("Z", "+00:00"))
-               if LATEST_SIMULATED_TIME else datetime.now(timezone.utc))
-    flights = []
-    for route in STATE.routes.values():
-        carrier = route["carrier"]
-        for entry in route["legs"]:
-            leg = entry["leg"]
-            try:
-                dep_yyz, arr_yyz = STATE._leg_aware_datetimes(leg)
-            except (KeyError, ValueError, TimezoneCoverageError):
-                continue
-            if dep_yyz is None and arr_yyz is None:
-                continue
-
-            cancelled = not entry["active"]
-            if cancelled:
-                cancelled_at = entry.get("cancelledAt")
-                if not cancelled_at:
-                    continue
-                cancelled_time = datetime.fromisoformat(cancelled_at.replace("Z", "+00:00"))
-                if now_utc - cancelled_time > timedelta(hours=1):
-                    continue
-            else:
-                # Keep completed YYZ movements on the board for roughly one hour.
-                last_movement = max(
-                    [value for value in (dep_yyz, arr_yyz) if value is not None],
-                    default=None,
-                )
-                if last_movement is not None:
-                    last_movement_utc = last_movement.astimezone(timezone.utc)
-                    if now_utc - last_movement_utc > timedelta(hours=1):
-                        continue
-
-            token = entry["token"]
-            gate = _passenger_gate_object(gate_by_token.get(token))
-            number = str(leg.get("flightNumber") or "")
-            suffix = str(leg.get("flightSuffix") or "")
-            primary = f"{carrier}{number}{suffix}"
-            codes = [primary] if primary else []
-            for share in leg.get("codeshare") or []:
-                share_code = str(share.get("carrier") or "") + str(share.get("flightNumber") or "")
-                if share_code and share_code not in codes:
-                    codes.append(share_code)
-
-            time_departure = (
-                dep_yyz.isoformat() if dep_yyz is not None else None
-            )
-            time_arrival = (
-                arr_yyz.isoformat() if arr_yyz is not None else None
-            )
-            fields = {
-                "flightCodes": codes or [carrier],
-                "airline": AIRLINE_NAMES.get(carrier, carrier),
-                "from": str(leg.get("departureStation") or ""),
-                "to": str(leg.get("arrivalStation") or ""),
-                "timeArrival": time_arrival,
-                "timeDeparture": time_departure,
-                "gate": gate,
-                "cancelled": cancelled,
-                "misc": {
-                    "aircraftType": entry["aircraft"].get("aircraftType"),
-                    "registration": entry["aircraft"].get("registration"),
-                    "trafficType": leg.get("trafficType"),
-                },
-            }
-            previous = copy.deepcopy(PASSENGER_PREVIOUS_FIELDS.get(token, {}))
-            old = PASSENGER_LAST_FIELDS.get(token)
-            if old is not None:
-                for key, value in fields.items():
-                    if old.get(key) != value:
-                        previous[key] = copy.deepcopy(old.get(key))
-            PASSENGER_PREVIOUS_FIELDS[token] = previous
-            PASSENGER_LAST_FIELDS[token] = copy.deepcopy(fields)
-
-            flights.append({
-                "flightId": token,
-                **fields,
-                "previous": previous,
-            })
-
-    def flight_sort_key(flight):
-        value = flight.get("timeDeparture") or flight.get("timeArrival")
-        return datetime.fromisoformat(value).timestamp() if value else float("inf")
-
-    flights.sort(key=flight_sort_key)
-    generated = now_utc.astimezone(STATE.airport_tz).isoformat()
-    return {"type": "assignments", "generatedAt": generated, "flights": flights}
-
-
-def parse_passenger_gate_selectors(raw: str | None) -> list[dict[str, Any]] | None:
-    if not raw or not raw.strip():
-        return None
-    selectors = []
-    range_pattern = re.compile(r"^([A-Z]+)(\d+)-(?:([A-Z]+))?(\d+)$")
-    for item in raw.split(","):
-        value = item.strip()
-        if not value:
-            continue
-        if ":" in value:
-            terminal, target = value.split(":", 1)
-            target = target.upper()
-        else:
-            terminal, target = value, ""
-        if not target:
-            selectors.append({"terminal": terminal})
-            continue
-        match = range_pattern.fullmatch(target)
-        if match:
-            branch, first, end_branch, last = match.groups()
-            if end_branch and end_branch != branch:
-                continue
-            selectors.append({
-                "terminal": terminal, "branch": branch,
-                "from": min(int(first), int(last)), "to": max(int(first), int(last)),
-            })
-        elif re.fullmatch(r"[A-Z]+", target):
-            selectors.append({"terminal": terminal, "branch": target})
-        else:
-            selectors.append({"terminal": terminal, "gate": target})
-    return selectors
-
-
-def passenger_gate_matches(gate: dict[str, Any] | None, selector: dict[str, Any]) -> bool:
-    if not gate or str(gate.get("terminal")) != str(selector["terminal"]):
-        return False
-    label = str(gate.get("gate", "")).upper()
-    if "gate" in selector:
-        return label == selector["gate"]
-    branch_match = re.match(r"^[A-Z]+", label)
-    branch = branch_match.group(0) if branch_match else ""
-    if "from" in selector:
-        number_match = re.search(r"\d+", label)
-        if branch != selector["branch"] or not number_match:
-            return False
-        number = int(number_match.group(0))
-        return selector["from"] <= number <= selector["to"]
-    if "branch" in selector:
-        return branch == selector["branch"]
-    return True
-
-
-def filter_passenger_flights(flights: list[dict[str, Any]], selectors: list[dict[str, Any]] | None):
-    if selectors is None:
-        return flights
-    result = []
-    for flight in flights:
-        previous_gate = flight.get("previous", {}).get("gate")
-        if any(passenger_gate_matches(flight.get("gate"), item)
-               or passenger_gate_matches(previous_gate, item) for item in selectors):
-            result.append(flight)
-    return result
-
-
-def _ws_send(sock, payload: bytes, opcode: int = 1) -> None:
-    length = len(payload)
-    head = bytes([0x80 | opcode])
-    if length < 126:
-        head += bytes([length])
-    elif length < 65536:
-        head += bytes([126]) + struct.pack("!H", length)
-    else:
-        head += bytes([127]) + struct.pack("!Q", length)
-    sock.sendall(head + payload)
-
-
-def _ws_read_exact(sock, length: int) -> bytes | None:
-    chunks = bytearray()
-    while len(chunks) < length:
-        part = sock.recv(length - len(chunks))
-        if not part:
+def capture_view_snapshot() -> ViewSnapshot | None:
+    """Take references to committed state; the feed builds its message outside the lock."""
+    with STATE_LOCK:
+        if STATE is None:
             return None
-        chunks.extend(part)
-    return bytes(chunks)
+        return ViewSnapshot(
+            state=STATE,
+            assignments=ASSIGNMENTS,
+            gate_starts=GATE_STARTS,
+            assigned_at=ASSIGNED_AT,
+            visit_positions=VISIT_POSITIONS,
+            unassigned_reasons=UNASSIGNED_REASONS,
+            deferred=DEFERRED_SESSIONS,
+            airline_names=AIRLINE_NAMES,
+        )
 
 
-def _ws_read_frame(sock):
-    header = _ws_read_exact(sock, 2)
-    if header is None:
-        return None, b""
-    opcode = header[0] & 0x0F
-    length = header[1] & 0x7F
-    if length == 126:
-        extended = _ws_read_exact(sock, 2)
-        if extended is None:
-            return None, b""
-        length = struct.unpack("!H", extended)[0]
-    elif length == 127:
-        extended = _ws_read_exact(sock, 8)
-        if extended is None:
-            return None, b""
-        length = struct.unpack("!Q", extended)[0]
-    masked = bool(header[1] & 0x80)
-    mask = _ws_read_exact(sock, 4) if masked else None
-    payload = _ws_read_exact(sock, length) if length else b""
-    if payload is None:
-        return None, b""
-    if masked and mask:
-        payload = bytes(value ^ mask[index % 4] for index, value in enumerate(payload))
-    return opcode, payload
+VIEW_FEED = ViewFeed(capture_view_snapshot, VIEW_CLOCK)
 
 
-def broadcast_passenger_assignments(*, force: bool = False) -> None:
-    global LAST_PASSENGER_FLIGHTS_JSON
+class EventRejected(Exception):
+    """A webhook the matcher will not apply; retrying the same request cannot help."""
+
+    def __init__(self, status: int, message: str):
+        super().__init__(message)
+        self.status = status
+
+
+def _parse_stream_speed(headers) -> float | None:
+    """X-Stream-Speed is sent for paced runs only; it just drives the dashboard clock."""
+    try:
+        speed = float(headers.get("X-Stream-Speed", ""))
+    except ValueError:
+        return None
+    return speed if speed > 0 and speed != float("inf") else None
+
+
+def _apply_event(action: str, message: dict[str, Any], run_id: str, index: int,
+                 simulated_time: str, resync: bool) -> dict[str, Any]:
+    """Apply one webhook event to matcher state and return its stream decisions."""
+    global CURRENT_RUN_ID, LAST_EVENT_INDEX, LAST_EVENT_ID, MISSED_EVENTS
+    event_id = f"{run_id}:{index}"
+    if action == "InitializeAirport":
+        if index != 0:
+            raise EventRejected(400, "InitializeAirport must be event index 0.")
+        decisions = _handle_initialize(message, simulated_time)
+        CURRENT_RUN_ID, LAST_EVENT_INDEX, MISSED_EVENTS = run_id, 0, []
+        LAST_EVENT_ID = event_id
+        return decisions
+
     if STATE is None:
-        return
-    message = build_passenger_message()
-    signature = json.dumps(message["flights"], sort_keys=True, separators=(",", ":"), allow_nan=False)
-    if not force and signature == LAST_PASSENGER_FLIGHTS_JSON:
-        return
-    LAST_PASSENGER_FLIGHTS_JSON = signature
-    with PASSENGER_CLIENT_LOCK:
-        clients = list(PASSENGER_CLIENTS.items())
-    for sock, selectors in clients:
-        try:
-            outgoing = {
-                **message,
-                "flights": filter_passenger_flights(message["flights"], selectors),
-            }
-            _ws_send(sock, json.dumps(outgoing, separators=(",", ":"), allow_nan=False).encode("utf-8"))
-        except OSError:
-            with PASSENGER_CLIENT_LOCK:
-                PASSENGER_CLIENTS.pop(sock, None)
+        raise EventRejected(409, "First message must be InitializeAirport.")
+    if run_id != CURRENT_RUN_ID:
+        raise EventRejected(409, "Run ID changed without a new InitializeAirport.")
+    if index <= LAST_EVENT_INDEX:
+        raise EventRejected(
+            409, f"Event {index} was superseded: event {LAST_EVENT_INDEX} is already committed."
+        )
+    if index > LAST_EVENT_INDEX + 1:
+        # The stream gave up on these. Their changes are lost to us, and their
+        # responses may never have reached the stream, so resend the whole plan.
+        missed = [LAST_EVENT_INDEX + 1, index - 1]
+        print(f"EVENT GAP: stream skipped events {missed[0]}-{missed[1]}; resyncing.",
+              file=sys.stderr, flush=True)
+        MISSED_EVENTS = [*MISSED_EVENTS, missed]
+        resync = True
+    decisions = _handle_update(message, simulated_time, resync=resync)
+    LAST_EVENT_INDEX = index
+    LAST_EVENT_ID = event_id
+    print(json.dumps({
+        "event_id": event_id,
+        "simulated_time": simulated_time,
+        **decisions,
+    }, separators=(",", ":")), flush=True)
+    return decisions
 
 
+def solver_status() -> str:
+    return JULIA_WORKER.status if JULIA_WORKER is not None else "not_started"
 
 
 class MatcherHandler(BaseHTTPRequestHandler):
@@ -2276,55 +2435,6 @@ class MatcherHandler(BaseHTTPRequestHandler):
 
     def log_message(self, fmt: str, *args) -> None:
         sys.stdout.write("[%s] %s\n" % (self.log_date_time_string(), fmt % args))
-
-    def _serve_passenger_websocket(self, query: str) -> None:
-        if self.headers.get("Upgrade", "").lower() != "websocket":
-            _json_response(self, 426, {"error": "WebSocket upgrade required"})
-            return
-        if self.headers.get("Sec-WebSocket-Version") != "13":
-            _json_response(self, 400, {"error": "WebSocket version 13 is required"})
-            return
-        key = self.headers.get("Sec-WebSocket-Key", "").strip()
-        if not key:
-            _json_response(self, 400, {"error": "Missing Sec-WebSocket-Key"})
-            return
-        accept = base64.b64encode(
-            hashlib.sha1((key + WEBSOCKET_GUID).encode("ascii")).digest()
-        ).decode("ascii")
-        self.send_response(101, "Switching Protocols")
-        self.send_header("Upgrade", "websocket")
-        self.send_header("Connection", "Upgrade")
-        self.send_header("Sec-WebSocket-Accept", accept)
-        self.end_headers()
-
-        selectors = parse_passenger_gate_selectors(parse_qs(query).get("gates", [None])[0])
-        sock = self.connection
-        try:
-            # Serialize initial snapshot + registration with stream updates so
-            # a client cannot miss an update between its snapshot and subscribe.
-            with STATE_LOCK:
-                message = build_passenger_message()
-                with PASSENGER_CLIENT_LOCK:
-                    PASSENGER_CLIENTS[sock] = selectors
-                    outgoing = {
-                        **message,
-                        "flights": filter_passenger_flights(message["flights"], selectors),
-                    }
-                    _ws_send(sock, json.dumps(outgoing, separators=(",", ":"), allow_nan=False).encode("utf-8"))
-            while True:
-                opcode, payload = _ws_read_frame(sock)
-                if opcode is None:
-                    break
-                if opcode == 8:
-                    _ws_send(sock, payload, opcode=8)
-                    break
-                if opcode == 9:
-                    _ws_send(sock, payload, opcode=10)
-        except (ConnectionError, OSError):
-            pass
-        finally:
-            with PASSENGER_CLIENT_LOCK:
-                PASSENGER_CLIENTS.pop(sock, None)
 
     def do_OPTIONS(self) -> None:
         self.send_response(204)
@@ -2335,28 +2445,33 @@ class MatcherHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self) -> None:
-        parsed = urlsplit(self.path)
-        if parsed.path == "/passenger/ws":
-            self._serve_passenger_websocket(parsed.query)
+        path = urlsplit(self.path).path
+        if path in VIEW_ENDPOINTS:
+            # The passenger endpoint sends the operator's messages for now; see passenger/SPEC.md.
+            VIEW_FEED.serve(self)
             return
-        if self.path == "/health":
+        if path == "/health":
             with STATE_LOCK:
                 _json_response(self, 200, {
                     "status": "ready" if STATE is not None else "waiting_for_initialization",
+                    "solver": solver_status(),
                     "run_id": CURRENT_RUN_ID,
                     "last_event_id": LAST_EVENT_ID,
+                    "missed_events": MISSED_EVENTS,
+                    "deferred_tows": len(DEFERRED_SESSIONS),
+                    "operator_websocket": "/operator/ws",
                     "passenger_websocket": "/passenger/ws",
+                    "dashboard_clients": VIEW_FEED.client_count,
                     "operator_snapshot": "/assignments",
                 })
             return
-        if self.path == "/assignments":
+        if path == "/assignments":
             with STATE_LOCK:
                 _json_response(self, 200, dashboard_snapshot())
             return
         _json_response(self, 404, {"error": "Not found"})
 
     def do_POST(self) -> None:
-        global CURRENT_RUN_ID, LAST_EVENT_INDEX, LAST_EVENT_ID
         if self.path != "/updates":
             _json_response(self, 404, {"error": "POST endpoint must be /updates"})
             return
@@ -2373,48 +2488,50 @@ class MatcherHandler(BaseHTTPRequestHandler):
             _json_response(self, 400, {"error": str(exc)})
             return
 
+        event_id = f"{run_id}:{index}"
+        action = message["action"]
+        resync = self.headers.get("X-Stream-Resync", "").strip().lower() == "true"
         with STATE_LOCK:
-            action = message["action"]
-            try:
-                if action == "InitializeAirport":
-                    if index != 0:
-                        raise ValueError("InitializeAirport must be event index 0.")
-                    summary = _handle_initialize(message, simulated_time)
-                    CURRENT_RUN_ID = run_id
-                    LAST_EVENT_INDEX = 0
-                    LAST_EVENT_ID = self.headers.get("X-Stream-Event-Id")
-                    broadcast_passenger_assignments(force=True)
-                    _json_response(self, 200, summary)
-                    return
-
-                if STATE is None:
-                    raise RuntimeError("First message must be InitializeAirport.")
-                if run_id != CURRENT_RUN_ID:
-                    raise RuntimeError("Run ID changed without a new InitializeAirport.")
-                if index != LAST_EVENT_INDEX + 1:
-                    raise RuntimeError(
-                        f"Out-of-order event index: expected {LAST_EVENT_INDEX + 1}, received {index}."
-                    )
-                summary = _handle_update(message, simulated_time)
-                LAST_EVENT_INDEX = index
-                LAST_EVENT_ID = self.headers.get("X-Stream-Event-Id")
-                broadcast_passenger_assignments()
-                print(json.dumps({
-                    "event_id": LAST_EVENT_ID,
-                    "simulated_time": simulated_time,
-                    **summary,
-                }, separators=(",", ":")), flush=True)
-                _json_response(self, 200, summary)
-            except TimezoneCoverageError as exc:
-                # Bad/incomplete schedule reference data is a client validation
-                # problem, not an internal server error. Keep event sequencing
-                # unchanged so the sender can correct the data and retry.
-                print(f"TIMEZONE COVERAGE event={self.headers.get('X-Stream-Event-Id', '?')}: {exc}", file=sys.stderr, flush=True)
-                _json_response(self, 422, {"error": str(exc), "error_type": "timezone_coverage"})
-            except Exception as exc:
-                print(f"ERROR event={self.headers.get('X-Stream-Event-Id', '?')}: {exc}", file=sys.stderr, flush=True)
-                _json_response(self, 500, {"error": str(exc)})
-
+            cached = RESPONSE_CACHE.get(event_id)
+            if cached is not None:
+                # A retry, possibly of an event that finished after the stream timed
+                # out. Return the committed answer; never apply an event twice.
+                print(f"DUPLICATE event={event_id}: returning its committed response", flush=True)
+                status, body = 200, cached
+            else:
+                saved = {name: globals()[name] for name in _EVENT_GLOBALS}
+                try:
+                    status, body = 200, _apply_event(action, message, run_id, index, simulated_time, resync)
+                    if action == "InitializeAirport":
+                        RESPONSE_CACHE.clear()
+                    RESPONSE_CACHE[event_id] = body
+                    while len(RESPONSE_CACHE) > RESPONSE_CACHE_SIZE:
+                        RESPONSE_CACHE.popitem(last=False)
+                    initializing = action == "InitializeAirport"
+                    VIEW_CLOCK.observe(simulated_time, _parse_stream_speed(self.headers), reset=initializing)
+                    VIEW_FEED.mark_changed(reset=initializing)
+                except EventRejected as exc:
+                    globals().update(saved)
+                    print(f"REJECTED event={event_id}: {exc}", file=sys.stderr, flush=True)
+                    status, body = exc.status, {"error": str(exc)}
+                except TimezoneCoverageError as exc:
+                    # Bad/incomplete schedule reference data is a client validation
+                    # problem, not an internal server error. Nothing was committed.
+                    globals().update(saved)
+                    print(f"TIMEZONE COVERAGE event={event_id}: {exc}", file=sys.stderr, flush=True)
+                    status, body = 422, {"error": str(exc), "error_type": "timezone_coverage"}
+                except Exception as exc:
+                    # Nothing was committed, so the stream may retry this event.
+                    globals().update(saved)
+                    print(f"ERROR event={event_id}: {exc}", file=sys.stderr, flush=True)
+                    traceback.print_exc()
+                    status, body = 500, {"error": str(exc)}
+        try:
+            _json_response(self, status, body)
+        except (BrokenPipeError, ConnectionResetError):
+            print(f"LATE RESPONSE event={event_id}: the stream stopped waiting; "
+                  "a retry will receive the cached response", file=sys.stderr, flush=True)
+            self.close_connection = True
 
 
 def main() -> int:
@@ -2436,18 +2553,22 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    server = ThreadingHTTPServer(
-        (args.host, args.port),
-        MatcherHandler,
+    # Start Julia before binding: until the solver is ready there is no listener,
+    # so the stream cannot deliver anything (it retries InitializeAirport meanwhile).
+    print("Starting the Julia solver; webhooks are not accepted until it is ready.", flush=True)
+    JULIA_WORKER = JuliaWorker(
+        SOLVER_BACKEND,
+        JULIA,
+        JULIA_TIMEOUT,
     )
 
+    server = None
     try:
-        # Start Julia before accepting any webhook events.
-        JULIA_WORKER = JuliaWorker(
-            SOLVER_BACKEND,
-            JULIA,
-            JULIA_TIMEOUT,
+        server = ThreadingHTTPServer(
+            (args.host, args.port),
+            MatcherHandler,
         )
+        VIEW_FEED.start()
 
         print(
             f"SmartGate matcher listening on "
@@ -2456,7 +2577,9 @@ def main() -> int:
         )
         print(
             f"Health: http://{args.host}:{args.port}/health | "
-            f"assignments: http://{args.host}:{args.port}/assignments",
+            f"assignments: http://{args.host}:{args.port}/assignments | "
+            f"views: ws://{args.host}:{args.port}/operator/ws, "
+            f"ws://{args.host}:{args.port}/passenger/ws",
             flush=True,
         )
 
@@ -2466,7 +2589,9 @@ def main() -> int:
         print("Stopping matcher.", flush=True)
 
     finally:
-        server.server_close()
+        VIEW_FEED.stop()
+        if server is not None:
+            server.server_close()
 
         if JULIA_WORKER is not None:
             JULIA_WORKER.close()

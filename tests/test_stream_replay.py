@@ -64,7 +64,8 @@ class ReplayTests(unittest.TestCase):
         for index, (_, _, headers) in enumerate(sent):
             self.assertEqual(headers, {"X-Stream-Run-Id": run.id,
                                       "X-Stream-Event-Id": f"{run.id}:{index}",
-                                      "X-Stream-Simulated-Time": self.scenario["events"][index]["timestamp"]})
+                                      "X-Stream-Simulated-Time": self.scenario["events"][index]["timestamp"],
+                                      "X-Stream-Speed": "60.0"})
         self.assertEqual(run.snapshot()["status"], "completed")
         self.assertEqual(run.snapshot()["delivered"], 3)
         self.assertEqual(run.snapshot()["simulated_time"], "2026-11-07T12:35:00Z")
@@ -113,7 +114,8 @@ class ReplayTests(unittest.TestCase):
                     self.assertEqual(run.snapshot()["lateness_seconds"], 0)
                     self.assertEqual([r["intended_deadline_seconds"] for r in self.records(run)], [0, 13, 13])
                 else:
-                    self.assertEqual(sent, [100])
+                    # 503 is retried under the same event ID; the 202 that follows is final.
+                    self.assertEqual(sent, [100] if response == 202 else [100, 108.5])
                     self.assertEqual(run.snapshot()["status"], "failed")
                     self.assertEqual(run.snapshot()["delivered"], 0)
 
@@ -160,25 +162,85 @@ class ReplayTests(unittest.TestCase):
                 self.assertEqual(run.snapshot()["delivered"], 3)
                 self.assertEqual(run.snapshot()["max_lateness_seconds"], 0)
 
-    def test_failures_stop_delivery_and_are_recorded(self):
-        for result in (300, 500, TimeoutError("timed out"), OSError("connection refused")):
+    def test_failed_updates_are_retried_then_skipped(self):
+        for result, attempts in ((300, 1), (422, 1), (500, 3), (TimeoutError("timed out"), 3),
+                                 (OSError("connection refused"), 3)):
             with self.subTest(result=result):
                 run = self.run_for_test(mode="unpaced")
                 calls = []
 
-                def send(*args):
-                    calls.append(args)
+                def send(url, message, headers):
+                    calls.append(headers)
                     if isinstance(result, Exception):
                         raise result
                     return result, None
 
-                run.execute(send=send)
+                run.execute(clock=self.clock, wait=self.clock.wait, send=send)
                 state = run.snapshot()
-                self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("failed", 1, 0))
-                self.assertEqual(state["failed_event_id"], f"{run.id}:0")
-                self.assertTrue(state["error"])
-                self.assertEqual(len(calls), 1)
-                self.assertTrue(self.records(run)[0]["error"])
+                self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("completed", 3, 0))
+                self.assertEqual(state["skipped"], 3)
+                self.assertEqual(state["skipped_event_ids"], [f"{run.id}:{index}" for index in range(3)])
+                self.assertEqual(state["retries"], 3 * (attempts - 1))
+                self.assertEqual(len(calls), 3 * attempts)
+                # Every attempt of one event reuses its event ID, the matcher's idempotency key.
+                first_event = calls[:attempts]
+                self.assertEqual({headers["X-Stream-Event-Id"] for headers in first_event}, {f"{run.id}:0"})
+                self.assertEqual([headers.get("X-Stream-Attempt") for headers in first_event],
+                                 [None, "2", "3"][:attempts])
+                self.assertNotIn("X-Stream-Resync", calls[0])
+                self.assertEqual(calls[attempts]["X-Stream-Resync"], "true")
+                records = self.records(run)
+                self.assertTrue(all(record["error"] for record in records))
+                self.assertEqual([len(record["attempts"]) for record in records], [attempts] * 3)
+                self.assertEqual([event["decision_status"] for event in run.events_after()], ["skipped"] * 3)
+
+    def test_retry_after_timeout_applies_the_response_once_and_clears_resync(self):
+        run = self.run_for_test(mode="unpaced")
+        calls = []
+
+        def send(url, message, headers):
+            calls.append(headers)
+            if len(calls) == 1:
+                raise TimeoutError("timed out")
+            return 200, {"assignments": [], "moves": []}
+
+        run.execute(clock=self.clock, wait=self.clock.wait, send=send)
+        state = run.snapshot()
+        self.assertEqual((state["status"], state["delivered"], state["retries"], state["skipped"]),
+                         ("completed", 3, 1, 0))
+        self.assertEqual([headers["X-Stream-Event-Id"] for headers in calls],
+                         [f"{run.id}:0", f"{run.id}:0", f"{run.id}:1", f"{run.id}:2"])
+        self.assertEqual(calls[1]["X-Stream-Attempt"], "2")
+        self.assertTrue(all("X-Stream-Resync" not in headers for headers in calls))
+        self.assertEqual([len(record["attempts"]) for record in self.records(run)], [2, 1, 1])
+
+    def test_initialization_is_retried_until_the_matcher_listens(self):
+        original = self.scenario["events"][0]["message"]
+        self.scenario["events"][0]["message"] = {
+            "action": "InitializeAirport", "flights": [original],
+            "parkedAircraft": [{**original["flight"], "gate": "D20"}], "gateOutages": []}
+        self.path.write_text(json.dumps(self.scenario))
+        for refusals, status in ((6, "completed"), (100, "failed")):
+            with self.subTest(refusals=refusals):
+                run = self.run_for_test(mode="unpaced")
+                run.initialize_retry_seconds = 20
+                calls = []
+
+                def send(url, message, headers):
+                    calls.append(message["action"])
+                    if len(calls) <= refusals:
+                        raise ConnectionRefusedError("connection refused")
+                    return 204, None
+
+                clock = Clock()
+                run.execute(clock=clock, wait=clock.wait, send=send)
+                state = run.snapshot()
+                self.assertEqual(state["status"], status)
+                if status == "completed":
+                    self.assertEqual(calls, ["InitializeAirport"] * 7 + ["UpdateTiming", "GateOutage"])
+                else:
+                    self.assertEqual(state["delivered"], 0)
+                    self.assertTrue(set(calls) == {"InitializeAirport"} and len(calls) > 1)
 
     def test_stop_interrupts_wait(self):
         run = self.run_for_test()
