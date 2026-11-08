@@ -1137,6 +1137,7 @@ LATEST_GATE_STATE: dict[str, Any] = {}
 LATEST_UNASSIGNED_AIRCRAFT: list[dict[str, Any]] = []
 LATEST_SIMULATED_TIME: str | None = None
 LAST_SOLVER_SUMMARY: dict[str, Any] = {}
+LAST_DECISION_RESPONSE: dict[str, Any] = {"assignments": [], "moves": []}
 PASSENGER_CLIENTS: dict[Any, list[dict[str, Any]] | None] = {}
 PASSENGER_CLIENT_LOCK = threading.RLock()
 PASSENGER_LAST_FIELDS: dict[str, dict[str, Any]] = {}
@@ -1315,6 +1316,8 @@ def dashboard_snapshot() -> dict[str, Any]:
         "gates": gates,
         "outages": copy.deepcopy(STATE.outages),
         "solver": copy.deepcopy(LAST_SOLVER_SUMMARY),
+        "last_decision_response": copy.deepcopy(LAST_DECISION_RESPONSE),
+        "last_decision_timestamp": LATEST_SIMULATED_TIME,
     }
 
 
@@ -1322,6 +1325,7 @@ def _handle_initialize(message: dict[str, Any], simulated_time: str) -> dict[str
     global STATE, ASSIGNMENTS, GATE_STARTS
     global LATEST_GATE_STATE, LATEST_UNASSIGNED_AIRCRAFT, LATEST_SIMULATED_TIME, LAST_SOLVER_SUMMARY
     global PASSENGER_LAST_FIELDS, PASSENGER_PREVIOUS_FIELDS, LAST_PASSENGER_FLIGHTS_JSON
+    global LAST_DECISION_RESPONSE
 
     PASSENGER_LAST_FIELDS = {}
     PASSENGER_PREVIOUS_FIELDS = {}
@@ -1381,14 +1385,17 @@ def _handle_initialize(message: dict[str, Any], simulated_time: str) -> dict[str
         "unassigned_sessions": sorted(sid for sid in sessions if sid not in assignments),
     }
 
-    return build_stream_decisions(
+    decisions = build_stream_decisions(
         candidate, sessions, assignments, gate_starts, include_all=True
     )
+    LAST_DECISION_RESPONSE = copy.deepcopy(decisions)
+    return decisions
 
 
 def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, Any]:
     global STATE, ASSIGNMENTS, GATE_STARTS
     global LATEST_GATE_STATE, LATEST_UNASSIGNED_AIRCRAFT, LATEST_SIMULATED_TIME, LAST_SOLVER_SUMMARY
+    global LAST_DECISION_RESPONSE
 
     if STATE is None or not STATE.initialized:
         raise RuntimeError("Matcher has not received InitializeAirport.")
@@ -1466,9 +1473,11 @@ def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, An
         "new_assignments": len(solver_result.get("assignments", [])),
         "reassignments": len(solver_result.get("reassignments", [])),
     }
-    return build_stream_decisions(
+    decisions = build_stream_decisions(
         candidate, after, assignments, gate_starts, decision_sessions
     )
+    LAST_DECISION_RESPONSE = copy.deepcopy(decisions)
+    return decisions
 
 def _passenger_gate_object(gate_id: str | None) -> dict[str, str] | None:
     if not gate_id or STATE is None:
