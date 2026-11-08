@@ -12,8 +12,13 @@ from __future__ import annotations
 
 import subprocess
 import argparse
+import base64
 import copy
+import hashlib
 import json
+import re
+import socket
+import struct
 import os
 import sys
 import threading
@@ -22,6 +27,7 @@ from datetime import date, datetime, timedelta, time, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, urlsplit
 
 from zoneinfo import ZoneInfo
 
@@ -393,6 +399,7 @@ class ScenarioState:
                 "leg": dict(leg),
                 "aircraft": dict(flight),
                 "active": True,
+                "cancelledAt": None,
                 "token": token,
             })
             self.token_legs[token] = {
@@ -489,12 +496,15 @@ class ScenarioState:
             if scope == "ALLLEGS":
                 for item in self.routes[route_id]["legs"]:
                     item["active"] = False
+                    item["cancelledAt"] = event["timestamp"]
             else:
                 entry["active"] = False
+                entry["cancelledAt"] = event["timestamp"]
 
         elif action == "ReinstateFlight":
             for item in self.routes[route_id]["legs"]:
                 item["active"] = True
+                item["cancelledAt"] = None
 
         elif action == "UpdateEquipment":
             scope = norm((message.get("equipmentUpdate") or {}).get("scope"))
@@ -1123,6 +1133,12 @@ LATEST_GATE_STATE: dict[str, Any] = {}
 LATEST_UNASSIGNED_AIRCRAFT: list[dict[str, Any]] = []
 LATEST_SIMULATED_TIME: str | None = None
 LAST_SOLVER_SUMMARY: dict[str, Any] = {}
+PASSENGER_CLIENTS: dict[Any, list[dict[str, Any]] | None] = {}
+PASSENGER_CLIENT_LOCK = threading.RLock()
+PASSENGER_LAST_FIELDS: dict[str, dict[str, Any]] = {}
+PASSENGER_PREVIOUS_FIELDS: dict[str, dict[str, Any]] = {}
+LAST_PASSENGER_FLIGHTS_JSON: str | None = None
+WEBSOCKET_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 
 def active_token_legs(state: ScenarioState) -> dict[str, dict[str, Any]]:
@@ -1446,6 +1462,253 @@ def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, An
     return build_stream_decisions(
         candidate, after, assignments, gate_starts, decision_sessions
     )
+
+def _passenger_gate_object(gate_id: str | None) -> dict[str, str] | None:
+    if not gate_id or STATE is None:
+        return None
+    record = STATE.gate_by_id.get(gate_id)
+    if record is None:
+        return None
+    terminal = record.get("terminal")
+    if terminal is None and record.get("kind") == "remote":
+        terminal = "Remote"
+    if terminal is None:
+        return None
+    return {"terminal": str(terminal), "gate": str(gate_id)}
+
+
+def build_passenger_message() -> dict[str, Any]:
+    """Build the passenger branch's documented full-list WebSocket payload."""
+    global PASSENGER_LAST_FIELDS, PASSENGER_PREVIOUS_FIELDS
+    if STATE is None:
+        return {"type": "assignments", "generatedAt": datetime.now(timezone.utc).isoformat(), "flights": []}
+
+    sessions = STATE.build_sessions()
+    gate_by_token: dict[str, str] = {}
+    for sid, session in sessions.items():
+        gate = ASSIGNMENTS.get(sid)
+        if gate:
+            for token in (session.get("start_token"), session.get("end_token")):
+                if token:
+                    gate_by_token[token] = gate
+
+    now_utc = (datetime.fromisoformat(LATEST_SIMULATED_TIME.replace("Z", "+00:00"))
+               if LATEST_SIMULATED_TIME else datetime.now(timezone.utc))
+    flights = []
+    for route in STATE.routes.values():
+        carrier = route["carrier"]
+        for entry in route["legs"]:
+            leg = entry["leg"]
+            try:
+                dep_yyz, arr_yyz = STATE._leg_datetimes(leg)
+            except (KeyError, ValueError, TimezoneCoverageError):
+                continue
+            if dep_yyz is None and arr_yyz is None:
+                continue
+
+            cancelled = not entry["active"]
+            if cancelled:
+                cancelled_at = entry.get("cancelledAt")
+                if not cancelled_at:
+                    continue
+                cancelled_time = datetime.fromisoformat(cancelled_at.replace("Z", "+00:00"))
+                if now_utc - cancelled_time > timedelta(hours=1):
+                    continue
+
+            token = entry["token"]
+            gate = _passenger_gate_object(gate_by_token.get(token))
+            number = str(leg.get("flightNumber") or "")
+            suffix = str(leg.get("flightSuffix") or "")
+            primary = f"{carrier}{number}{suffix}"
+            codes = [primary] if primary else []
+            for share in leg.get("codeshare", []):
+                share_code = str(share.get("carrier") or "") + str(share.get("flightNumber") or "")
+                if share_code and share_code not in codes:
+                    codes.append(share_code)
+
+            time_departure = (
+                dep_yyz.replace(tzinfo=STATE.airport_tz).isoformat() if dep_yyz is not None else None
+            )
+            time_arrival = (
+                arr_yyz.replace(tzinfo=STATE.airport_tz).isoformat() if arr_yyz is not None else None
+            )
+            fields = {
+                "gate": gate,
+                "timeArrival": time_arrival,
+                "timeDeparture": time_departure,
+                "cancelled": cancelled,
+            }
+            previous = copy.deepcopy(PASSENGER_PREVIOUS_FIELDS.get(token, {}))
+            old = PASSENGER_LAST_FIELDS.get(token)
+            if old is not None:
+                for key, value in fields.items():
+                    if old.get(key) != value:
+                        previous[key] = copy.deepcopy(old.get(key))
+            PASSENGER_PREVIOUS_FIELDS[token] = previous
+            PASSENGER_LAST_FIELDS[token] = copy.deepcopy(fields)
+
+            flights.append({
+                "flightId": token,
+                "flightCodes": codes or [carrier],
+                "airline": AIRLINE_NAMES.get(carrier, carrier),
+                "from": str(leg.get("departureStation") or ""),
+                "to": str(leg.get("arrivalStation") or ""),
+                "timeArrival": time_arrival,
+                "timeDeparture": time_departure,
+                "gate": gate,
+                "cancelled": cancelled,
+                "previous": previous,
+                "misc": {
+                    "aircraftType": entry["aircraft"].get("aircraftType"),
+                    "registration": entry["aircraft"].get("registration"),
+                    "trafficType": leg.get("trafficType"),
+                },
+            })
+
+    def flight_sort_key(flight):
+        value = flight.get("timeDeparture") or flight.get("timeArrival")
+        return datetime.fromisoformat(value).timestamp() if value else float("inf")
+
+    flights.sort(key=flight_sort_key)
+    generated = now_utc.astimezone(STATE.airport_tz).isoformat()
+    return {"type": "assignments", "generatedAt": generated, "flights": flights}
+
+
+def parse_passenger_gate_selectors(raw: str | None) -> list[dict[str, Any]] | None:
+    if not raw or not raw.strip():
+        return None
+    selectors = []
+    range_pattern = re.compile(r"^([A-Z]+)(\d+)-(?:([A-Z]+))?(\d+)$")
+    for item in raw.split(","):
+        value = item.strip()
+        if not value:
+            continue
+        if ":" in value:
+            terminal, target = value.split(":", 1)
+            target = target.upper()
+        else:
+            terminal, target = value, ""
+        if not target:
+            selectors.append({"terminal": terminal})
+            continue
+        match = range_pattern.fullmatch(target)
+        if match:
+            branch, first, end_branch, last = match.groups()
+            if end_branch and end_branch != branch:
+                continue
+            selectors.append({
+                "terminal": terminal, "branch": branch,
+                "from": min(int(first), int(last)), "to": max(int(first), int(last)),
+            })
+        elif re.fullmatch(r"[A-Z]+", target):
+            selectors.append({"terminal": terminal, "branch": target})
+        else:
+            selectors.append({"terminal": terminal, "gate": target})
+    return selectors
+
+
+def passenger_gate_matches(gate: dict[str, Any] | None, selector: dict[str, Any]) -> bool:
+    if not gate or str(gate.get("terminal")) != str(selector["terminal"]):
+        return False
+    label = str(gate.get("gate", "")).upper()
+    if "gate" in selector:
+        return label == selector["gate"]
+    branch_match = re.match(r"^[A-Z]+", label)
+    branch = branch_match.group(0) if branch_match else ""
+    if "from" in selector:
+        number_match = re.search(r"\d+", label)
+        if branch != selector["branch"] or not number_match:
+            return False
+        number = int(number_match.group(0))
+        return selector["from"] <= number <= selector["to"]
+    if "branch" in selector:
+        return branch == selector["branch"]
+    return True
+
+
+def filter_passenger_flights(flights: list[dict[str, Any]], selectors: list[dict[str, Any]] | None):
+    if selectors is None:
+        return flights
+    result = []
+    for flight in flights:
+        previous_gate = flight.get("previous", {}).get("gate")
+        if any(passenger_gate_matches(flight.get("gate"), item)
+               or passenger_gate_matches(previous_gate, item) for item in selectors):
+            result.append(flight)
+    return result
+
+
+def _ws_send(sock, payload: bytes, opcode: int = 1) -> None:
+    length = len(payload)
+    head = bytes([0x80 | opcode])
+    if length < 126:
+        head += bytes([length])
+    elif length < 65536:
+        head += bytes([126]) + struct.pack("!H", length)
+    else:
+        head += bytes([127]) + struct.pack("!Q", length)
+    sock.sendall(head + payload)
+
+
+def _ws_read_exact(sock, length: int) -> bytes | None:
+    chunks = bytearray()
+    while len(chunks) < length:
+        part = sock.recv(length - len(chunks))
+        if not part:
+            return None
+        chunks.extend(part)
+    return bytes(chunks)
+
+
+def _ws_read_frame(sock):
+    header = _ws_read_exact(sock, 2)
+    if header is None:
+        return None, b""
+    opcode = header[0] & 0x0F
+    length = header[1] & 0x7F
+    if length == 126:
+        extended = _ws_read_exact(sock, 2)
+        if extended is None:
+            return None, b""
+        length = struct.unpack("!H", extended)[0]
+    elif length == 127:
+        extended = _ws_read_exact(sock, 8)
+        if extended is None:
+            return None, b""
+        length = struct.unpack("!Q", extended)[0]
+    masked = bool(header[1] & 0x80)
+    mask = _ws_read_exact(sock, 4) if masked else None
+    payload = _ws_read_exact(sock, length) if length else b""
+    if payload is None:
+        return None, b""
+    if masked and mask:
+        payload = bytes(value ^ mask[index % 4] for index, value in enumerate(payload))
+    return opcode, payload
+
+
+def broadcast_passenger_assignments(*, force: bool = False) -> None:
+    global LAST_PASSENGER_FLIGHTS_JSON
+    if STATE is None:
+        return
+    message = build_passenger_message()
+    signature = json.dumps(message["flights"], sort_keys=True, separators=(",", ":"), allow_nan=False)
+    if not force and signature == LAST_PASSENGER_FLIGHTS_JSON:
+        return
+    LAST_PASSENGER_FLIGHTS_JSON = signature
+    with PASSENGER_CLIENT_LOCK:
+        clients = list(PASSENGER_CLIENTS.items())
+    for sock, selectors in clients:
+        try:
+            outgoing = {
+                **message,
+                "flights": filter_passenger_flights(message["flights"], selectors),
+            }
+            _ws_send(sock, json.dumps(outgoing, separators=(",", ":"), allow_nan=False).encode("utf-8"))
+        except OSError:
+            with PASSENGER_CLIENT_LOCK:
+                PASSENGER_CLIENTS.pop(sock, None)
+
+
 
 
 class MatcherHandler(BaseHTTPRequestHandler):
