@@ -471,25 +471,30 @@ class ScenarioState:
         route_id, index, entry = found
 
         if action == "UpdateTiming":
-            updated = dict(legs[0])
-            if "legType" not in updated:
-                updated["legType"] = entry["leg"].get("legType", "Originating")
-            entry["leg"] = updated
-            self.token_legs[entry["token"]] = {
-                "carrier": carrier,
-                "leg": {
-                    "flightNumber": updated.get("flightNumber"),
-                    "flightSuffix": updated.get("flightSuffix"),
-                    "originatingDate": updated.get("originatingDate"),
-                    "departureStation": updated.get("departureStation"),
-                    "arrivalStation": updated.get("arrivalStation"),
-                    "trafficType": updated.get("trafficType"),
-                },
-            }
-            # Aircraft details are present in the webhook and remain shared
-            # for the updated leg.
-            if flight:
-                entry["aircraft"] = dict(flight)
+            for leg_reference in legs:
+                leg_found = self._find_route_leg(carrier, leg_reference)
+                if leg_found is None:
+                    continue
+                _, _, updated_entry = leg_found
+                updated = dict(leg_reference)
+                if "legType" not in updated:
+                    updated["legType"] = updated_entry["leg"].get("legType", "Originating")
+                updated_entry["leg"] = updated
+                self.token_legs[updated_entry["token"]] = {
+                    "carrier": carrier,
+                    "leg": {
+                        "flightNumber": updated.get("flightNumber"),
+                        "flightSuffix": updated.get("flightSuffix"),
+                        "originatingDate": updated.get("originatingDate"),
+                        "departureStation": updated.get("departureStation"),
+                        "arrivalStation": updated.get("arrivalStation"),
+                        "trafficType": updated.get("trafficType"),
+                    },
+                }
+                # Aircraft details are present in the webhook and remain shared
+                # for the updated leg.
+                if flight:
+                    updated_entry["aircraft"] = dict(flight)
 
         elif action == "CancelFlight":
             scope = norm((message.get("cancelScope") or {}).get("type"))
