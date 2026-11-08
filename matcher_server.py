@@ -1490,7 +1490,10 @@ def _passenger_gate_object(gate_id: str | None) -> dict[str, str] | None:
         terminal = "Remote"
     if terminal is None:
         return None
-    return {"terminal": str(terminal), "gate": str(gate_id)}
+    terminal_label = str(terminal)
+    if terminal_label.startswith("T") and terminal_label[1:].isdigit():
+        terminal_label = terminal_label[1:]
+    return {"terminal": terminal_label, "gate": str(gate_id)}
 
 
 def build_passenger_message() -> dict[str, Any]:
