@@ -51,7 +51,8 @@ function parseTime(iso: string | null | undefined): number | null {
   return Date.parse(iso);
 }
 
-const isDeparture = (f: Flight) => f.from === LOCAL_AIRPORT;
+/** A turnback (YYZ -> YYZ) is an arrival, as in the operator view. */
+const isDeparture = (f: Flight) => f.to !== LOCAL_AIRPORT;
 const localTimeKey = (f: Flight) => (isDeparture(f) ? "timeDeparture" : "timeArrival");
 const localTime = (f: Flight) => parseTime(f[localTimeKey(f)]);
 const previousLocalTime = (f: Flight) => parseTime(f.previous[localTimeKey(f)]);
