@@ -52,10 +52,10 @@ the server and further delivery.
 Start your matcher or a test receiver separately. It must accept the
 [webhook contract](docs/stream.md#webhook-api), including `InitializeAirport`.
 The example below assumes it listens at `http://127.0.0.1:9000/updates`; replace
-that URL with your receiver's address. To use the allocator from
-`ilp_gate_assignment`, start the [matcher adapter](docs/matcher-integration.md).
-The adapter loads the algorithm from a separate checkout and returns decisions
-under the current stream contract. It does not modify the algorithm files.
+that URL with your receiver's address. The active matcher and algorithm are on
+the `matching` branch. Follow the [connection guide](docs/matcher-integration.md)
+to run that branch's receiver from a separate checkout without changing your
+partner's working files.
 
 From another terminal, start a quick replay:
 
