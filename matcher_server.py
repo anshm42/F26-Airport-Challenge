@@ -1294,48 +1294,75 @@ def dashboard_snapshot() -> dict[str, Any]:
 
 def _handle_initialize(message: dict[str, Any], simulated_time: str) -> dict[str, Any]:
     global STATE, ASSIGNMENTS, GATE_STARTS
+    global LATEST_GATE_STATE, LATEST_UNASSIGNED_AIRCRAFT, LATEST_SIMULATED_TIME, LAST_SOLVER_SUMMARY
+
     aircraft_classes, gates, airport_timezone = load_references()
     candidate = ScenarioState({}, aircraft_classes, gates, airport_timezone)
     candidate.initialize({"timestamp": simulated_time, "message": message})
     sessions = candidate.build_sessions()
+
+    # The stream already has physical positions for parked aircraft. Lock
+    # those positions for the initial solve; never silently reshuffle the
+    # initialization snapshot.
+    for session in sessions.values():
+        if session.get("initiallyParked"):
+            fixed = candidate.parked_gates.get(norm(session.get("registration")))
+            if fixed:
+                session["fixedGate"] = fixed
+
     payload = build_solver_payload(sessions, gates, candidate.outage_payload())
     payload["mode"] = "initial"
     result = run_julia(SOLVER_BACKEND, payload)
     assignments = assignment_map(result.get("assignments", []))
-    gate_starts = {sid: float(sessions[sid]["start"]) for sid in assignments if sid in sessions}
+    gate_starts = {
+        sid: float(sessions[sid]["start"])
+        for sid in assignments if sid in sessions
+    }
 
-    # The ILP makes the best simultaneous initial allocation. Any sessions it
-    # cannot place are then queued for the earliest compatible gate opening.
+    # Keep the existing local repair fallback for sessions the joint model
+    # cannot place. Conflict-group occupancy and crosswalk capacity are used
+    # by the repair path too.
     initial_unassigned = [sid for sid in result.get("unassigned", []) if sid in sessions]
     waiting_result = repair_assignments_python(
         sessions, gates, candidate.outage_payload(), assignments,
         set(initial_unassigned), gate_starts,
-    ) if initial_unassigned else {"assignments": [], "reassignments": [], "retained_assignments": [], "unassigned": [], "unassigned_reasons": {}, "gate_starts": {}, "waiting": {}}
+    ) if initial_unassigned else {
+        "assignments": [], "reassignments": [], "retained_assignments": [],
+        "unassigned": [], "unassigned_reasons": {}, "gate_starts": {}, "waiting": {},
+    }
     for pair in waiting_result.get("assignments", []):
+        assignments[str(pair[0])] = str(pair[1])
+    for pair in waiting_result.get("reassignments", []):
         assignments[str(pair[0])] = str(pair[1])
     gate_starts.update(waiting_result.get("gate_starts", {}))
 
     STATE = candidate
     ASSIGNMENTS = assignments
     GATE_STARTS = gate_starts
-    status = build_aircraft_status(
-        sessions, assignments, GATE_STARTS,
-        waiting_result.get("unassigned_reasons", {}),
-    )
-    return {
-        "ready": True,
+    LATEST_GATE_STATE = copy.deepcopy(message.get("gateState", {}))
+    LATEST_UNASSIGNED_AIRCRAFT = copy.deepcopy(message.get("unassignedAircraft", []))
+    LATEST_SIMULATED_TIME = simulated_time
+    LAST_SOLVER_SUMMARY = {
+        "mode": "initial",
+        "termination_status": result.get("termination_status"),
+        "objective": result.get("objective"),
         "sessions": len(sessions),
-        "assigned": len(assignments),
-        "unassigned": status["unassigned_sessions"],
-        **status,
-        "unmatched_gate_outages": candidate.unmatched_outages,
-        "recognized_passenger_gate_outages": candidate.recognized_passenger_gate_outages,
+        "assigned_sessions": len(assignments),
+        "unassigned_sessions": sorted(sid for sid in sessions if sid not in assignments),
     }
+
+    return build_stream_decisions(
+        candidate, sessions, assignments, gate_starts, include_all=True
+    )
+
 
 def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, Any]:
     global STATE, ASSIGNMENTS, GATE_STARTS
+    global LATEST_GATE_STATE, LATEST_UNASSIGNED_AIRCRAFT, LATEST_SIMULATED_TIME, LAST_SOLVER_SUMMARY
+
     if STATE is None or not STATE.initialized:
         raise RuntimeError("Matcher has not received InitializeAirport.")
+
     candidate = copy.deepcopy(STATE)
     before = candidate.build_sessions()
     action = candidate.apply_message({"timestamp": simulated_time, "message": message})
@@ -1355,10 +1382,6 @@ def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, An
             assignments.pop(sid, None)
             gate_starts.pop(sid, None)
 
-    # Reconsider every aircraft that is already waiting for a future gate, as
-    # well as every currently unassigned aircraft, on every update. A delay,
-    # cancellation, reinstatement, equipment change, or outage change can free
-    # an earlier slot even when the waiting aircraft itself did not change.
     waiting_ids = {
         sid for sid, gate in assignments.items()
         if sid in after
@@ -1368,13 +1391,10 @@ def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, An
     repair_ids = set(changed) | waiting_ids | unassigned_ids
 
     solver_result: dict[str, Any] = {
-        "assignments": [], "reassignments": [], "retained_assignments": [], "unassigned": [],
-        "unassigned_reasons": {}, "gate_starts": {}, "waiting": {},
+        "assignments": [], "reassignments": [], "retained_assignments": [],
+        "unassigned": [], "unassigned_reasons": {}, "gate_starts": {}, "waiting": {},
     }
     if repair_ids:
-        # repair_assignments_python excludes all repair_ids from fixed
-        # occupancy, then rebuilds their reservations in priority order. It
-        # retains an old gate as a preference but recomputes its earliest slot.
         solver_result = repair_assignments_python(
             after, candidate.gates, outages, assignments, repair_ids, gate_starts
         )
@@ -1382,7 +1402,6 @@ def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, An
             if sid not in after:
                 assignments.pop(sid, None)
                 gate_starts.pop(sid, None)
-        # Clear old reservations for the sessions being reconsidered first.
         for sid in repair_ids:
             assignments.pop(sid, None)
             gate_starts.pop(sid, None)
@@ -1394,29 +1413,32 @@ def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, An
             assignments[str(pair[0])] = str(pair[1])
         gate_starts.update(solver_result.get("gate_starts", {}))
 
-    # Commit only after the complete repair succeeds.
+    # Commit the candidate only after the complete schedule repair succeeds.
     STATE = candidate
     ASSIGNMENTS = assignments
     GATE_STARTS = gate_starts
+    LATEST_GATE_STATE = copy.deepcopy(message.get("gateState", {}))
+    LATEST_UNASSIGNED_AIRCRAFT = copy.deepcopy(message.get("unassignedAircraft", []))
+    LATEST_SIMULATED_TIME = simulated_time
 
-    status = build_aircraft_status(
-        after, assignments, gate_starts,
-        solver_result.get("unassigned_reasons", {}),
-    )
-
-    return {
+    decision_sessions = set()
+    for key in ("assignments", "reassignments", "retained_assignments"):
+        decision_sessions.update(str(pair[0]) for pair in solver_result.get(key, []))
+    LAST_SOLVER_SUMMARY = {
+        "mode": "repair",
         "action": action,
         "changed_sessions": sorted(changed),
         "reconsidered_waiting_sessions": sorted(waiting_ids),
         "removed_sessions": removed,
-        "assignments": solver_result.get("assignments", []),
-        "reassignments": solver_result.get("reassignments", []),
-        "retained_assignments": solver_result.get("retained_assignments", []),
-        "unassigned": status["unassigned_sessions"],
-        **status,
-        "unmatched_gate_outages": candidate.unmatched_outages,
-        "recognized_passenger_gate_outages": candidate.recognized_passenger_gate_outages,
+        "sessions": len(after),
+        "assigned_sessions": len(assignments),
+        "unassigned_sessions": sorted(sid for sid in after if sid not in assignments),
+        "new_assignments": len(solver_result.get("assignments", [])),
+        "reassignments": len(solver_result.get("reassignments", [])),
     }
+    return build_stream_decisions(
+        candidate, after, assignments, gate_starts, decision_sessions
+    )
 
 
 class MatcherHandler(BaseHTTPRequestHandler):
