@@ -770,47 +770,43 @@ def determine_changed_sessions(
     after: dict[str, dict[str, Any]],
     assignments: dict[str, str],
     outages: dict[str, list[list[float]]],
-    gates: list[dict[str, str]],
+    gates: list[dict[str, Any]],
 ) -> tuple[set[str], list[str]]:
     changed = {
         sid for sid, session in after.items()
         if sid not in before or before[sid] != session
     }
     removed = [sid for sid in before if sid not in after]
+    gate_by_id = {str(g["id"]): g for g in gates}
 
-    by_id = after
-    # Any session whose currently assigned gate is now closed or too small is
-    # affected, even if its own schedule fields did not change.
-    gate_classes = {norm(g["id"]): g["widthClass"] for g in gates}
-    for sid, gate in assignments.items():
-        if sid not in by_id:
+    # Existing reservations are invalidated by either a width mismatch or an
+    # outage on any IFATC alternative in that passenger conflict group.
+    for sid, gate_id in assignments.items():
+        if sid not in after:
             continue
-        session = by_id[sid]
-        gate_class = gate_classes.get(norm(gate))
-        ac_class = session.get("widthClass")
-        if not allowed_width(ac_class, gate_class):
+        gate = gate_by_id.get(gate_id)
+        if gate is None or not allowed_width(after[sid].get("widthClass"), gate.get("widthClass")):
             changed.add(sid)
             continue
-        for start, end in outages.get(gate, []):
-            if float(session["start"]) < float(end) and float(start) < float(session["end"]):
+        group = str(gate.get("conflictGroup", ""))
+        for start, end in outages.get(group, []):
+            if float(after[sid]["start"]) < float(end) and float(start) < float(after[sid]["end"]):
                 changed.add(sid)
                 break
 
     return changed, removed
 
-
 def allowed_width(aircraft_class: str | None, gate_class: str | None) -> bool:
     if aircraft_class not in WIDTH_CLASSES or gate_class not in WIDTH_CLASSES:
         return False
-    a = WIDTH_CLASSES.index(aircraft_class)
-    g = WIDTH_CLASSES.index(gate_class)
-    return g == a or g == a + 1
+    # Crosswalk widthClass is the maximum mapped capacity class.
+    return WIDTH_CLASSES.index(gate_class) >= WIDTH_CLASSES.index(aircraft_class)
 
 
 
 def _earliest_gate_start(
     session: dict[str, Any],
-    gate_id: str,
+    conflict_group: str,
     occupied: dict[str, list[tuple[float, float]]],
     outages: dict[str, list[list[float]]],
 ) -> float | None:
@@ -821,8 +817,8 @@ def _earliest_gate_start(
     if candidate >= session_end:
         return None
 
-    blocked = list(occupied.get(gate_id, []))
-    blocked.extend((float(a), float(b)) for a, b in outages.get(gate_id, []))
+    blocked = list(occupied.get(conflict_group, []))
+    blocked.extend((float(a), float(b)) for a, b in outages.get(conflict_group, []))
     for block_start, block_end in sorted(blocked):
         # A booking/outage anywhere in the aircraft's remaining stay means
         # it must wait until that block ends before entering this gate.
@@ -845,12 +841,14 @@ def repair_assignments_python(
     previous_gate_starts = previous_gate_starts or {}
     by_id = sessions
     occupied: dict[str, list[tuple[float, float]]] = defaultdict(list)
+    gate_by_id = {str(g["id"]): g for g in gates}
     for sid, gate_id in previous.items():
-        if sid in changed or sid not in by_id:
+        if sid in changed or sid not in by_id or gate_id not in gate_by_id:
             continue
         session = by_id[sid]
         booking_start = float(previous_gate_starts.get(sid, session["start"]))
-        occupied[gate_id].append((booking_start, float(session["end"])))
+        group = str(gate_by_id[gate_id]["conflictGroup"])
+        occupied[group].append((booking_start, float(session["end"])))
 
     gate_index = {str(g["id"]): i for i, g in enumerate(gates)}
 
@@ -858,17 +856,9 @@ def repair_assignments_python(
         aircraft_class = session.get("widthClass")
         if aircraft_class not in WIDTH_CLASSES:
             return []
-        ai = WIDTH_CLASSES.index(aircraft_class)
         result = []
         for gate in gates:
-            kind = gate.get("kind", "gate")
-            if kind == "remote" and not session.get("remoteAllowed", False):
-                continue
-            gate_class = gate.get("widthClass")
-            if gate_class not in WIDTH_CLASSES:
-                continue
-            gi = WIDTH_CLASSES.index(gate_class)
-            if gi not in (ai, ai + 1):
+            if not allowed_width(aircraft_class, gate.get("widthClass")):
                 continue
             result.append(gate)
         return result
@@ -900,12 +890,12 @@ def repair_assignments_python(
         def cost(gate: dict[str, Any]) -> tuple[float, str]:
             same = session.get("widthClass") == gate.get("widthClass")
             value = 0.0 if same else 500.0
-            is_remote = gate.get("kind") == "remote"
-            turnback = bool(session.get("turnback", False))
-            if is_remote:
-                value += 5000.0 if turnback else 0.0
-            elif session.get("remoteAllowed", False) and not turnback:
-                value += 1000.0
+            if gate.get("kind") == "remote":
+                value += 5000.0
+            preferred = session.get("preferredTerminal")
+            gate_terminal = gate.get("terminal")
+            if preferred and gate_terminal and preferred != gate_terminal:
+                value += 75.0  # soft carrier-terminal preference, never exclusivity
             value += gate_index[str(gate["id"])] * 0.001
             if old_gate is not None and str(gate["id"]) == old_gate:
                 value -= 1_000_000.0
@@ -918,7 +908,7 @@ def repair_assignments_python(
         # First try a gate available at the aircraft's scheduled arrival.
         for gate in ranked:
             gid = str(gate["id"])
-            available = _earliest_gate_start(session, gid, occupied, outages)
+            available = _earliest_gate_start(session, str(gate["conflictGroup"]), occupied, outages)
             if available is not None and available <= start:
                 selected = gid
                 selected_start = start
@@ -947,7 +937,8 @@ def repair_assignments_python(
                 unassigned_reasons[sid] = "no_gate_slot_before_departure"
             continue
 
-        occupied[selected].append((float(selected_start), end))
+        selected_group = str(gate_by_id[selected]["conflictGroup"])
+        occupied[selected_group].append((float(selected_start), end))
         gate_starts[sid] = float(selected_start)
         if selected_start > start:
             waiting[sid] = {
