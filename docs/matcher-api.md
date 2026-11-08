@@ -58,7 +58,10 @@ gate-change notice.
 
 Each connection immediately receives the complete current list. A new complete
 list is sent whenever any flight record changes; no deltas or sequence numbers
-are required. The message shape is:
+are required. Passenger-facing terminal values are `1` and `3` (the underlying operator
+snapshot uses `T1` and `T3`). Remote H stands use the `Remote` terminal label.
+
+The message shape is:
 
 ```json
 {
@@ -115,10 +118,13 @@ The JSON response includes:
 - `gate_assignments`: session-level reservations, including registration,
   aircraft type, planned gate, arrival/departure minutes, gate-entry minute,
   and assigned/waiting/unassigned status.
-- `gate_state`: the latest occupancy snapshot supplied by the stream.
-- `gate_state_source`: clarifies that this snapshot was received immediately
-  before the current matcher decision; the stream's run/event feed is the
-  authoritative post-application occupancy view.
+- `gate_state`: the matcher's predicted post-decision occupancy after applying
+  the current response's immediate moves.
+- `gate_state_before_decision`: the latest complete occupancy snapshot supplied
+  by the stream before the current matcher response.
+- `gate_state_source`: clarifies that the post-decision state is a matcher
+  prediction; the stream's run/event feed remains authoritative after it
+  validates and applies the response.
 - `unassigned_aircraft` and `unassigned_details`.
 - `gates`: canonical gate IDs, terminal, width class, conflict group, current
   occupant, and outage windows.
