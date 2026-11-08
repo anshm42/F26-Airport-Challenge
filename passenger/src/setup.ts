@@ -50,7 +50,7 @@ app.innerHTML = `
           </div>`,
         ).join("")}
         <input id="gates" name="gates" autocomplete="off" spellcheck="false" placeholder="All gates">
-        <p class="hint">Comma separated: <code>1</code> terminal · <code>1:D</code> branch · <code>1:D24</code> gate · <code>1:D20-30</code> range</p>
+        <p class="hint">Comma separated: <code>1</code> terminal · <code>1:D</code> branch · <code>1:D24</code> gate · <code>1:D20-30</code> range · <code>Remote</code> or <code>R:H01A</code> remote stands</p>
         <p class="showing">Showing: <strong id="showing"></strong></p>
       </section>
       <details>

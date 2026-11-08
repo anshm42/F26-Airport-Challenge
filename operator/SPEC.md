@@ -2,12 +2,12 @@
 
 Gate-focused view for operators, showing what's happening across the airport from the top down (see the top-level `SPEC.md`).
 Shows every gate and remote stand on a timeline, with the flights and parked aircraft holding them, outages, and the waitlist.
-Read-only: the operator can't send decisions back. This is a known prototype limitation; a real product would feed back to the algorithm through a separate endpoint.
+Read-only: the operator can't send decisions back. This is a known prototype limitation; a real product would send them over this view's endpoint, which is kept separate from the passenger one for that reason.
 
 # API
 
 The view reads from the matching algorithm's API over a single WebSocket.
-It mirrors the passenger API ([`../passenger/SPEC.md`](../passenger/SPEC.md) on the `passenger` branch), with more information per flight.
+The passenger view ([`../passenger/SPEC.md`](../passenger/SPEC.md)) has its own endpoint, which for now sends these same messages.
 The API carries only dynamic data. Static references (the gate inventory, size classes) are imported from [`../data`](../data), as the stream and the matcher read them, never copied into messages.
 
 ## Where the data comes from
@@ -29,7 +29,7 @@ Everything else maps directly: `flightCodes` from `flight.carrier` + `flightNumb
 `emergencyState`, `trafficType` as sent; outages as sent, with their times made absolute.
 Message fields with no slot here (e.g. a diversion's `reason`) go in `misc`.
 Two passenger fields repeat static data for the passenger API's sake: `airline` (from `airlineTerminals` in
-[`../data/pearson.json`](../data/pearson.json)) and `Gate.terminal` (implied by the gate key).
+[`../data/pearson.json`](../data/pearson.json)) and `Gate.terminal` (implied by the gate key: `"1"` or `"3"`, or `"Remote"` for remote stands).
 
 ## Connection
 
@@ -41,7 +41,7 @@ The server sends the full state on connect, then again whenever anything changes
 Updates are batched on a one-second tick: changes within the same second are sent together as one message at the next tick.
 On a tick with no changes it sends a heartbeat instead, so the view's clock keeps moving and it can tell a quiet airport from a dead connection.
 There are no deltas and no sequence numbers: every full message replaces the previous one, so a reconnect or reload just receives the current state.
-There are no gate selectors; the operator gets everything and filters in the view.
+There are no gate selectors and no time window: every message holds everything currently decided, and the view filters by gate and time itself.
 
 ## Messages
 
@@ -59,14 +59,15 @@ There are no gate selectors; the operator gets everything and filters in the vie
 { "type": "heartbeat", "generatedAt": "2026-11-07T13:12:45-05:00" }  // nothing changed; only the clock moves
 ```
 
-The `assignments` message is a superset of the passenger message: the passenger view could read it unchanged, and should ignore heartbeats.
+The passenger endpoint (`ws://<host>/passenger/ws`) sends these same messages, heartbeats included.
+The endpoints are separate so each can be restricted on its own later: the passenger one trimmed to passenger data, and this one the place for operator requests.
 
 ### Gate inventory (imported, not sent)
 
 The view reads the inventory from [`../data/pearson.json`](../data/pearson.json) (`src/inventory.ts`), the same way the stream does:
 one resource per key of the stream's `gateState` (`passengerStandMapping`: 78 terminal gates and 32 H positions), with its
 passenger aliases (swing gates), IFATC size class, `conflictGroup` (H01, H01A and H01B can't be occupied at once) and IFATC stand names.
-`Gate.gate` is that key: a passenger label such as `"D32"`, or `"Remote Stand H01A"` for remote stands (shown as "H01A").
+`Gate.gate` is that key: a passenger label such as `"D32"`, or `"Remote Stand H01A"` for remote stands (shown as "H01A"), whose `Gate.terminal` is `"Remote"`.
 Aircraft size classes come from [`../data/aircraft.json`](../data/aircraft.json) by `aircraftType`.
 Changing the inventory means changing the data files, as for the stream; the API has no way to add or change gates.
 
@@ -132,7 +133,6 @@ An aircraft with a flight is shown through that flight's `occupancy` instead.
 # Known unknowns
 
 - **Alarms.** Not specified, and may be cut. The view keeps an empty panel for them; they would likely arrive as another top-level array.
-- How long finished flights stay in the message. The passenger API keeps them ~1 h; the operator timeline can show the whole day.
 - Message size: a full message is ~690 KB for 1,200 flights. Full messages only go out when something changes (about a third of ticks in the mock), heartbeats otherwise. Deltas only if measured to be needed.
 - **Two waitlists.** This API only has "no gate assigned" (`gate: null`). An aircraft can also be on the ground unable to enter the gate it was assigned: the matcher planned a later entry (`occupancy.start` after `timeArrival`), or the stream refused the arrival because the gate was still occupied or out of service. The stream reports both kinds together in `unassignedAircraft`, by registration. How the API distinguishes them is undecided.
 - Waitlist order is the view's (earliest first). `misc.waitlistReason` is free text until the reasons are pinned down.
