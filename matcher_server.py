@@ -1458,19 +1458,7 @@ class MatcherHandler(BaseHTTPRequestHandler):
             return
         if self.path == "/assignments":
             with STATE_LOCK:
-                sessions = STATE.build_sessions() if STATE else {}
-                status = build_aircraft_status(sessions, ASSIGNMENTS, GATE_STARTS)
-                _json_response(self, 200, {
-                    "run_id": CURRENT_RUN_ID,
-                    "last_event_id": LAST_EVENT_ID,
-                    "assignments": ASSIGNMENTS,
-                    "unassigned": status["unassigned_sessions"],
-                    **status,
-                    "unmatched_gate_outages": STATE.unmatched_outages if STATE else [],
-                    "recognized_passenger_gate_outages": (
-                        STATE.recognized_passenger_gate_outages if STATE else []
-                    ),
-                })
+                _json_response(self, 200, dashboard_snapshot())
             return
         _json_response(self, 404, {"error": "Not found"})
 
@@ -1502,7 +1490,7 @@ class MatcherHandler(BaseHTTPRequestHandler):
                     CURRENT_RUN_ID = run_id
                     LAST_EVENT_INDEX = 0
                     LAST_EVENT_ID = self.headers.get("X-Stream-Event-Id")
-                    _json_response(self, 200, {"status": "initialized", **summary})
+                    _json_response(self, 200, summary)
                     return
 
                 if STATE is None:
@@ -1521,7 +1509,7 @@ class MatcherHandler(BaseHTTPRequestHandler):
                     "simulated_time": simulated_time,
                     **summary,
                 }, separators=(",", ":")), flush=True)
-                _empty_response(self, 204)
+                _json_response(self, 200, summary)
             except TimezoneCoverageError as exc:
                 # Bad/incomplete schedule reference data is a client validation
                 # problem, not an internal server error. Keep event sequencing
