@@ -93,9 +93,15 @@ Only one run may be active. Statuses are `running`, `stopping`, `completed`,
 and overlapping starts or stopping a finished run `409`. An in-flight webhook may
 finish after a stop request.
 
-Status also includes `gate_state`, `gate_state_time`, `unassigned_aircraft`, and
-`planned_assignments`. Each run saves `scenario.json`, `deliveries.jsonl`, and
-the latest complete `gate-state.json` in the returned
+Status also includes `gate_state`, `gate_state_time`, `unassigned_aircraft`,
+`planned_assignments`, `latest_decision`, and `decision_event_count`. The dashboard
+can poll `GET /runs/RUN_ID/events?after=0` or subscribe to live
+`GET /runs/RUN_ID/events/stream?after=0` (Server-Sent Events). Each event contains
+the source event timestamp, simulated decision timestamp, actual UTC response
+receipt time, matcher assignments/moves, gate changes, and resulting gate state.
+Every processed webhook is represented, including events that make no gate changes.
+Each run saves `scenario.json`, `deliveries.jsonl`, append-only
+`decision-events.jsonl`, and the latest complete `gate-state.json` in the returned
 `records_directory`. Run-status lookup lasts until the server shuts down; saved
 records remain on disk.
 
