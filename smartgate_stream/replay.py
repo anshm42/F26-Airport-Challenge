@@ -79,6 +79,8 @@ class Run:
         self.mode = mode
         self.speed = speed
         self.directory = Path(tempfile.mkdtemp(prefix="smartgate-stream-"))
+        self.decision_events_path = self.directory / "decision-events.jsonl"
+        self.decision_events_path.write_text("", encoding="utf-8")
         (self.directory / "scenario.json").write_text(
             json.dumps(self.scenario, indent=2, allow_nan=False) + "\n", encoding="utf-8")
         self._save_gates()
@@ -115,6 +117,9 @@ class Run:
         with self.events_condition:
             event = copy.deepcopy(event)
             event["sequence"] = len(self.decision_events) + 1
+            with self.decision_events_path.open("a", encoding="utf-8") as output:
+                output.write(json.dumps(event, allow_nan=False, separators=(",", ":")) + "\n")
+                output.flush()
             self.decision_events.append(event)
             self.latest_decision = event
             self.events_condition.notify_all()
