@@ -1638,10 +1638,19 @@ def build_passenger_message() -> dict[str, Any]:
                 arr_yyz.isoformat() if arr_yyz is not None else None
             )
             fields = {
-                "gate": gate,
+                "flightCodes": codes or [carrier],
+                "airline": AIRLINE_NAMES.get(carrier, carrier),
+                "from": str(leg.get("departureStation") or ""),
+                "to": str(leg.get("arrivalStation") or ""),
                 "timeArrival": time_arrival,
                 "timeDeparture": time_departure,
+                "gate": gate,
                 "cancelled": cancelled,
+                "misc": {
+                    "aircraftType": entry["aircraft"].get("aircraftType"),
+                    "registration": entry["aircraft"].get("registration"),
+                    "trafficType": leg.get("trafficType"),
+                },
             }
             previous = copy.deepcopy(PASSENGER_PREVIOUS_FIELDS.get(token, {}))
             old = PASSENGER_LAST_FIELDS.get(token)
@@ -1654,20 +1663,8 @@ def build_passenger_message() -> dict[str, Any]:
 
             flights.append({
                 "flightId": token,
-                "flightCodes": codes or [carrier],
-                "airline": AIRLINE_NAMES.get(carrier, carrier),
-                "from": str(leg.get("departureStation") or ""),
-                "to": str(leg.get("arrivalStation") or ""),
-                "timeArrival": time_arrival,
-                "timeDeparture": time_departure,
-                "gate": gate,
-                "cancelled": cancelled,
+                **fields,
                 "previous": previous,
-                "misc": {
-                    "aircraftType": entry["aircraft"].get("aircraftType"),
-                    "registration": entry["aircraft"].get("registration"),
-                    "trafficType": leg.get("trafficType"),
-                },
             })
 
     def flight_sort_key(flight):
