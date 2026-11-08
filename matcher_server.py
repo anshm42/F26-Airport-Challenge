@@ -199,11 +199,14 @@ def load_references() -> tuple[dict[str, str], list[dict[str, Any]], str]:
             if group:
                 terminal_by_gate[str(group[0]).strip()] = str(terminal)
 
-    airline_terminals = {
-        norm(row.get("carrier")): str(row.get("terminal"))
-        for row in pearson_data.get("airlineTerminals", {}).get("records", [])
-        if row.get("carrier") and row.get("terminal")
-    }
+    airline_terminals = {}
+    for row in pearson_data.get("airlineTerminals", {}).get("records", []):
+        if not row.get("carrier") or row.get("terminal") is None:
+            continue
+        terminal_value = str(row["terminal"]).strip()
+        airline_terminals[norm(row["carrier"])] = (
+            f"T{terminal_value}" if terminal_value.isdigit() else terminal_value
+        )
 
     gates: list[dict[str, Any]] = []
     seen: set[str] = set()
