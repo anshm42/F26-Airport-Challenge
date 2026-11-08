@@ -4,7 +4,9 @@ export const LOCAL_AIRPORT = "YYZ";
 export const LOCAL_TIMEZONE = "America/Toronto";
 
 export interface Gate {
+  /** "1", "3", or "Remote" for remote stands. */
   terminal: string;
+  /** The gate's key: "D24", or the full IFATC name for remote stands ("Remote Stand H01A"); see gateLabel. */
   gate: string;
 }
 
@@ -29,7 +31,13 @@ export interface AssignmentsMessage {
   flights: Flight[];
 }
 
-export type ServerMessage = AssignmentsMessage;
+/** Sent on a tick with no changes: only the clock moves. */
+export interface HeartbeatMessage {
+  type: "heartbeat";
+  generatedAt: string;
+}
 
-/** A source of assignment lists: the real WebSocket, or the mock. Returns a function that stops it. */
+export type ServerMessage = AssignmentsMessage | HeartbeatMessage;
+
+/** A source of assignment lists: the real WebSocket, or the mock. The WebSocket ignores `gates` (the board filters). Returns a function that stops it. */
 export type Source = (gates: string | null, onMessage: (msg: ServerMessage) => void) => () => void;

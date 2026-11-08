@@ -1,5 +1,5 @@
 import "./style.css";
-import { describeSelectors, matchesCurrentGate, parseSelectors } from "./gates";
+import { describeSelectors, gateLabel, matchesCurrentGate, matchesFlight, parseSelectors } from "./gates";
 import { mockSource } from "./mock";
 import { STRINGS, title, type Lang, type Show } from "./strings";
 import { LOCAL_AIRPORT, LOCAL_TIMEZONE, type Flight, type Gate, type Source } from "./types";
@@ -34,6 +34,7 @@ const PLANE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="curr
 const MINUTE = 60_000;
 const BOARDING_BEFORE_DEPARTURE = 30 * MINUTE; // no boarding times in the feed yet (SPEC.md)
 const GATE_CHANGE_WINDOW = 60 * MINUTE;
+const FINISHED_WINDOW = 60 * MINUTE; // flights stay this long past their current time (SPEC.md)
 const PANEL_MIN_WIDTH = 620;
 
 // Times must carry an offset (SPEC.md); never fall back to the device's timezone.
@@ -50,13 +51,24 @@ function parseTime(iso: string | null | undefined): number | null {
   return Date.parse(iso);
 }
 
-const isDeparture = (f: Flight) => f.from === LOCAL_AIRPORT;
+/** A turnback (YYZ -> YYZ) is an arrival, as in the operator view. */
+const isDeparture = (f: Flight) => f.to !== LOCAL_AIRPORT;
 const localTimeKey = (f: Flight) => (isDeparture(f) ? "timeDeparture" : "timeArrival");
 const localTime = (f: Flight) => parseTime(f[localTimeKey(f)]);
 const previousLocalTime = (f: Flight) => parseTime(f.previous[localTimeKey(f)]);
 /** Like a real board, the time column keeps the earlier time and the status column carries the new one. */
 const boardTime = (f: Flight) => previousLocalTime(f) ?? localTime(f);
 const sameGate = (a: Gate | null | undefined, b: Gate | null | undefined) => a?.terminal === b?.terminal && a?.gate === b?.gate;
+
+/** The server's clock: the latest generatedAt received, or the device's until the first message. */
+let serverNow: number | null = null;
+const now = () => serverNow ?? Date.now();
+
+/** Hidden once the current (not previous) time is more than an hour ago, so a delayed flight stays until its new time. */
+function inWindow(f: Flight): boolean {
+  const time = localTime(f);
+  return time === null || now() - time <= FINISHED_WINDOW;
+}
 
 const escape = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const formatTime = (t: number | null) => (t === null ? "--:--" : timeFormat.format(t));
@@ -66,29 +78,28 @@ function showGateChange(f: Flight): boolean {
   if (!f.previous.gate || sameGate(f.previous.gate, f.gate)) return false;
   if (!matchesCurrentGate(selectors, f)) return true;
   const t = localTime(f);
-  return t !== null && t - Date.now() < GATE_CHANGE_WINDOW;
+  return t !== null && t - now() < GATE_CHANGE_WINDOW;
 }
 
 /** Status column: one line, most important first. Colours: red cancelled, yellow delayed, blue gate change, green boarding. */
 function status(f: Flight): [cls: string, text: string] {
   if (f.cancelled) return ["bad", t.cancelled];
-  const now = Date.now();
   const time = localTime(f);
   const before = previousLocalTime(f);
   if (time !== null && before !== null && time > before) return ["delayed", t.delayed(formatTime(time))];
   if (time !== null && before !== null && time < before) return ["delayed", t.revised(formatTime(time))];
-  if (showGateChange(f)) return ["moved", t.gateChange(f.previous.gate!.gate)];
+  if (showGateChange(f)) return ["moved", t.gateChange(gateLabel(f.previous.gate!.gate))];
   // A real status from the feed beats the estimated boarding time.
   if (typeof f.misc.status === "string") {
     const text = t.feedStatus[f.misc.status.toLowerCase()] ?? f.misc.status;
     return [/board|final/i.test(f.misc.status) ? "go" : "", text];
   }
   if (time === null) return ["", ""];
-  if (!isDeparture(f)) return ["", now >= time ? t.arrived : t.onTime];
+  if (!isDeparture(f)) return ["", now() >= time ? t.arrived : t.onTime];
   const boarding = time - BOARDING_BEFORE_DEPARTURE;
-  if (now >= time) return ["", t.departed];
-  if (now >= boarding) return ["go", t.boarding];
-  const minutes = Math.ceil((boarding - now) / MINUTE);
+  if (now() >= time) return ["", t.departed];
+  if (now() >= boarding) return ["go", t.boarding];
+  const minutes = Math.ceil((boarding - now()) / MINUTE);
   return ["", minutes <= 60 ? t.boardsIn(minutes) : t.boardsAt(formatTime(boarding))];
 }
 
@@ -184,7 +195,7 @@ function row(f: Flight, flash: Flash | undefined): string {
   // On a mixed board, arrivals are marked "From"; on an arrivals-only board the column header says it.
   const fromLabel = !isDeparture(f) && show === "all" ? `<span class="from">${t.from}</span>` : "";
   const city = `${fromLabel}${escape(CITIES[code] ?? code)}`;
-  const gate = f.gate ? escape(f.gate.gate) : "";
+  const gate = f.gate ? escape(gateLabel(f.gate.gate)) : "";
   const gateCls = f.cancelled ? "gate cancelled" : showGateChange(f) ? "gate moved" : "gate";
   const [statusCls, statusText] = status(f);
   const classes = ["row", f.cancelled ? "cancelled" : "", flash ? `flash flash-${flash}` : ""].join(" ");
@@ -206,12 +217,12 @@ const PANEL_HEAD = `
 
 // --- state & rendering ---
 
-/** The round sign in the title bar: the branch letter or terminal number this board covers, if there's just one. */
+/** The round sign in the title bar: the branch letter or terminal number this board covers, if there's just one ("R" for remote stands). */
 function sign(): string {
   const all = selectors ?? [];
   const branches = new Set(all.map((s) => ("branch" in s ? s.branch : "gate" in s ? s.gate.match(/^[A-Z]*/)![0] : null)));
   if (all.length && branches.size === 1 && !branches.has(null)) return [...branches][0]!;
-  const terminals = new Set(all.map((s) => s.terminal));
+  const terminals = new Set(all.map((s) => (/^\d+$/.test(s.terminal) ? s.terminal : s.terminal[0].toUpperCase())));
   return terminals.size === 1 ? [...terminals][0] : "✈";
 }
 
@@ -239,7 +250,8 @@ const pageEl = document.querySelector<HTMLElement>("#page")!;
 const prevEl = document.querySelector<HTMLButtonElement>("#prev")!;
 const nextEl = document.querySelector<HTMLButtonElement>("#next")!;
 
-let flights: Flight[] = [];
+let flights: Flight[] = []; // this board's gates and direction; the time window is applied when rendering
+let windowed: Flight[] = [];
 let seen = new Map<string, { flight: Flight; json: string }>(); // to flash rows that changed since the last message
 let flashing = new Map<string, Flash>();
 let page = 0;
@@ -257,9 +269,10 @@ function layout(): { columns: number; rows: number } {
 function render() {
   const { columns, rows } = layout();
   const perPage = columns * rows;
-  pages = Math.max(1, Math.ceil(flights.length / perPage));
+  windowed = flights.filter(inWindow);
+  pages = Math.max(1, Math.ceil(windowed.length / perPage));
   page = Math.min(page, pages - 1);
-  const visible = flights.slice(page * perPage, (page + 1) * perPage);
+  const visible = windowed.slice(page * perPage, (page + 1) * perPage);
   boardEl.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
   boardEl.innerHTML = Array.from({ length: columns }, (_, c) => {
     const panel = visible.slice(c * rows, (c + 1) * rows);
@@ -280,9 +293,23 @@ function receive(incoming: Flight[], generatedAt: string) {
     if (old && old.json !== JSON.stringify(f)) flashing.set(f.flightId, flashKind(old.flight, f));
   }
   seen = new Map(incoming.map((f) => [f.flightId, { flight: f, json: JSON.stringify(f) }]));
-  const shown = show === "all" ? incoming : incoming.filter((f) => isDeparture(f) === (show === "departures"));
+  // The server doesn't filter (SPEC.md): keep this board's gates, current or previous, and direction.
+  const shown = incoming.filter((f) => matchesFlight(selectors, f) && (show === "all" || isDeparture(f) === (show === "departures")));
   flights = shown.sort((a, b) => (boardTime(a) ?? Infinity) - (boardTime(b) ?? Infinity));
-  document.querySelector("#updated")!.textContent = t.updated(clockFormat.format(parseTime(generatedAt) ?? Date.now()));
+  setClock(generatedAt);
+  render();
+}
+
+function setClock(generatedAt: string) {
+  serverNow = parseTime(generatedAt) ?? serverNow;
+  document.querySelector("#updated")!.textContent = t.updated(clockFormat.format(now()));
+}
+
+/** Nothing changed: only the clock moves. Re-render only if that retired a flight. */
+function heartbeat(generatedAt: string) {
+  setClock(generatedAt);
+  if (flights.filter(inWindow).length === windowed.length) return;
+  flashing.clear();
   render();
 }
 
@@ -296,7 +323,7 @@ function tickClock() {
   document.querySelector("#clock")!.textContent = timeFormat.format(Date.now());
 }
 
-source(gates, (msg) => receive(msg.flights, msg.generatedAt));
+source(gates, (msg) => (msg.type === "heartbeat" ? heartbeat(msg.generatedAt) : receive(msg.flights, msg.generatedAt)));
 
 prevEl.addEventListener("click", () => turnPage(-1));
 nextEl.addEventListener("click", () => turnPage(1));
@@ -311,7 +338,7 @@ addEventListener("resize", render);
 // Codeshare loops are measured in rendered text, so measure again once the board font has loaded.
 document.fonts.ready.then(render);
 
-// Countdowns and the gate-change window depend on the current time.
+// Countdowns, the gate-change window and the time window depend on the current time.
 setInterval(() => {
   flashing.clear();
   render();
