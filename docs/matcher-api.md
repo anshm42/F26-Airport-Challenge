@@ -122,7 +122,8 @@ The JSON response includes:
 - `unassigned_aircraft` and `unassigned_details`.
 - `gates`: canonical gate IDs, terminal, width class, conflict group, current
   occupant, and outage windows.
-- `outages`, `solver`, `run_id`, `last_event_id`, and `simulated_time`.
+- `outages`, `solver`, `last_decision_response`, `last_decision_timestamp`,
+  `run_id`, `last_event_id`, and `simulated_time`.
 
 The same endpoint can be polled by the operator dashboard. It does not need to
 know whether an assignment came from the initial JuMP/Gurobi optimization or
