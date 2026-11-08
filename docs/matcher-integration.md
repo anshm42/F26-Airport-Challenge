@@ -154,5 +154,18 @@ The adapter tests on this branch use a stand-in allocator. They do not validate
 the latest matching branch or the real Julia solve. Run the backend check and a
 complete replay when validating a new matcher revision.
 
+Run the real solver's parked-aircraft regression separately with an installed
+Julia/Gurobi environment and a valid license:
+
+```sh
+RUN_GUROBI_TESTS=1 python3 -m unittest discover -s tests -p test_solver_occupancy.py -v
+```
+
+The case has one occupied gate and two non-overlapping future arrivals. The
+parked aircraft must keep its reservation; both arrivals must remain unassigned.
+This regression currently fails because the initial model permits dropping the
+parked aircraft. It is opt-in so the ordinary suite does not require a Gurobi
+license. The reservation fix has not yet been applied.
+
 To roll back a matcher revision, stop its process and restore the previous
 detached checkout revision. Restart the matcher and start a new stream run.
