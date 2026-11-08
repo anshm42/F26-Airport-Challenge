@@ -148,8 +148,7 @@ class Run:
                 return False
             self.state["status"] = "stopping"
             self.stop_event.set()
-            with self.events_condition:
-                self.events_condition.notify_all()
+            self.events_condition.notify_all()
             return True
 
     def start(self):
