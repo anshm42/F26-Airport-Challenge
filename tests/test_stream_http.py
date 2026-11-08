@@ -8,6 +8,7 @@ import time
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from unittest.mock import patch
 
 from smartgate_stream.generate import generate
 from smartgate_stream.server import ControlServer
@@ -256,23 +257,18 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(self.webhook.received, [])
         self.assertEqual(self.control.manager.runs, {})
 
-    def test_invalid_matcher_batch_keeps_occupancy_and_stops_delivery(self):
+    def test_invalid_initial_response_fails_without_partial_moves(self):
         initial, _ = self.gate_scenario()
         tail = initial["parkedAircraft"][0]["registration"]
-        invalid = {"moves": [{"registration": tail, "gate": "D22"},
-                              {"registration": "C-UNKNOWN", "gate": "D24"}]}
-        self.webhook.response_body = invalid
-        code, created = self.request("POST", "/runs", self.options)
-        self.assertEqual(code, 201)
-        state = self.terminal(created["run_id"])
-        self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("failed", 1, 0))
-        self.assertEqual(len(self.webhook.received), 1)
-        self.assertEqual(state["gate_state"]["D20"], initial["flights"][0]["flight"])
-        self.assertIsNone(state["gate_state"]["D22"])
-        records = Path(state["records_directory"]) / "deliveries.jsonl"
-        record = json.loads(records.read_text().splitlines()[0])
-        self.assertEqual(record["http_status"], 200)
-        self.assertEqual(record["matcher_response"], invalid)
+        for response in ({"moves": [{"registration": tail, "gate": "D22"},
+                                    {"registration": "C-UNKNOWN", "gate": "D24"}]},
+                         {"moves": "not a list"}):
+            self.webhook.response_body = response
+            _, created = self.request("POST", "/runs", self.options)
+            state = self.terminal(created["run_id"])
+            self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("failed", 1, 0))
+            self.assertEqual(state["gate_state"]["D20"], initial["flights"][0]["flight"])
+            self.assertIsNone(state["gate_state"]["D22"])
 
     def test_stop_wakes_paced_wait(self):
         self.options.update(mode="paced", speed=1)
@@ -317,13 +313,21 @@ class HttpTests(unittest.TestCase):
             self.assertFalse(worker.is_alive())
         self.assertEqual(sorted(codes), [201, 409])
 
-    def test_webhook_http_error_ends_run(self):
+    def test_webhook_http_errors_are_retried_then_skipped(self):
         self.webhook.response_status = 503
-        _, created = self.request("POST", "/runs", self.options)
-        state = self.terminal(created["run_id"])
-        self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("failed", 1, 0))
-        self.assertIn("503", state["error"])
-        self.assertEqual(len(self.webhook.received), 1)
+        with patch("smartgate_stream.replay.RETRY_BACKOFF_SECONDS", (0.001,)):
+            _, created = self.request("POST", "/runs", self.options)
+            state = self.terminal(created["run_id"])
+        events = len(load_scenario(FIXTURE)["events"])
+        self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("completed", events, 0))
+        self.assertEqual(state["skipped"], events)
+        self.assertIn("503", json.loads((Path(state["records_directory"]) / "deliveries.jsonl")
+                                        .read_text().splitlines()[0])["error"])
+        self.assertEqual(len(self.webhook.received), 3 * events)
+        first, second = (headers for _, headers in self.webhook.received[:2])
+        self.assertEqual(first["X-Stream-Event-Id"], second["X-Stream-Event-Id"])
+        self.assertEqual(second["X-Stream-Attempt"], "2")
+        self.assertEqual(self.webhook.received[3][1]["X-Stream-Resync"], "true")
 
     def test_bad_requests_and_invalid_fixture_deliver_nothing(self):
         for body in ([], {}, {**self.options, "speed": False}, {**self.options, "speed": 10**400},

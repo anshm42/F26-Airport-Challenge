@@ -139,6 +139,9 @@ main {
 }
 
 .empty { padding: 24px 12px; color: var(--muted); }
+.empty.unavailable { padding-bottom: 4px; color: var(--fg); font-size: 1.3rem; }
+.empty.detail { padding-top: 0; font-size: 0.85rem; overflow-wrap: anywhere; }
+#updated.offline { color: var(--bad); }
 
 /* Footer: kept dark and quiet, like the bezel */
 footer {

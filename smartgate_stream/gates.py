@@ -136,10 +136,13 @@ class GateState:
                             or message.get("equipmentUpdate", {}).get("scope") == "AllLegs")
                 affected = [value for key, value in self.flights.items()
                             if value["route"] == target["route"]] if all_legs else [target]
-                for record in affected:
-                    if action == "UpdateEquipment":
-                        record["aircraft"] = self._aircraft(message["flight"]).copy()
-                    else:
+                if action == "UpdateEquipment":
+                    new_plane = self._aircraft(message["flight"]).copy()
+                    # Reassign the flight without renaming or removing physical aircraft.
+                    for record in affected:
+                        record["aircraft"] = new_plane.copy()
+                else:
+                    for record in affected:
                         record["cancelled"] = action == "CancelFlight"
         self.advance(timestamp)
 
@@ -220,8 +223,14 @@ class GateState:
         self.__dict__.update(candidate.__dict__)
 
     def _decisions(self, response, *, initializing):
-        require(isinstance(response, dict) and set(response) <= {"assignments", "moves"},
-                "matcher response must contain only assignments and moves")
+        require(isinstance(response, dict) and set(response) <= {"assignments", "moves", "reassessment"},
+                "matcher response must contain only assignments, moves and reassessment")
+        if "reassessment" in response:
+            timer = response["reassessment"]
+            require(isinstance(timer, dict) and set(timer) == {"at"}, "invalid reassessment fields")
+            if timer["at"] is not None:
+                require(self.now is not None and parse_utc(timer["at"]) > self.now,
+                        "reassessment at must be strictly in the future")
         assignments, moves = response.get("assignments", []), response.get("moves", [])
         require(isinstance(assignments, list) and isinstance(moves, list), "matcher decisions must be arrays")
         targets, references = {}, set()

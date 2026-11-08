@@ -145,7 +145,7 @@ TypeScript + Vite, no framework. One page, configured by URL parameters:
 
 | Parameter  | Meaning                                                                                       |
 |------------|-----------------------------------------------------------------------------------------------|
-| `source`   | `mock` (default) or a WS URL                                                                  |
+| `source`   | A WS URL (default: the matcher, `ws://<page host>:9000/operator/ws`) or `mock`                |
 | `scenario` | Mock only: `1200` (default), `400` or `scripted` from [`../fixtures`](../fixtures), or the URL of a scenario file |
 | `rate`     | Mock only: simulated seconds per real second (default 60)                                     |
 | `start`    | Mock only: Toronto time (`HH:MM`) on the scenario's day to start at; default: the current time of day |

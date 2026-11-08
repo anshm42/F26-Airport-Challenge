@@ -238,6 +238,15 @@ not when the matcher returns its choice. Empty acknowledgments make no plan chan
 
 ## Clock and records
 
+The native matcher enables automatic `ReassessGates` notifications through the
+optional response `reassessment` field. Movement batches, outage boundaries, and
+future gate-entry timers then trigger requests even during quiet periods.
+Source updates at the same instant take priority. See the
+[reassessment contract](../GateStateSpecification.md#automatic-reassessment).
+`attempted`/`delivered` count source events; `reassessments_attempted` and
+`reassessments_delivered` count notifications. Every request shares the same
+sequence and appears in delivery/decision records.
+
 When the first event is `InitializeAirport`, its successful readiness response
 anchors the simulation clock. Otherwise the first event's send time is the anchor.
 At 60×, five simulated minutes
@@ -262,6 +271,49 @@ for attempted/delivered messages, elapsed time, HTTP time, and lateness. Its
 last announcement. Status also exposes `gate_state`, `unassigned_aircraft`, and
 `planned_assignments`. HTTP duration includes the receiver's synchronous response
 time; it does not measure matcher computation separately.
+
+### Timestamped decision events for dashboards
+
+After every webhook attempt completes, the stream publishes one ordered decision
+event, including events where the matcher makes no gate changes. The simulation
+clock is paused while the synchronous matcher responds, so `decision_made_at`
+uses the event's simulated timestamp; `decision_received_at_utc` separately records
+the real UTC time at which the response finished. `decision_duration_seconds`
+is the measured webhook round-trip duration, not a simulated-time increment.
+
+Each event includes `event_id`, `event_type`, `event_timestamp`,
+`decision_made_at`, `decision_received_at_utc`, `decision_status`, HTTP status,
+any matcher `assignments` and `moves`, a `gate_changes` before/after list, and the
+resulting complete `gate_state`, `gate_state_time`, `unassigned_aircraft`, and
+`planned_assignments`. A decision is marked `applied` only after the stream has
+successfully validated and applied the response. Failed webhook responses are
+also recorded as failed events; they do not change the authoritative gate state.
+
+A dashboard can poll the event history:
+
+```http
+GET /runs/RUN_ID/events?after=0
+```
+
+Or subscribe to live Server-Sent Events (SSE):
+
+```http
+GET /runs/RUN_ID/events/stream?after=0
+Accept: text/event-stream
+```
+
+Each SSE message has event type `decision`, a monotonically increasing sequence
+ID, and the complete JSON event in its `data` field. Reconnect with
+`?after=LAST_SEQUENCE` to retrieve only later events. The stream sends periodic
+comment keep-alives while waiting for the next update. The ordinary
+`GET /runs/RUN_ID` response also includes `latest_decision` and
+`decision_event_count`.
+
+The run records directory now includes append-only `decision-events.jsonl` in
+addition to `scenario.json`, `deliveries.jsonl`, and `gate-state.json`, allowing
+the dashboard history to be reconstructed after the run finishes. Events are
+ordered by delivery sequence; event timestamps remain the scenario's simulated
+timestamps, including when multiple events share a timestamp.
 
 Remove retained directories when no longer needed. Run statuses are memory-only;
 the server does not restore them after restart. A logging failure also fails the

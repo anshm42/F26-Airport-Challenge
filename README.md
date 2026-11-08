@@ -4,6 +4,61 @@ The dynamic update server replays synthetic Pearson flight updates to a matching
 algorithm over an HTTP(S) webhook. The matcher chooses future gates; the stream
 owns current passenger-gate occupancy and simulated aircraft movements.
 
+## Run locally with one command
+
+For the complete **1,200-flight demo at 60×**, including both frontends:
+
+```sh
+python3 run_demo.py
+```
+
+Open the operator at `http://127.0.0.1:5173/` and passenger board at
+`http://127.0.0.1:5174/board.html`. The launcher installs locked frontend
+dependencies with `npm ci` if needed (Node/npm required). Julia/Gurobi requirements
+below still apply. Ports 8080, 9000, 5173, and 5174 must be free. Initialization
+finishes before the simulation clock starts; a complete day takes about 24 minutes.
+Ctrl-C stops both frontends, both backend services, and Julia. Run the same command
+again for a fresh day. To show a selected gate, use the passenger setup page at
+`http://127.0.0.1:5174/`.
+
+The native matcher opts into automatic reassessment, so quiet periods still update
+waiting aircraft after movements, outage boundaries, and delayed gate entry.
+Run status counts source events separately from `reassessments_delivered`.
+
+With Julia, the `JSON`, `JuMP`, and `Gurobi` Julia packages, and a Gurobi license
+already installed, run:
+
+```sh
+python3 run_local.py
+```
+
+This starts the matcher on `http://127.0.0.1:9000` and the updater on
+`http://127.0.0.1:8080`, then replays the checked-in **400-flight day at 480×**.
+The replay takes about three minutes. The first ordinary update arrives about
+40 seconds after initialization; the initial quiet period is intentional.
+
+The script warms the persistent Julia solver before sending the initial webhook,
+then prints the run-status URL, progress, and log/record paths. After the
+replay, the APIs remain available until **Ctrl-C**, which stops both servers and
+the Julia worker. Existing servers are not reused or stopped; ports 8080 and
+9000 must be free. Failed runs print the error and exit with a nonzero status.
+
+Set the speed explicitly with `python3 run_local.py --speed 480`, or use
+`python3 run_local.py --speed 60` for a slower replay. Speed must be finite and
+greater than zero. The script finds Julia
+on `PATH` or in the default Juliaup directory; `GMS_JULIA` can specify its path.
+It does not install packages or change algorithm settings. The manual steps below
+remain available for separate processes or another scenario.
+
+To run the 1,200-flight day without pacing:
+
+```sh
+python3 run_local.py --scenario fixtures/pearson-2026-11-07-seed42.json --mode unpaced
+```
+
+`--scenario` selects the input file. `--mode unpaced` delivers updates as quickly
+as matching acknowledges them; `--speed` only controls timing in paced mode.
+
 ## Dynamic update server
 
 Requires **Python 3.11+**, with no third-party dependencies. Run all commands from
@@ -52,7 +107,10 @@ the server and further delivery.
 Start your matcher or a test receiver separately. It must accept the
 [webhook contract](docs/stream.md#webhook-api), including `InitializeAirport`.
 The example below assumes it listens at `http://127.0.0.1:9000/updates`; replace
-that URL with your receiver's address. The updater does not provide a matcher.
+that URL with your receiver's address. The active matcher and algorithm are on
+the `matching` branch. Follow the [connection guide](docs/matcher-integration.md)
+to run that branch's receiver from a separate checkout without changing your
+partner's working files.
 
 From another terminal, start a quick replay:
 
@@ -93,9 +151,15 @@ Only one run may be active. Statuses are `running`, `stopping`, `completed`,
 and overlapping starts or stopping a finished run `409`. An in-flight webhook may
 finish after a stop request.
 
-Status also includes `gate_state`, `gate_state_time`, `unassigned_aircraft`, and
-`planned_assignments`. Each run saves `scenario.json`, `deliveries.jsonl`, and
-the latest complete `gate-state.json` in the returned
+Status also includes `gate_state`, `gate_state_time`, `unassigned_aircraft`,
+`planned_assignments`, `latest_decision`, and `decision_event_count`. The dashboard
+can poll `GET /runs/RUN_ID/events?after=0` or subscribe to live
+`GET /runs/RUN_ID/events/stream?after=0` (Server-Sent Events). Each event contains
+the source event timestamp, simulated decision timestamp, actual UTC response
+receipt time, matcher assignments/moves, gate changes, and resulting gate state.
+Every processed webhook is represented, including events that make no gate changes.
+Each run saves `scenario.json`, `deliveries.jsonl`, append-only
+`decision-events.jsonl`, and the latest complete `gate-state.json` in the returned
 `records_directory`. Run-status lookup lasts until the server shuts down; saved
 records remain on disk.
 
@@ -132,12 +196,18 @@ for initialization and all eight update actions, and the
 
 ## Operator view
 
-A read-only gate timeline for operators, reading the matcher's WebSocket API. Until the matcher exists it replays
-the stream's scenarios with a stand-in matcher whose gate choices are potentially incorrect. See the
-[operator API and viewer](operator/SPEC.md).
+A read-only gate timeline for operators, reading the matcher's WebSocket API. See the
+[operator API and viewer](operator/SPEC.md). The passenger board is in `passenger/`
+([spec](passenger/SPEC.md)).
+
+Both views connect to the matcher at `ws://<page host>:9000/{operator,passenger}/ws` by default.
+Without one they still load, say that there is no data source, and retry every 3 s.
+Add `?source=mock` for simulated data with a stand-in matcher whose gate choices are potentially incorrect.
 
 ```sh
-cd operator && npm install && npm run dev
+python run_local.py                               # matcher + stream on :9000/:8080
+cd operator && npm install && npm run dev         # http://localhost:5173/
+cd passenger && npm install && npm run dev        # http://localhost:5173/board.html (5174 if both run)
 ```
 
 ## Reference data
@@ -153,3 +223,8 @@ python3 -m unittest discover -s tests
 
 Tests include localhost webhook integration and require permission to bind local
 sockets; they do not require internet access or a running matcher.
+
+
+## Matcher and dashboards
+
+The matcher returns validated passenger-gate `assignments` and aircraft `moves` on every webhook. It serves the passenger dashboard WebSocket at `/passenger/ws` and the shared operator JSON snapshot at `/assignments`. See [Matcher API](docs/matcher-api.md) for both dashboard contracts.

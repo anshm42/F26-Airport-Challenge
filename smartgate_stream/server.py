@@ -3,7 +3,7 @@
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 from .replay import ACTIVE_STATUSES, WEBHOOK_TIMEOUT, Run
 from .validation import read_json, require
@@ -49,6 +49,8 @@ class RunManager:
 
 
 class ControlHandler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
     def log_message(self, format, *args):
         pass
 
@@ -70,9 +72,38 @@ class ControlHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         self.dispatch()
 
+    def stream_events(self, run, after):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache, no-transform")
+        self.send_header("Connection", "keep-alive")
+        self.send_header("X-Accel-Buffering", "no")
+        self.end_headers()
+        self.wfile.flush()
+        try:
+            while True:
+                events = run.wait_for_events(after, timeout=15)
+                if events:
+                    for event in events:
+                        after = event["sequence"]
+                        payload = json.dumps(event, allow_nan=False, separators=(",", ":"))
+                        frame = f"id: {after}\nevent: decision\ndata: {payload}\n\n"
+                        self.wfile.write(frame.encode("utf-8"))
+                else:
+                    self.wfile.write(b": keep-alive\n\n")
+                self.wfile.flush()
+                if run.snapshot()["status"] not in ACTIVE_STATUSES and not run.events_after(after):
+                    break
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            pass
+        finally:
+            self.close_connection = True
+
     def dispatch(self):
         try:
-            path = urlsplit(self.path).path.strip("/").split("/")
+            parsed = urlsplit(self.path)
+            path = parsed.path.strip("/").split("/")
+            query = parse_qs(parsed.query)
             if self.command == "POST" and path == ["runs"]:
                 require(self.headers.get("Content-Type", "").split(";")[0].strip().lower() == "application/json",
                         "Content-Type must be application/json")
@@ -84,6 +115,21 @@ class ControlHandler(BaseHTTPRequestHandler):
                 self.respond(201, self.server.manager.create(read_json(body)))
             elif self.command == "GET" and len(path) == 2 and path[0] == "runs":
                 self.respond(200, self.server.manager.get(path[1]).snapshot())
+            elif self.command == "GET" and len(path) == 3 and path[0] == "runs" and path[2] == "events":
+                after = int(query.get("after", ["0"])[0])
+                require(after >= 0, "after must be a nonnegative event sequence")
+                run = self.server.manager.get(path[1])
+                events = run.events_after(after)
+                self.respond(200, {
+                    "run_id": path[1],
+                    "events": events,
+                    "latest_sequence": events[-1]["sequence"] if events else after,
+                })
+            elif (self.command == "GET" and len(path) == 4 and path[0] == "runs"
+                  and path[2] == "events" and path[3] == "stream"):
+                after = int(query.get("after", ["0"])[0])
+                require(after >= 0, "after must be a nonnegative event sequence")
+                self.stream_events(self.server.manager.get(path[1]), after)
             elif self.command == "POST" and len(path) == 3 and path[0] == "runs" and path[2] == "stop":
                 run = self.server.manager.get(path[1])
                 if not run.stop():
