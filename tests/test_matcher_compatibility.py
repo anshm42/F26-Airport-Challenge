@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime
 
+import matcher_server as matcher
 from matcher_server import (
     ScenarioState,
     allowed_width,
@@ -54,6 +55,60 @@ class MatcherCompatibilityTests(unittest.TestCase):
             "previous": {"gate": {"terminal": "1", "gate": "D24"}},
         }]
         self.assertEqual(filter_passenger_flights(flights, selectors), flights)
+
+    def test_passenger_feed_includes_current_parked_arrival_with_offset(self):
+        flight = {
+            "carrier": "AC",
+            "registration": "C-TEST",
+            "aircraftType": "789",
+        }
+        leg = {
+            "flightNumber": "501",
+            "flightSuffix": None,
+            "originatingDate": "2026-11-07",
+            "departureStation": "YUL",
+            "arrivalStation": "YYZ",
+            "scheduledDepartureTime": "06:00",
+            "scheduledArrivalTime": "07:00",
+            "trafficType": "Domestic",
+            "codeshare": [{"carrier": "UA", "flightNumber": "8501"}],
+        }
+        message = {
+            "action": "InitializeAirport",
+            "flights": [{"action": "CreateFlight", "flight": flight, "legs": [leg]}],
+            "parkedAircraft": [{**flight, "gate": "D22"}],
+            "gateOutages": [],
+        }
+        state = ScenarioState({}, self.aircraft_classes, self.gates, self.airport_timezone)
+        state.initialize({
+            "timestamp": "2026-11-07T12:00:00Z",
+            "message": message,
+        })
+
+        old_state = (
+            matcher.STATE, matcher.ASSIGNMENTS, matcher.LATEST_SIMULATED_TIME,
+            matcher.PASSENGER_LAST_FIELDS, matcher.PASSENGER_PREVIOUS_FIELDS,
+        )
+        try:
+            matcher.STATE = state
+            matcher.ASSIGNMENTS = {"PARKED:C-TEST": "D22"}
+            matcher.LATEST_SIMULATED_TIME = "2026-11-07T12:00:00Z"
+            matcher.PASSENGER_LAST_FIELDS = {}
+            matcher.PASSENGER_PREVIOUS_FIELDS = {}
+            payload = matcher.build_passenger_message()
+            self.assertEqual(payload["type"], "assignments")
+            self.assertEqual(len(payload["flights"]), 1)
+            passenger_flight = payload["flights"][0]
+            self.assertEqual(passenger_flight["flightCodes"], ["AC501", "UA8501"])
+            self.assertEqual(passenger_flight["gate"], {"terminal": "1", "gate": "D22"})
+            self.assertTrue(passenger_flight["timeArrival"].endswith("-05:00"))
+            self.assertEqual(passenger_flight["timeDeparture"], None)
+            self.assertEqual(passenger_flight["previous"], {})
+        finally:
+            (
+                matcher.STATE, matcher.ASSIGNMENTS, matcher.LATEST_SIMULATED_TIME,
+                matcher.PASSENGER_LAST_FIELDS, matcher.PASSENGER_PREVIOUS_FIELDS,
+            ) = old_state
 
 
 if __name__ == "__main__":
