@@ -2,8 +2,8 @@ import "./style.css";
 import { describeSelectors, gateLabel, matchesCurrentGate, matchesFlight, parseSelectors } from "./gates";
 import { mockSource } from "./mock";
 import { STRINGS, title, type Lang, type Show } from "./strings";
-import { LOCAL_AIRPORT, LOCAL_TIMEZONE, type Flight, type Gate, type Source } from "./types";
-import { websocketSource } from "./websocket";
+import { LOCAL_AIRPORT, LOCAL_TIMEZONE, type Connection, type Flight, type Gate, type Source, defaultSource } from "./types";
+import { RECONNECT_MS, websocketSource } from "./websocket";
 
 const params = new URLSearchParams(location.search);
 const gates = params.get("gates");
@@ -12,8 +12,10 @@ const lang: Lang = params.get("lang") === "fr" ? "fr" : "en";
 const show: Show = (["departures", "arrivals"] as const).find((s) => s === params.get("show")) ?? "all";
 const t = STRINGS[lang];
 document.documentElement.lang = lang;
-const sourceParam = params.get("source") ?? "mock";
-const source: Source = sourceParam === "mock" ? mockSource : websocketSource(sourceParam);
+// Default: the matching algorithm. "mock" shows hard-coded flights instead.
+const sourceParam = params.get("source") || defaultSource("/passenger/ws");
+const isMock = sourceParam === "mock";
+const source: Source = isMock ? mockSource : websocketSource(sourceParam);
 
 // Pearson-style city names; unknown codes fall back to the IATA code.
 const CITIES: Record<string, string> = {
@@ -256,6 +258,10 @@ let seen = new Map<string, { flight: Flight; json: string }>(); // to flash rows
 let flashing = new Map<string, Flash>();
 let page = 0;
 let pages = 1;
+let connection: Connection = isMock ? "open" : "connecting";
+/** Whether any message has arrived, and whether the matcher has any flights at all (before this board's filter). */
+let received = false;
+let anyFlights = false;
 
 function layout(): { columns: number; rows: number } {
   const css = getComputedStyle(document.documentElement);
@@ -277,7 +283,7 @@ function render() {
   boardEl.innerHTML = Array.from({ length: columns }, (_, c) => {
     const panel = visible.slice(c * rows, (c + 1) * rows);
     const body = panel.map((f) => row(f, flashing.get(f.flightId))).join("");
-    const empty = c === 0 && !visible.length ? `<p class="empty">${escape(t.noFlights(describeSelectors(gates, lang)))}</p>` : "";
+    const empty = c === 0 && !visible.length ? emptyMessage() : "";
     return `<section class="panel">${PANEL_HEAD}${body}${empty}</section>`;
   }).join("");
   pageEl.textContent = `${page + 1} / ${pages}`;
@@ -286,7 +292,35 @@ function render() {
   setUpMarquees();
 }
 
+/** Why the board is empty: no data source, still connecting, nothing from the matcher yet, or nothing at these gates. */
+function emptyMessage(): string {
+  const detail = (text: string) => `<p class="empty detail">${escape(text)}</p>`;
+  if (!received && connection === "closed") {
+    return `<p class="empty unavailable">${escape(t.unavailable)}</p>` +
+      detail(t.noSource(sourceParam, RECONNECT_MS / 1000));
+  }
+  if (!received) return `<p class="empty">${escape(t.connecting)}</p>`;
+  if (!anyFlights) return `<p class="empty">${escape(t.waiting)}</p>`;
+  return `<p class="empty">${escape(t.noFlights(describeSelectors(gates, lang)))}</p>`;
+}
+
+/** Footer: when the last update was, and whether the connection behind it is gone. */
+function renderUpdated() {
+  const el = document.querySelector<HTMLElement>("#updated")!;
+  const at = received ? clockFormat.format(now()) : null;
+  el.textContent = connection === "closed" ? (at ? t.offlineSince(at) : t.noSourceShort) : at ? t.updated(at) : "";
+  el.classList.toggle("offline", connection === "closed");
+}
+
+function onConnection(state: Connection) {
+  connection = state;
+  renderUpdated();
+  if (!received) render();
+}
+
 function receive(incoming: Flight[], generatedAt: string) {
+  received = true;
+  anyFlights = incoming.length > 0;
   flashing = new Map();
   for (const f of incoming) {
     const old = seen.get(f.flightId);
@@ -302,7 +336,7 @@ function receive(incoming: Flight[], generatedAt: string) {
 
 function setClock(generatedAt: string) {
   serverNow = parseTime(generatedAt) ?? serverNow;
-  document.querySelector("#updated")!.textContent = t.updated(clockFormat.format(now()));
+  renderUpdated();
 }
 
 /** Nothing changed: only the clock moves. Re-render only if that retired a flight. */
@@ -323,7 +357,8 @@ function tickClock() {
   document.querySelector("#clock")!.textContent = timeFormat.format(Date.now());
 }
 
-source(gates, (msg) => (msg.type === "heartbeat" ? heartbeat(msg.generatedAt) : receive(msg.flights, msg.generatedAt)));
+source(gates, (msg) => (msg.type === "heartbeat" ? heartbeat(msg.generatedAt) : receive(msg.flights, msg.generatedAt)), onConnection);
+render();
 
 prevEl.addEventListener("click", () => turnPage(-1));
 nextEl.addEventListener("click", () => turnPage(1));

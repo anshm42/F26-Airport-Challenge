@@ -56,7 +56,7 @@ app.innerHTML = `
       <details>
         <summary>Advanced</summary>
         <label class="field">Data source
-          <input id="source" name="source" autocomplete="off" spellcheck="false" placeholder="mock (simulated data) or ws://host/passenger/ws">
+          <input id="source" name="source" autocomplete="off" spellcheck="false" placeholder="ws://${location.hostname}:9000/passenger/ws (the matcher, default) or mock">
         </label>
       </details>
       <div class="actions">
@@ -92,7 +92,7 @@ function boardUrl(): string {
   if (state.show !== "all") q.set("show", state.show);
   if (state.lang !== "en") q.set("lang", state.lang);
   if (state.gates) q.set("gates", state.gates);
-  if (state.source && state.source !== "mock") q.set("source", state.source);
+  if (state.source) q.set("source", state.source);
   const query = q.toString().replace(/%2C/g, ",").replace(/%3A/g, ":");
   return `board.html${query ? `?${query}` : ""}`;
 }

@@ -136,6 +136,24 @@ main { flex: 1; display: grid; grid-template-columns: 1fr 340px; min-height: 0; 
 #timeline-wrap { position: relative; min-width: 0; min-height: 0; }
 /* contain: scrolling into an edge must not chain to the page (or a trackpad's swipe-back); the edge hint takes it. */
 #timeline { position: absolute; inset: 0; overflow: auto; overscroll-behavior: contain; }
+/* Data source problems, over the timeline. Never blocks it: a lost connection still shows the last state. */
+#notice {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  z-index: 7;
+  transform: translateX(-50%);
+  max-width: min(560px, 90%);
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.4);
+}
+#notice.bad { border-color: var(--emergency); }
+#notice.bad h2 { color: var(--emergency); }
+#notice p { margin: 4px 0 0; }
+#notice a { color: var(--early); }
 /* Shown when a sideways scroll reaches an edge of the window. */
 #edge-hint {
   position: absolute;

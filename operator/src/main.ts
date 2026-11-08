@@ -6,8 +6,8 @@ import { positionNowMarks, renderFlight, renderGate, renderWaitlist } from "./si
 import { formatClock, ms } from "./time";
 import { type Filters, type Selection, type TimelineResult, esc, gateKey, renderTimeline } from "./timeline";
 import { RESOURCES, closedBy } from "./inventory";
-import type { AssignmentsMessage, Flight } from "./types";
-import { websocketSource } from "./websocket";
+import { type AssignmentsMessage, type Connection, type Flight, defaultSource } from "./types";
+import { RECONNECT_MS, websocketSource } from "./websocket";
 
 // Operator view: a read-only gate timeline plus a sidebar. See ../SPEC.md.
 
@@ -18,18 +18,19 @@ const num = (name: string, fallback: number) => {
   const v = Number(params.get(name));
   return params.has(name) && Number.isFinite(v) && v > 0 ? v : fallback;
 };
-const sourceParam = params.get("source") ?? "mock";
-const source =
-  sourceParam === "mock"
-    ? mockSource({ scenario: params.get("scenario") ?? "1200", rate: num("rate", 60), start: params.get("start") })
-    : websocketSource(sourceParam);
+// Default: the matching algorithm. "mock" replays a scenario with a stand-in matcher instead.
+const sourceParam = params.get("source") || defaultSource("/operator/ws");
+const isMock = sourceParam === "mock";
+const source = isMock
+  ? mockSource({ scenario: params.get("scenario") ?? "1200", rate: num("rate", 60), start: params.get("start") })
+  : websocketSource(sourceParam);
 
 const $ = <T extends Element>(selector: string) => document.querySelector<T>(selector)!;
 
 document.querySelector("#app")!.innerHTML = `
   <header>
     <h1>Gate Operations</h1>
-    <span class="muted">${esc(sourceParam === "mock" ? `Mock data (stream scenario ${params.get("scenario") ?? "1200"})` : sourceParam)}</span>
+    <span class="muted">${esc(isMock ? `Mock data (stream scenario ${params.get("scenario") ?? "1200"})` : sourceParam)}</span>
     <span id="stats" class="muted"></span>
     <span id="clock"></span>
     <span id="fresh" class="muted"></span>
@@ -62,6 +63,7 @@ document.querySelector("#app")!.innerHTML = `
   </div>
   <main>
     <div id="timeline-wrap">
+      <div id="notice" hidden></div>
       <div id="timeline"><div id="now"></div><svg id="links"></svg><div id="sheet"></div><div id="link-label" hidden></div><div id="link-time" hidden></div></div>
       <div id="edge-hint" hidden></div>
       <button type="button" class="edge-arrow" data-extend="before" title="Show 1 h earlier">‹</button>
@@ -106,6 +108,7 @@ let latest: AssignmentsMessage | null = null;
 let byId = new Map<string, Flight>();
 const resources = new Map(RESOURCES.map((r) => [gateKey(r), r]));
 let receivedAt = 0;
+let connection: Connection = isMock ? "open" : "connecting";
 let centerOn: string | null = null;
 /** Scroll adjustments to apply once the next render has laid out the sheet. */
 let scrollTo: number | null = null;
@@ -238,8 +241,34 @@ function toggle(kind: keyof Selection, id: string | null) {
 function renderFreshness() {
   const age = receivedAt ? Date.now() - receivedAt : Infinity;
   const fresh = $("#fresh");
-  fresh.textContent = receivedAt ? `updated ${Math.floor(age / 1000)} s ago` : "connecting…";
-  fresh.classList.toggle("stale", age > STALE_AFTER_MS);
+  const updated = receivedAt ? `updated ${Math.floor(age / 1000)} s ago` : "";
+  fresh.textContent =
+    connection === "closed" ? (receivedAt ? `disconnected · ${updated}` : "no data source")
+    : connection === "connecting" ? "connecting…"
+    : updated || "waiting for data…";
+  fresh.classList.toggle("stale", connection === "closed" || age > STALE_AFTER_MS);
+  renderNotice();
+}
+
+/** What's wrong with the data source, over the timeline: unreachable, lost, or connected with nothing to show yet. */
+function renderNotice() {
+  const retry = `Retrying every ${RECONNECT_MS / 1000} s.`;
+  const where = `<code>${esc(sourceParam)}</code>`;
+  const help = `Start the matcher (<code>python run_local.py</code>), or open <a href="?source=mock">?source=mock</a> for simulated data.`;
+  let html = "";
+  if (connection === "closed" && !latest) {
+    html = `<h2>No data source</h2><p>The matching algorithm isn't reachable at ${where}. ${retry}</p><p class="muted">${help}</p>`;
+  } else if (connection === "closed") {
+    html = `<h2>Connection lost</h2><p>Showing the last state received from ${where}. ${retry}</p>`;
+  } else if (connection === "connecting" && !latest) {
+    html = `<p>Connecting to the matching algorithm at ${where}…</p>`;
+  } else if (latest && !latest.flights.length && !latest.parkedAircraft.length) {
+    html = `<h2>No flights yet</h2><p>Connected to ${where}, but the matcher has no airport state: waiting for the stream to send <code>InitializeAirport</code>.</p>`;
+  }
+  const notice = $<HTMLElement>("#notice");
+  notice.hidden = !html;
+  notice.classList.toggle("bad", connection === "closed");
+  setHtml(notice, html);
 }
 
 form.addEventListener("input", () => {
@@ -394,6 +423,10 @@ document.addEventListener("keydown", (e) => {
   render();
 });
 
+const onConnection = (state: Connection) => {
+  connection = state;
+  renderFreshness();
+};
 source((msg) => {
   receivedAt = Date.now();
   // A heartbeat only moves the clock; the last full state stands.
@@ -409,6 +442,7 @@ source((msg) => {
   readControls();
   renderFreshness();
   render();
-});
+}, onConnection);
 renderSizeToggles();
+renderFreshness();
 setInterval(renderFreshness, 1000);

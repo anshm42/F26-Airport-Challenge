@@ -135,7 +135,7 @@ Board URL parameters:
 | `gates`   | Gate selectors, applied by the board (see Gate selectors); not sent to the server |
 | `show`    | `all` (default), `departures` or `arrivals`                          |
 | `lang`    | `en` (default) or `fr`. The title stays bilingual, chosen language first |
-| `source`  | `mock` (default, hard-coded data with simulated changes) or a WS URL |
+| `source`  | A WS URL (default: the matcher, `ws://<page host>:9000/passenger/ws`) or `mock` (hard-coded data with simulated changes) |
 
 Gate changes are only highlighted when the flight is within the next hour, or when it has moved off this board's gates.
 

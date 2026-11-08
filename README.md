@@ -177,12 +177,18 @@ for initialization and all eight update actions, and the
 
 ## Operator view
 
-A read-only gate timeline for operators, reading the matcher's WebSocket API. Until the matcher exists it replays
-the stream's scenarios with a stand-in matcher whose gate choices are potentially incorrect. See the
-[operator API and viewer](operator/SPEC.md).
+A read-only gate timeline for operators, reading the matcher's WebSocket API. See the
+[operator API and viewer](operator/SPEC.md). The passenger board is in `passenger/`
+([spec](passenger/SPEC.md)).
+
+Both views connect to the matcher at `ws://<page host>:9000/{operator,passenger}/ws` by default.
+Without one they still load, say that there is no data source, and retry every 3 s.
+Add `?source=mock` for simulated data with a stand-in matcher whose gate choices are potentially incorrect.
 
 ```sh
-cd operator && npm install && npm run dev
+python run_local.py                               # matcher + stream on :9000/:8080
+cd operator && npm install && npm run dev         # http://localhost:5173/
+cd passenger && npm install && npm run dev        # http://localhost:5173/board.html (5174 if both run)
 ```
 
 ## Reference data
