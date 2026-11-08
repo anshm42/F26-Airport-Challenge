@@ -137,28 +137,10 @@ class GateState:
                 affected = [value for key, value in self.flights.items()
                             if value["route"] == target["route"]] if all_legs else [target]
                 if action == "UpdateEquipment":
-                    old_tails = {record["aircraft"]["registration"] for record in affected}
                     new_plane = self._aircraft(message["flight"]).copy()
-                    new_tail = new_plane["registration"]
+                    # Reassign the flight without renaming or removing physical aircraft.
                     for record in affected:
                         record["aircraft"] = new_plane.copy()
-                    # Equipment changes can change registration. Keep the
-                    # stream's grounded index and gateState occupant identity
-                    # synchronized so matcher moves reference the new tail.
-                    for old_tail in old_tails:
-                        if old_tail not in self.grounded:
-                            continue
-                        if old_tail != new_tail:
-                            require(new_tail not in self.grounded,
-                                    "equipment update would duplicate a grounded registration")
-                            self.grounded.pop(old_tail)
-                        self.grounded[new_tail] = new_plane.copy()
-                        self.gates = {
-                            gate: (new_plane.copy()
-                                   if occupant is not None and occupant["registration"] == old_tail
-                                   else occupant)
-                            for gate, occupant in self.gates.items()
-                        }
                 else:
                     for record in affected:
                         record["cancelled"] = action == "CancelFlight"

@@ -293,17 +293,22 @@ class GateStateTests(unittest.TestCase):
         self.assertEqual(state.gates["D22"], PARKED)
 
     def test_equipment_swap_does_not_erase_the_original_aircraft(self):
-        state = self.initialized([self.arrival, self.return_flight], [{**SPARE, "gate": "D22"}])
-        state.apply_decisions({"assignments": [assignment(self.arrival, "D31"),
-                                               assignment(self.return_flight, "D31")]})
-        state.advance(parse_utc("2026-11-07T13:00:00Z"))
-        state.apply_message({"action": "UpdateEquipment", "flight": SPARE.copy(),
-                             "legs": [assignment(self.return_flight, None)["leg"]],
-                             "equipmentUpdate": {"scope": "AllLegs"}}, "2026-11-07T13:10:00Z")
-        state.apply_decisions({"assignments": [assignment(self.return_flight, "D22")]})
-        state.advance(parse_utc("2026-11-07T14:00:00Z"))
-        self.assertIsNone(state.gates["D22"])
-        self.assertEqual(state.gates["D31"], INBOUND)
+        for scope in ("AllLegs", "SpecificLeg"):
+            with self.subTest(scope=scope):
+                state = self.initialized([self.arrival, self.return_flight], [{**SPARE, "gate": "D22"}])
+                state.apply_decisions({"assignments": [assignment(self.arrival, "D31"),
+                                                       assignment(self.return_flight, "D31")]})
+                state.advance(parse_utc("2026-11-07T13:00:00Z"))
+                state.apply_message({"action": "UpdateEquipment", "flight": SPARE.copy(),
+                                     "legs": [assignment(self.return_flight, None)["leg"]],
+                                     "equipmentUpdate": {"scope": scope}}, "2026-11-07T13:10:00Z")
+                self.assertEqual(state.gates["D22"], SPARE)
+                self.assertEqual(state.gates["D31"], INBOUND)
+                self.assertEqual(set(state.grounded), {SPARE["registration"], INBOUND["registration"]})
+                state.apply_decisions({"assignments": [assignment(self.return_flight, "D22")]})
+                state.advance(parse_utc("2026-11-07T14:00:00Z"))
+                self.assertIsNone(state.gates["D22"])
+                self.assertEqual(state.gates["D31"], INBOUND)
 
     def test_replacement_keeps_unchanged_leg_plan_and_completed_movements(self):
         state = self.initialized()
