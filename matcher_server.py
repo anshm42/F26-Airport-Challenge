@@ -1220,6 +1220,8 @@ def build_aircraft_status(
 
 
 LATEST_GATE_STATE: dict[str, Any] = {}
+PREDICTED_GATE_STATE: dict[str, Any] = {}
+PREDICTED_UNASSIGNED_AIRCRAFT: list[dict[str, Any]] = []
 LATEST_UNASSIGNED_AIRCRAFT: list[dict[str, Any]] = []
 LATEST_SIMULATED_TIME: str | None = None
 LAST_SOLVER_SUMMARY: dict[str, Any] = {}
@@ -1332,6 +1334,80 @@ def build_stream_decisions(
     }
 
 
+def predict_post_decision_gate_state(
+    state: ScenarioState,
+    sessions: dict[str, dict[str, Any]],
+    assignments: dict[str, str],
+    gate_starts: dict[str, float],
+    session_ids: set[str],
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Mirror only current-visit moves; future assignments do not occupy gates."""
+    predicted = copy.deepcopy(LATEST_GATE_STATE)
+    unassigned = copy.deepcopy(LATEST_UNASSIGNED_AIRCRAFT)
+    occupied_now = {
+        str(plane.get("registration")): gate
+        for gate, plane in predicted.items() if plane is not None
+    }
+    unassigned_now = {
+        str(plane.get("registration"))
+        for plane in unassigned if plane.get("registration")
+    }
+    now_minute = current_minute(state)
+    targets: dict[str, tuple[str, dict[str, Any]]] = {}
+
+    for sid in session_ids:
+        session = sessions.get(sid)
+        gate = assignments.get(sid)
+        if session is None or gate is None:
+            continue
+        registration = str(session.get("registration", ""))
+        if registration not in occupied_now and registration not in unassigned_now:
+            continue
+        if not (float(session["start"]) <= now_minute < float(session["end"])):
+            continue
+        if float(gate_starts.get(sid, session["start"])) > now_minute:
+            continue
+        plane = {
+            "carrier": session.get("carrier"),
+            "registration": registration,
+            "aircraftType": session.get("aircraftType"),
+        }
+        previous = targets.get(registration)
+        if previous is not None and previous[0] != gate:
+            raise RuntimeError("Current aircraft visit received conflicting gate targets.")
+        targets[registration] = (gate, plane)
+
+    target_registrations = set(targets)
+    for gate_id, occupant in list(predicted.items()):
+        if occupant is not None and str(occupant.get("registration")) in target_registrations:
+            predicted[gate_id] = None
+
+    group_occupants: dict[str, str] = {}
+    for gate_id, occupant in predicted.items():
+        if occupant is None:
+            continue
+        gate_record = state.gate_by_id.get(gate_id)
+        if gate_record:
+            group_occupants[str(gate_record["conflictGroup"])] = str(occupant.get("registration"))
+
+    for registration, (gate_id, plane) in targets.items():
+        gate_record = state.gate_by_id.get(gate_id)
+        if gate_record is None:
+            raise RuntimeError(f"Matcher selected unknown passenger gate {gate_id!r}.")
+        group = str(gate_record["conflictGroup"])
+        blocker = group_occupants.get(group)
+        if blocker is not None and blocker != registration:
+            raise RuntimeError(f"Matcher selected occupied passenger conflict group {group!r}.")
+        group_occupants[group] = registration
+        predicted[gate_id] = plane
+
+    unassigned = [
+        plane for plane in unassigned
+        if str(plane.get("registration")) not in target_registrations
+    ]
+    return predicted, unassigned
+
+
 def dashboard_snapshot() -> dict[str, Any]:
     if STATE is None:
         return {
@@ -1358,8 +1434,13 @@ def dashboard_snapshot() -> dict[str, Any]:
         STATE, sessions, ASSIGNMENTS, GATE_STARTS, include_all=True,
         respect_gate_start=False
     )
+    gate_state_for_dashboard = PREDICTED_GATE_STATE or LATEST_GATE_STATE
+    unassigned_for_dashboard = (
+        PREDICTED_UNASSIGNED_AIRCRAFT
+        if PREDICTED_GATE_STATE else LATEST_UNASSIGNED_AIRCRAFT
+    )
     occupants = {
-        gate: plane for gate, plane in LATEST_GATE_STATE.items() if plane is not None
+        gate: plane for gate, plane in gate_state_for_dashboard.items() if plane is not None
     }
     gates = []
     for gate in STATE.gates:
@@ -1405,9 +1486,10 @@ def dashboard_snapshot() -> dict[str, Any]:
         "gate_assignments": gate_assignments,
         "unassigned": status["unassigned_sessions"],
         "unassigned_details": status["unassigned_details"],
-        "gate_state": copy.deepcopy(LATEST_GATE_STATE),
-        "gate_state_source": "latest stream snapshot received before the current matcher decision",
-        "unassigned_aircraft": copy.deepcopy(LATEST_UNASSIGNED_AIRCRAFT),
+        "gate_state": copy.deepcopy(gate_state_for_dashboard),
+        "gate_state_before_decision": copy.deepcopy(LATEST_GATE_STATE),
+        "gate_state_source": "matcher-predicted post-decision; stream event feed is authoritative",
+        "unassigned_aircraft": copy.deepcopy(unassigned_for_dashboard),
         "gates": gates,
         "outages": copy.deepcopy(STATE.outages),
         "solver": copy.deepcopy(LAST_SOLVER_SUMMARY),
