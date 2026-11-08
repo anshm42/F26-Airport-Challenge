@@ -44,9 +44,7 @@ STATION_TZ_JSON = Path(os.environ.get("GMS_STATION_TIMEZONES_JSON", STATION_TZ_D
 STREAM_PROFILES_JSON = _DATA_DIR / "stream_profiles.json"
 AIRLINE_TERMINALS: dict[str, str] = {}
 AIRLINE_NAMES: dict[str, str] = {}
-# The initial plan is always solved by Gurobi. A full day takes ~40 s, longer than
-# the stream's 10 s per attempt: the stream retries InitializeAirport and receives
-# the cached answer once the solve commits.
+# Bound optimization time so initialization can finish within the webhook budget.
 GUROBI_TIME_LIMIT = float(os.environ.get("GMS_GUROBI_TIME_LIMIT", "6"))
 GUROBI_THREADS = int(os.environ.get("GMS_GUROBI_THREADS", "1"))
 # Covers JuMP model building on top of Gurobi's own limit.
