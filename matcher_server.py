@@ -47,6 +47,14 @@ AIRLINE_NAMES: dict[str, str] = {}
 JULIA_TIMEOUT = float(os.environ.get("GMS_JL_TIMEOUT", "9.0"))
 WIDTH_CLASSES = ("A", "B", "C", "D", "E", "F")
 
+# Assignment policy weights. Walking classes are ordinal effort scores from
+# pearson.json, not measured metres or minutes.
+MAX_TARMAC_WAIT_MINUTES = float(os.environ.get("GMS_MAX_TARMAC_WAIT_MINUTES", "60"))
+WAITING_PENALTY_PER_MINUTE = float(os.environ.get("GMS_WAITING_PENALTY_PER_MINUTE", "1.0"))
+WALKING_DISTANCE_PENALTY_PER_CLASS = float(os.environ.get("GMS_WALKING_PENALTY_PER_CLASS", "10.0"))
+DOMESTIC_TO_INTERNATIONAL_PENALTY = float(os.environ.get("GMS_DOMESTIC_TO_INTERNATIONAL_PENALTY", "1000.0"))
+EMERGENCY_GATE_PENALTY = float(os.environ.get("GMS_EMERGENCY_GATE_PENALTY", "1000.0"))
+
 # Built-in fallback mappings. The global airportsdata database supplies broad
 # coverage for other IATA stations; this fallback keeps common routes working
 # even before that optional package is installed. External JSON entries override
@@ -194,10 +202,28 @@ def load_references() -> tuple[dict[str, str], list[dict[str, Any]], str]:
             aircraft_classes[code] = width_class
 
     terminal_by_gate: dict[str, str] = {}
+    walking_class_by_gate: dict[str, int] = {}
+    traffic_types_by_gate: dict[str, list[str]] = {}
+    gate_zones = pearson_data.get("gateZones", {}).get("terminals", {})
     for terminal, terminal_data in pearson_data.get("passengerGateGroups", {}).get("terminals", {}).items():
+        walking_by_label = terminal_data.get("walkingDistanceClassByGate", {})
         for group in terminal_data.get("groups", []):
-            if group:
-                terminal_by_gate[str(group[0]).strip()] = str(terminal)
+            if not group:
+                continue
+            gate_id = str(group[0]).strip()
+            terminal_by_gate[gate_id] = str(terminal)
+            allowed_types: set[str] = set()
+            walking_values = []
+            for alias in group:
+                alias = str(alias).strip()
+                zone = alias[:1]
+                allowed_types.update(gate_zones.get(str(terminal), {}).get(zone, []))
+                value = walking_by_label.get(alias)
+                if value is not None:
+                    walking_values.append(int(value))
+            if walking_values:
+                walking_class_by_gate[gate_id] = min(walking_values)
+            traffic_types_by_gate[gate_id] = sorted(allowed_types)
 
     airline_terminals = {}
     for row in pearson_data.get("airlineTerminals", {}).get("records", []):
@@ -225,6 +251,10 @@ def load_references() -> tuple[dict[str, str], list[dict[str, Any]], str]:
             "ifatcStandNames": stands,
             "terminal": terminal_by_gate.get(gate_id),
             "kind": "remote" if gate_id.startswith("Remote Stand H") else "gate",
+            "walkingDistanceClass": walking_class_by_gate.get(
+                gate_id, 10 if gate_id.startswith("Remote Stand H") else 10
+            ),
+            "allowedTrafficTypes": traffic_types_by_gate.get(gate_id, []),
             "basis": record.get("basis"),
         })
 
@@ -782,7 +812,22 @@ class ScenarioState:
             emergency_state == "Turnback"
             or (emergency_state is None and is_diversion and reason == "turnback")
         )
-        priority = bool(is_diversion and not remote_allowed) or turnback
+        priority = bool(
+            emergency_state == "Emergency"
+            or (is_diversion and not remote_allowed)
+            or turnback
+        )
+        session_start_token = start_token if start_token is not None else (
+            None if anchor.startswith("PARKED:") else anchor
+        )
+        arrival_traffic_type = (
+            self.token_legs.get(session_start_token, {}).get("leg", {}).get("trafficType")
+            if session_start_token else None
+        )
+        departure_traffic_type = (
+            self.token_legs.get(end_token, {}).get("leg", {}).get("trafficType")
+            if end_token else None
+        )
         sessions[session_id] = {
             "id": session_id,
             "registration": registration,
@@ -795,10 +840,10 @@ class ScenarioState:
             "remoteAllowed": remote_allowed,
             "turnback": turnback,
             "initiallyParked": anchor.startswith("PARKED:"),
-            "start_token": start_token if start_token is not None else (
-                None if anchor.startswith("PARKED:") else anchor
-            ),
+            "start_token": session_start_token,
             "end_token": end_token,
+            "arrivalTrafficType": arrival_traffic_type,
+            "departureTrafficType": departure_traffic_type,
             "preferredTerminal": self.airline_terminals.get(norm(aircraft.get("carrier"))),
             "trafficTypes": sorted({
                 str(self.token_legs[token]["leg"].get("trafficType"))
@@ -931,19 +976,59 @@ def _earliest_gate_start(
     return candidate if candidate < session_end else None
 
 
+def _traffic_compatible(session: dict[str, Any], gate: dict[str, Any]) -> bool:
+    arrival = str(session.get("arrivalTrafficType") or "")
+    departure = str(session.get("departureTrafficType") or "")
+
+    if arrival == "International" and departure == "Domestic":
+        return False
+
+    required = {value for value in (arrival, departure) if value}
+    allowed = set(gate.get("allowedTrafficTypes") or [])
+    return not required or not allowed or required.issubset(allowed)
+
+
+def _gate_assignment_cost(session: dict[str, Any], gate: dict[str, Any], index: int) -> float:
+    aircraft_class = session.get("widthClass")
+    gate_class = gate.get("widthClass")
+    value = 0.0 if aircraft_class == gate_class else 500.0
+
+    is_remote = gate.get("kind") == "remote"
+    if is_remote:
+        value += 5000.0
+        if session.get("remoteAllowed", False):
+            value += EMERGENCY_GATE_PENALTY
+
+    preferred = session.get("preferredTerminal")
+    gate_terminal = gate.get("terminal")
+    if preferred and gate_terminal and preferred != gate_terminal:
+        value += 75.0
+
+    value += float(gate.get("walkingDistanceClass", 10)) * WALKING_DISTANCE_PENALTY_PER_CLASS
+
+    if (
+        session.get("arrivalTrafficType") == "Domestic"
+        and session.get("departureTrafficType") == "International"
+    ):
+        value += DOMESTIC_TO_INTERNATIONAL_PENALTY
+
+    return value + index * 0.001
+
+
 def repair_assignments_python(
     sessions: dict[str, dict[str, Any]],
-    gates: list[dict[str, str]],
+    gates: list[dict[str, Any]],
     outages: dict[str, list[list[float]]],
     previous: dict[str, str],
     changed: set[str],
     previous_gate_starts: dict[str, float] | None = None,
 ) -> dict[str, Any]:
-    """Repair assignments and queue otherwise-unassigned aircraft for a later gate."""
+    """Repair changed sessions, allowing <=60 minutes of tarmac wait then overflow."""
     previous_gate_starts = previous_gate_starts or {}
     by_id = sessions
     occupied: dict[str, list[tuple[float, float]]] = defaultdict(list)
     gate_by_id = {str(g["id"]): g for g in gates}
+
     for sid, gate_id in previous.items():
         if sid in changed or sid not in by_id or gate_id not in gate_by_id:
             continue
@@ -954,26 +1039,43 @@ def repair_assignments_python(
 
     gate_index = {str(g["id"]): i for i, g in enumerate(gates)}
 
-    def candidates_for(session: dict[str, Any]) -> list[dict[str, Any]]:
+    def candidates_for(session: dict[str, Any], include_remote: bool = False) -> list[dict[str, Any]]:
         aircraft_class = session.get("widthClass")
         if aircraft_class not in WIDTH_CLASSES:
             return []
-        result = []
         fixed_gate = session.get("fixedGate")
+        result = []
         for gate in gates:
-            if fixed_gate and gate.get("id") != fixed_gate:
+            gate_id = str(gate.get("id", ""))
+            is_remote = gate.get("kind") == "remote"
+            if fixed_gate and gate_id != fixed_gate:
+                continue
+            if is_remote and not include_remote and not session.get("remoteAllowed", False):
                 continue
             if not allowed_width(aircraft_class, gate.get("widthClass")):
+                continue
+            if not _traffic_compatible(session, gate):
                 continue
             result.append(gate)
         return result
 
     decision_ids = [sid for sid in changed if sid in by_id]
-    candidate_map = {sid: candidates_for(by_id[sid]) for sid in decision_ids}
+    terminal_candidate_map = {
+        sid: candidates_for(by_id[sid], include_remote=False)
+        for sid in decision_ids
+    }
+    remote_candidate_map = {
+        sid: [
+            gate for gate in candidates_for(by_id[sid], include_remote=True)
+            if gate.get("kind") == "remote"
+        ]
+        for sid in decision_ids
+    }
+
     decision_ids.sort(key=lambda sid: (
         0 if by_id[sid].get("initiallyParked", False) else 1,
         0 if by_id[sid].get("priority", False) else 1,
-        len(candidate_map[sid]),
+        len(terminal_candidate_map[sid]),
         0 if sid in previous else 1,
         sid,
     ))
@@ -989,69 +1091,112 @@ def repair_assignments_python(
     for sid in decision_ids:
         session = by_id[sid]
         old_gate = previous.get(sid)
-        candidates = candidate_map[sid]
         start, end = float(session["start"]), float(session["end"])
+        initially_parked = bool(session.get("initiallyParked", False))
 
-        def cost(gate: dict[str, Any]) -> tuple[float, str]:
-            same = session.get("widthClass") == gate.get("widthClass")
-            value = 0.0 if same else 500.0
-            if gate.get("kind") == "remote":
-                value += 5000.0
-            preferred = session.get("preferredTerminal")
-            gate_terminal = gate.get("terminal")
-            if preferred and gate_terminal and preferred != gate_terminal:
-                value += 75.0  # soft carrier-terminal preference, never exclusivity
-            value += gate_index[str(gate["id"])] * 0.001
-            if old_gate is not None and str(gate["id"]) == old_gate:
+        def ranked_cost(gate: dict[str, Any], *, preserve_old: bool = True) -> float:
+            index = gate_index[str(gate["id"])]
+            value = _gate_assignment_cost(session, gate, index)
+            if preserve_old and old_gate == str(gate["id"]):
                 value -= 1_000_000.0
-            return value, str(gate["id"])
+            return value
 
-        selected = None
-        selected_start = None
-        ranked = sorted(candidates, key=cost)
+        selected: str | None = None
+        selected_start: float | None = None
 
-        # First try a gate available at the aircraft's scheduled arrival.
-        for gate in ranked:
-            gid = str(gate["id"])
-            available = _earliest_gate_start(session, str(gate["conflictGroup"]), occupied, outages)
-            if available is not None and available <= start:
-                selected = gid
+        # Initially parked aircraft already occupy the apron. They cannot
+        # remain on the taxiway/tarmac waiting for a later slot.
+        if initially_parked:
+            immediate_options = []
+            for gate in terminal_candidate_map[sid] + remote_candidate_map[sid]:
+                available = _earliest_gate_start(
+                    session, str(gate["conflictGroup"]), occupied, outages
+                )
+                if available is not None and available <= start:
+                    immediate_options.append((ranked_cost(gate), str(gate["id"])))
+            if immediate_options:
+                _, selected = min(immediate_options)
                 selected_start = start
-                break
+        else:
+            # First consider all compatible terminal gates that become
+            # available within the configured tarmac-wait window.
+            terminal_options = []
+            latest_terminal_start = min(start + MAX_TARMAC_WAIT_MINUTES, end)
+            for gate in terminal_candidate_map[sid]:
+                available = _earliest_gate_start(
+                    session, str(gate["conflictGroup"]), occupied, outages
+                )
+                if available is None or available > latest_terminal_start or available >= end:
+                    continue
+                wait_minutes = max(0.0, available - start)
+                score = (
+                    wait_minutes * WAITING_PENALTY_PER_MINUTE
+                    + ranked_cost(gate)
+                )
+                terminal_options.append((score, available, str(gate["id"])))
 
-        # Aircraft already parked at initialization cannot wait off-gate for
-        # a future opening. They must receive a gate immediately or remain
-        # explicitly unassigned as an initial-parking conflict.
-        if selected is None and not session.get("initiallyParked", False):
-            future_options = []
-            for gate in ranked:
-                gid = str(gate["id"])
-                available = _earliest_gate_start(session, str(gate["conflictGroup"]), occupied, outages)
-                if available is not None:
-                    future_options.append((available, cost(gate), gid))
-            if future_options:
-                selected_start, _, selected = min(future_options)
+            if terminal_options:
+                _, selected_start, selected = min(terminal_options)
 
-        if selected is None:
+            # A medically authorized emergency/diversion may use remote
+            # overflow immediately rather than incur a prolonged tarmac hold.
+            # Ordinary flights use remote overflow only after the full wait
+            # window has elapsed without a compatible terminal slot.
+            if not terminal_options or session.get("remoteAllowed", False):
+                remote_options = []
+                for gate in remote_candidate_map[sid]:
+                    available = _earliest_gate_start(
+                        session, str(gate["conflictGroup"]), occupied, outages
+                    )
+                    if available is None:
+                        continue
+
+                    if session.get("remoteAllowed", False):
+                        remote_start = available
+                        if remote_start > start + MAX_TARMAC_WAIT_MINUTES or remote_start >= end:
+                            continue
+                    else:
+                        remote_start = start + MAX_TARMAC_WAIT_MINUTES
+                        if remote_start >= end or available > remote_start:
+                            continue
+
+                    score = (
+                        max(0.0, remote_start - start) * WAITING_PENALTY_PER_MINUTE
+                        + ranked_cost(gate, preserve_old=True)
+                    )
+                    remote_options.append((score, remote_start, str(gate["id"])))
+
+                if remote_options:
+                    remote_score, remote_start, remote_gate = min(remote_options)
+                    terminal_score = min((item[0] for item in terminal_options), default=float("inf"))
+                    if not terminal_options or remote_score < terminal_score:
+                        selected = remote_gate
+                        selected_start = remote_start
+
+        if selected is None or selected_start is None:
             unassigned.append(sid)
-            if not candidates:
-                unassigned_reasons[sid] = "no_compatible_gate"
-            elif session.get("initiallyParked", False):
+            all_candidates = terminal_candidate_map[sid] + remote_candidate_map[sid]
+            if not all_candidates:
+                unassigned_reasons[sid] = "no_traffic_compatible_gate_or_width_match"
+            elif initially_parked:
                 unassigned_reasons[sid] = "initially_parked_no_gate_available_at_start"
             else:
-                unassigned_reasons[sid] = "no_gate_slot_before_departure"
+                unassigned_reasons[sid] = "no_gate_slot_within_tarmac_wait_or_overflow_window"
             continue
 
         selected_group = str(gate_by_id[selected]["conflictGroup"])
         occupied[selected_group].append((float(selected_start), end))
         gate_starts[sid] = float(selected_start)
+
         if selected_start > start:
             waiting[sid] = {
                 "gate": selected,
                 "arrival_minute": start,
                 "gate_entry_minute": float(selected_start),
                 "wait_minutes": float(selected_start) - start,
+                "overflow": gate_by_id[selected].get("kind") == "remote",
             }
+
         if old_gate is None:
             new_assignments.append([sid, selected])
         elif selected != old_gate:
@@ -1069,6 +1214,7 @@ def repair_assignments_python(
         "waiting": waiting,
     }
 
+
 def build_solver_payload(
     sessions: dict[str, dict[str, Any]],
     gates: list[dict[str, str]],
@@ -1078,6 +1224,11 @@ def build_solver_payload(
         "sessions": list(sessions.values()),
         "gates": gates,
         "outages": outages,
+        "costs": {
+            "walkingDistancePerClass": WALKING_DISTANCE_PENALTY_PER_CLASS,
+            "domesticToInternationalPenalty": DOMESTIC_TO_INTERNATIONAL_PENALTY,
+            "emergencyRemotePenalty": EMERGENCY_GATE_PENALTY,
+        },
     }
 
 
