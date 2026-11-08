@@ -703,33 +703,49 @@ class ScenarioState:
             )
             parked_aircraft = self.parked.get(registration)
             opened = None
+            future_events = events
 
             if parked_aircraft:
-                first_departure = next((e for e in events if e["kind"] == "DEPART"), None)
-                meta = first_departure["aircraft"] if first_departure else parked_aircraft
-                # Keep the PARKED anchor (and therefore its fixed initial
-                # position) but remember the arrival leg that brought this
-                # aircraft to its current stand when it is in the schedule.
-                opened = (self.epoch, f"PARKED:{registration}", meta, None)
+                snapshot = self.snapshot_time or self.epoch
+                past_events = [item for item in events if item["time"] <= snapshot]
+                future_events = [item for item in events if item["time"] > snapshot]
+                arrivals = [item for item in past_events if item["kind"] == "ARRIVE"]
+                departures = [item for item in past_events if item["kind"] == "DEPART"]
+                last_arrival = max(arrivals, key=lambda item: item["time"], default=None)
+                last_departure = max(departures, key=lambda item: item["time"], default=None)
 
-            for item in events:
+                if last_arrival is not None and (
+                    last_departure is None or last_arrival["time"] > last_departure["time"]
+                ):
+                    current_start = max(self.epoch, last_arrival["time"])
+                    current_start_token = last_arrival["token"]
+                    current_aircraft = last_arrival["aircraft"]
+                else:
+                    current_start = self.epoch
+                    current_start_token = None
+                    current_aircraft = parked_aircraft
+
+                first_future_departure = next(
+                    (item for item in future_events if item["kind"] == "DEPART"), None
+                )
+                meta = first_future_departure["aircraft"] if first_future_departure else current_aircraft
+                opened = (
+                    current_start, f"PARKED:{registration}", meta, current_start_token
+                )
+
+            for item in future_events:
                 if item["kind"] == "ARRIVE":
                     if opened is None:
                         opened = (item["time"], item["token"], item["aircraft"], item["token"])
-                    elif (opened[1].startswith("PARKED:")
-                          and self.snapshot_time is not None
-                          and item["time"] <= self.snapshot_time):
-                        opened = (opened[0], opened[1], opened[2], item["token"])
-                else:
-                    if opened is not None:
-                        start_dt, anchor, meta, start_token = opened
-                        if item["time"] > start_dt:
-                            self._add_session(
-                                sessions, anchor, registration, item["aircraft"],
-                                start_dt, item["time"], start_token=start_token,
-                                end_token=item["token"],
-                            )
-                        opened = None
+                elif opened is not None:
+                    start_dt, anchor, meta, start_token = opened
+                    if item["time"] > start_dt:
+                        self._add_session(
+                            sessions, anchor, registration, item["aircraft"],
+                            start_dt, item["time"], start_token=start_token,
+                            end_token=item["token"],
+                        )
+                    opened = None
 
             if opened is not None:
                 start_dt, anchor, meta, start_token = opened
