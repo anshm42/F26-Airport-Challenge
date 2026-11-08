@@ -8,6 +8,7 @@ import time
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from unittest.mock import patch
 
 from smartgate_stream.generate import generate
 from smartgate_stream.server import ControlServer
@@ -256,23 +257,39 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(self.webhook.received, [])
         self.assertEqual(self.control.manager.runs, {})
 
-    def test_invalid_matcher_batch_keeps_occupancy_and_stops_delivery(self):
+    def test_invalid_matcher_decision_is_rejected_without_blocking_valid_ones(self):
         initial, _ = self.gate_scenario()
         tail = initial["parkedAircraft"][0]["registration"]
-        invalid = {"moves": [{"registration": tail, "gate": "D22"},
-                              {"registration": "C-UNKNOWN", "gate": "D24"}]}
-        self.webhook.response_body = invalid
+        partly_invalid = {"moves": [{"registration": tail, "gate": "D22"},
+                                    {"registration": "C-UNKNOWN", "gate": "D24"}]}
+        self.webhook.response_body = partly_invalid
         code, created = self.request("POST", "/runs", self.options)
         self.assertEqual(code, 201)
         state = self.terminal(created["run_id"])
-        self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("failed", 1, 0))
-        self.assertEqual(len(self.webhook.received), 1)
-        self.assertEqual(state["gate_state"]["D20"], initial["flights"][0]["flight"])
-        self.assertIsNone(state["gate_state"]["D22"])
+        self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("completed", 3, 3))
+        self.assertEqual(state["rejected_decisions"], 3)
+        status, events = self.request("GET", f"/runs/{created['run_id']}/events")
+        after_initialization = events["events"][0]["gate_state"]
+        self.assertIsNone(after_initialization["D20"])
+        self.assertEqual(after_initialization["D22"], initial["flights"][0]["flight"])
+        self.assertIsNone(after_initialization["D24"])
         records = Path(state["records_directory"]) / "deliveries.jsonl"
         record = json.loads(records.read_text().splitlines()[0])
         self.assertEqual(record["http_status"], 200)
-        self.assertEqual(record["matcher_response"], invalid)
+        self.assertEqual(record["matcher_response"], partly_invalid)
+        self.assertEqual([group["moves"] for group in record["rejected_decisions"]],
+                         [[{"registration": "C-UNKNOWN", "gate": "D24"}]])
+        self.assertEqual([event["decision_status"] for event in events["events"]], ["partial"] * 3)
+
+    def test_malformed_matcher_response_keeps_occupancy_and_delivery_continues(self):
+        initial, _ = self.gate_scenario()
+        self.webhook.response_body = {"moves": "not a list"}
+        _, created = self.request("POST", "/runs", self.options)
+        state = self.terminal(created["run_id"])
+        self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("completed", 3, 3))
+        status, events = self.request("GET", f"/runs/{created['run_id']}/events")
+        self.assertEqual(events["events"][0]["gate_state"]["D20"], initial["flights"][0]["flight"])
+        self.assertEqual([event["decision_status"] for event in events["events"]], ["rejected"] * 3)
 
     def test_stop_wakes_paced_wait(self):
         self.options.update(mode="paced", speed=1)
@@ -317,13 +334,21 @@ class HttpTests(unittest.TestCase):
             self.assertFalse(worker.is_alive())
         self.assertEqual(sorted(codes), [201, 409])
 
-    def test_webhook_http_error_ends_run(self):
+    def test_webhook_http_errors_are_retried_then_skipped(self):
         self.webhook.response_status = 503
-        _, created = self.request("POST", "/runs", self.options)
-        state = self.terminal(created["run_id"])
-        self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("failed", 1, 0))
-        self.assertIn("503", state["error"])
-        self.assertEqual(len(self.webhook.received), 1)
+        with patch("smartgate_stream.replay.RETRY_BACKOFF_SECONDS", (0.001,)):
+            _, created = self.request("POST", "/runs", self.options)
+            state = self.terminal(created["run_id"])
+        events = len(load_scenario(FIXTURE)["events"])
+        self.assertEqual((state["status"], state["attempted"], state["delivered"]), ("completed", events, 0))
+        self.assertEqual(state["skipped"], events)
+        self.assertIn("503", json.loads((Path(state["records_directory"]) / "deliveries.jsonl")
+                                        .read_text().splitlines()[0])["error"])
+        self.assertEqual(len(self.webhook.received), 3 * events)
+        first, second = (headers for _, headers in self.webhook.received[:2])
+        self.assertEqual(first["X-Stream-Event-Id"], second["X-Stream-Event-Id"])
+        self.assertEqual(second["X-Stream-Attempt"], "2")
+        self.assertEqual(self.webhook.received[3][1]["X-Stream-Resync"], "true")
 
     def test_bad_requests_and_invalid_fixture_deliver_nothing(self):
         for body in ([], {}, {**self.options, "speed": False}, {**self.options, "speed": 10**400},

@@ -69,12 +69,16 @@ def main(argv=None):
                     thread.start()
                     cleanup.callback(server.shutdown)
                 cleanup.callback(control.manager.close)
+                matcher.VIEW_FEED.start()
+                cleanup.callback(matcher.VIEW_FEED.stop)
                 status = control.manager.create({"scenario_path": str(args.scenario.resolve()),
                     "webhook_url": f"http://127.0.0.1:{receiver.server_port}/updates", "mode": args.mode, "speed": speed})
                 run = control.manager.get(status["run_id"])
                 run_url = f"http://127.0.0.1:{control.server_port}/runs/{run.id}"
                 label = f"Paced replay: {speed:g}x" if args.mode == "paced" else "Unpaced replay"
                 print(f"{label}\nRun status: {run_url}\nMatcher: http://127.0.0.1:{receiver.server_port}/assignments"
+                      f"\nViews: ws://127.0.0.1:{receiver.server_port}/operator/ws, "
+                      f"ws://127.0.0.1:{receiver.server_port}/passenger/ws"
                       f"\nRun records: {run.directory}\nPress Ctrl-C to stop both services.", file=console, flush=True)
                 previous = None
                 while True:

@@ -1,16 +1,10 @@
 import unittest
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 import matcher_server as matcher
-from matcher_server import (
-    ScenarioState,
-    allowed_width,
-    filter_passenger_flights,
-    load_references,
-    parse_passenger_gate_selectors,
-    passenger_gate_matches,
-)
+from matcher_server import ScenarioState, allowed_width, load_references
+from matcher_views import ViewSnapshot, build_assignments_message
 from smartgate_stream.gates import GateState
 from smartgate_stream.inventory import initial_gate_state
 from test_stream_gates import INBOUND, assignment, flight
@@ -76,19 +70,6 @@ class MatcherCompatibilityTests(unittest.TestCase):
         self.assertEqual(outage["conflictGroup"], state.gate_by_id["D32"]["conflictGroup"])
         self.assertIn(outage["conflictGroup"], state.outage_payload())
 
-    def test_passenger_gate_selectors_match_current_and_previous_gate(self):
-        selectors = parse_passenger_gate_selectors("1:D20-D30,3:A")
-        self.assertTrue(passenger_gate_matches({"terminal": "1", "gate": "D24"}, selectors[0]))
-        self.assertTrue(passenger_gate_matches({"terminal": "3", "gate": "A17"}, selectors[1]))
-        self.assertFalse(passenger_gate_matches({"terminal": "1", "gate": "E24"}, selectors[0]))
-
-        flights = [{
-            "flightId": "AC|501||2026-11-07|LEG0",
-            "gate": None,
-            "previous": {"gate": {"terminal": "1", "gate": "D24"}},
-        }]
-        self.assertEqual(filter_passenger_flights(flights, selectors), flights)
-
     def test_passenger_feed_includes_current_parked_arrival_with_offset(self):
         flight = {
             "carrier": "AC",
@@ -118,31 +99,28 @@ class MatcherCompatibilityTests(unittest.TestCase):
             "message": message,
         })
 
-        old_state = (
-            matcher.STATE, matcher.ASSIGNMENTS, matcher.LATEST_SIMULATED_TIME,
-            matcher.PASSENGER_LAST_FIELDS, matcher.PASSENGER_PREVIOUS_FIELDS,
+        snapshot = ViewSnapshot(
+            state=state,
+            assignments={"PARKED:C-TEST": "D22"},
+            gate_starts={},
+            assigned_at={"PARKED:C-TEST": "2026-11-07T12:00:00Z"},
+            visit_positions={},
+            unassigned_reasons={},
+            deferred={},
+            airline_names=matcher.AIRLINE_NAMES,
         )
-        try:
-            matcher.STATE = state
-            matcher.ASSIGNMENTS = {"PARKED:C-TEST": "D22"}
-            matcher.LATEST_SIMULATED_TIME = "2026-11-07T12:00:00Z"
-            matcher.PASSENGER_LAST_FIELDS = {}
-            matcher.PASSENGER_PREVIOUS_FIELDS = {}
-            payload = matcher.build_passenger_message()
-            self.assertEqual(payload["type"], "assignments")
-            self.assertEqual(len(payload["flights"]), 1)
-            passenger_flight = payload["flights"][0]
-            self.assertEqual(passenger_flight["flightCodes"], ["AC501", "UA8501"])
-            self.assertEqual(passenger_flight["gate"], {"terminal": "1", "gate": "D22"})
-            self.assertTrue(passenger_flight["timeArrival"].endswith("-05:00"))
-            self.assertEqual(passenger_flight["timeDeparture"], None)
-            self.assertEqual(passenger_flight["previous"], {})
-        finally:
-            (
-                matcher.STATE, matcher.ASSIGNMENTS, matcher.LATEST_SIMULATED_TIME,
-                matcher.PASSENGER_LAST_FIELDS, matcher.PASSENGER_PREVIOUS_FIELDS,
-            ) = old_state
-
+        payload = build_assignments_message(snapshot, datetime(2026, 11, 7, 12, tzinfo=timezone.utc))
+        self.assertEqual(payload["type"], "assignments")
+        self.assertEqual(payload["generatedAt"], "2026-11-07T07:00:00-05:00")
+        self.assertEqual(len(payload["flights"]), 1)
+        passenger_flight = payload["flights"][0]
+        self.assertEqual(passenger_flight["flightCodes"], ["AC501", "UA8501"])
+        self.assertEqual(passenger_flight["gate"], {"terminal": "1", "gate": "D22"})
+        self.assertEqual(passenger_flight["timeArrival"], "2026-11-07T07:00:00-05:00")
+        self.assertEqual(passenger_flight["timeDeparture"], "2026-11-07T06:00:00-05:00")
+        self.assertEqual(passenger_flight["assignedAt"], "2026-11-07T07:00:00-05:00")
+        self.assertEqual(passenger_flight["registration"], "C-TEST")
+        self.assertEqual(payload["parkedAircraft"], [])
 
 if __name__ == "__main__":
     unittest.main()

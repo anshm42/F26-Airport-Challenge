@@ -40,9 +40,22 @@ The stream validates and applies the whole response atomically. An empty ordinar
 2xx acknowledgment, including legacy `202`, makes no plan changes; `204` has no
 body. Initialization still requires `200` or `204`. Decision bodies are limited
 to 1 MiB. Measure matcher computation in matcher logs, correlated by event ID.
-Redirects, non-2xx
-responses, connection failures, and a 10-second socket timeout fail the run at the
-first affected event. There are no retries.
+Each attempt has a 10-second socket timeout. Connection failures, timeouts, and
+5xx responses are retried under the same `X-Stream-Event-Id`, with
+`X-Stream-Attempt: N` on retries. The matcher treats the event ID as an
+idempotency key: a retry receives the committed response without the event being
+applied twice, and the stream applies each event's decisions at most once.
+`InitializeAirport` is retried for up to 180 seconds (the matcher may still be
+starting its solver, or a full-day solve may take longer than one attempt) and
+fails the run if it never succeeds. An update is tried 3 times, then skipped; the
+next request carries `X-Stream-Resync: true`, asking the matcher for its full plan.
+Redirects and other 4xx responses are not retried. Paced runs also send
+`X-Stream-Speed` so dashboards can advance the simulated clock between events.
+
+An invalid decision no longer fails the run. If the whole response cannot be
+applied atomically, each aircraft's assignments and move are applied as their own
+atomic group; rejected groups are recorded in `rejected_decisions` and the event's
+`decision_status` is `partial` or `rejected` (`skipped` when no response arrived).
 
 ## Time and matcher responsibilities
 

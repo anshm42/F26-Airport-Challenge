@@ -1,0 +1,375 @@
+/* Bare-bones operator view. Colours are tokens so the look can be refined in one place. */
+:root {
+  --bg: #0b0f1a;
+  --panel: #121828;
+  --line: #222b40;
+  --grid: #1a2236;
+  --fg: #e6ebf5;
+  --muted: #8c97b0;
+  --arr: #2f6fb0;
+  --dep: #3a8a6a;
+  --delayed: #e0a020;
+  --early: #6fd0ff;
+  --moved: #6fd0ff;
+  --split: #f4a6ff;
+  --emergency: #ff4d4d;
+  --turnback: #ff8a3d;
+  --outage: #ff6262;
+  --parked: #4a5470;
+  --waited: #ffd166;
+  --now: #ff4d4d;
+  --select: #ffffff;
+  --label-width: 110px;
+  font-family: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); }
+#app { height: 100vh; display: flex; flex-direction: column; }
+.muted { color: var(--muted); }
+h1 { margin: 0; font-size: 1.3rem; }
+h2 { margin: 0 0 6px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+
+header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+#clock { margin-left: auto; font-size: 1.2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+#fresh.stale { color: var(--emergency); }
+
+#controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
+}
+#controls label { display: inline-flex; align-items: center; gap: 4px; }
+.toggles { display: inline-flex; align-items: center; gap: 4px; }
+.toggle {
+  font: inherit;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+.toggle[aria-pressed="true"] { color: var(--fg); background: var(--line); border-color: var(--muted); }
+.toggle:hover { border-color: var(--fg); }
+/* Size swipe surface: padded so near misses still land; no text selection or touch scrolling mid-swipe. */
+#size-filter { position: relative; padding: 10px 6px; margin: -10px -6px; cursor: pointer; user-select: none; touch-action: none; }
+#size-filter .toggle { transition: background-color 120ms, border-color 120ms, color 120ms; }
+.toggle.nudge { animation: nudge 160ms ease-out; }
+.toggle.goosh { animation: goosh 420ms cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes nudge {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.93); }
+  100% { transform: scale(1); }
+}
+@keyframes goosh {
+  0% { transform: scale(1, 1); }
+  25% { transform: scale(1.22, 0.78); }
+  50% { transform: scale(0.88, 1.14); }
+  75% { transform: scale(1.06, 0.95); }
+  100% { transform: scale(1, 1); }
+}
+
+/* Pause: grey while following now; faded red once the timeline is untied from now. */
+.toggle[data-toggle="paused"] { color: var(--fg); background: transparent; border-color: var(--muted); }
+.toggle[data-toggle="paused"][aria-pressed="true"] { border-color: color-mix(in srgb, var(--now) 55%, transparent); background: color-mix(in srgb, var(--now) 10%, transparent); }
+#controls input[type="number"] { width: 3.5em; }
+#controls input, #controls select {
+  font: inherit;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 2px 4px;
+}
+
+#legend { display: flex; flex-wrap: wrap; gap: 2px 4px; padding: 4px 10px; border-bottom: 1px solid var(--line); font-size: 0.8rem; }
+.key {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font: inherit;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.key:hover { border-color: var(--line); }
+.key[aria-pressed="true"] { border-color: var(--muted); background: var(--line); }
+.key::before { content: ""; width: 18px; height: 10px; border-radius: 2px; background: var(--muted); }
+.key.arr::before { background: var(--arr); }
+.key.dep::before { background: var(--dep); }
+.key.delayed::before { box-shadow: inset 0 -3px var(--delayed); }
+.key.early::before { box-shadow: inset 0 -3px var(--early); }
+.key.moved::before { outline: 1px dashed var(--moved); }
+.key.turn::before { background: linear-gradient(to right, var(--arr), var(--dep)); }
+/* Changing gates: the arrival half (blue) and departure half (green), dashed where they meet, fading outwards. */
+.key.split { gap: 0; }
+.key.split::before { display: none; }
+.swatch { width: 12px; height: 10px; }
+.swatch.split-arr { background: linear-gradient(to right, transparent, var(--arr) 75%); border-right: 2px dashed var(--split); margin-right: 2px; }
+.swatch.split-dep { background: linear-gradient(to left, transparent, var(--dep) 75%); border-left: 2px dashed var(--split); margin-right: 4px; }
+.key.emergency::before { background: var(--emergency); }
+.key.turnback::before { background: var(--turnback); }
+.key.cancelled::before { background: repeating-linear-gradient(135deg, #555 0 3px, #333 3px 6px); }
+.key.outage::before { background: repeating-linear-gradient(135deg, var(--outage) 0 2px, transparent 2px 6px); }
+.key.parked::before { background: var(--parked); }
+.key.waited::before { content: "⟵"; width: auto; height: auto; background: none; color: var(--waited); font-weight: 700; line-height: 1; }
+
+main { flex: 1; display: grid; grid-template-columns: 1fr 340px; min-height: 0; }
+
+/* Timeline */
+#timeline-wrap { position: relative; min-width: 0; min-height: 0; }
+/* contain: scrolling into an edge must not chain to the page (or a trackpad's swipe-back); the edge hint takes it. */
+#timeline { position: absolute; inset: 0; overflow: auto; overscroll-behavior: contain; }
+/* Data source problems, over the timeline. Never blocks it: a lost connection still shows the last state. */
+#notice {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  z-index: 7;
+  transform: translateX(-50%);
+  max-width: min(560px, 90%);
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.4);
+}
+#notice.bad { border-color: var(--emergency); }
+#notice.bad h2 { color: var(--emergency); }
+#notice p { margin: 4px 0 0; }
+#notice a { color: var(--early); }
+/* Shown when a sideways scroll reaches an edge of the window. */
+#edge-hint {
+  position: absolute;
+  top: 34px;
+  z-index: 5;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--fg);
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+/* Arrows at the ends of the time axis: extend the window by an hour, for a mouse. */
+.edge-arrow {
+  position: absolute;
+  top: 2px;
+  z-index: 6;
+  width: 22px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel);
+  color: var(--fg);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 16px;
+  cursor: pointer;
+}
+.edge-arrow:hover { border-color: var(--muted); }
+.edge-arrow:disabled { color: var(--muted); cursor: default; opacity: 0.5; }
+.edge-arrow[data-extend="before"] { left: calc(var(--label-width) + 2px); }
+.edge-arrow[data-extend="after"] { right: 16px; }
+#edge-hint[data-side="before"] { left: calc(var(--label-width) + 8px); }
+#edge-hint[data-side="after"] { right: 14px; }
+.sheet { position: relative; min-height: 100%; }
+.axis, .row, .group { display: flex; }
+.label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  flex: 0 0 var(--label-width);
+  width: var(--label-width);
+  padding: 2px 8px;
+  background: var(--bg);
+  border-right: 1px solid var(--line);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.axis { position: sticky; top: 0; z-index: 3; height: 24px; background: var(--bg); border-bottom: 1px solid var(--line); }
+.axis .label { z-index: 4; }
+.ticks { position: relative; flex: 1; }
+.tick.day { color: var(--fg); font-weight: 700; }
+.tick { position: absolute; top: 4px; transform: translateX(-50%); font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.group { height: 22px; border-bottom: 1px solid var(--line); }
+.group .label { background: var(--panel); font-weight: 700; color: var(--muted); overflow: visible; }
+.row { border-bottom: 1px solid var(--grid); }
+.row .label { display: flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
+.alias { color: var(--muted); font-size: 0.8em; }
+.row .label[data-gate] { cursor: pointer; }
+.row .label[data-gate]:hover { background: var(--panel); }
+.row.selected .label { background: var(--line); box-shadow: inset 3px 0 var(--select); }
+.row.selected { background: color-mix(in srgb, var(--select) 4%, transparent); }
+.track {
+  position: relative;
+  flex: 1;
+  background: repeating-linear-gradient(to right, var(--grid) 0 1px, transparent 1px var(--px-per-hour)) var(--grid-offset) 0;
+}
+/* Behind the bars (it comes first in #timeline), so it shows between them without covering their text. */
+#now { position: absolute; top: 0; width: 2px; margin-left: -1px; background: var(--now); pointer-events: none; }
+
+/* Split-turn connector: under the bars (it comes before #sheet), drawn only for the selected flight. */
+#links { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
+#links .link { fill: none; stroke: var(--split); stroke-width: 3; stroke-linecap: round; opacity: 0.85; }
+#links marker path { fill: var(--split); }
+#link-label, #link-time {
+  position: absolute;
+  z-index: 1;
+  transform: translateY(-50%);
+  padding: 1px 6px;
+  border: 1px solid var(--split);
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+#link-time { transform: translate(-50%, -50%); }
+
+.track .outage {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--outage) 45%, transparent) 0 2px, transparent 2px 7px);
+  border-left: 2px solid var(--outage);
+}
+
+.bar {
+  position: absolute;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--arr);
+  font-size: 0.8rem;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.bar > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.bar.arr { background: var(--arr); }
+.bar.dep { background: var(--dep); }
+.bar.turn { background: linear-gradient(to right, var(--arr), var(--dep)); }
+.bar.delayed { box-shadow: inset 0 -3px var(--delayed); }
+.bar.early { box-shadow: inset 0 -3px var(--early); }
+.bar.moved { outline: 1px dashed var(--moved); outline-offset: -1px; }
+.bar.emergency { background: var(--emergency); }
+.bar.turnback { background: var(--turnback); }
+/* Split turn: the aircraft's other half is at another gate; dashed edge on that side. */
+.bar.split { font-weight: 700; }
+.bar.split.arr { border-right: 3px dashed var(--split); }
+.bar.split.dep { border-left: 3px dashed var(--split); }
+.bar.parked { background: var(--parked); color: var(--muted); }
+/* From the waitlist: a leftward badge where the stay starts, i.e. when the gate was assigned. */
+.bar .badge { font-style: normal; font-weight: 700; color: var(--waited); margin-right: 3px; }
+/* Held by a position sharing this one's space (H01A blocks H01 and H01B). */
+.track .blocked {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border: 1px dashed var(--parked);
+  border-radius: 3px;
+  background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--parked) 40%, transparent) 0 2px, transparent 2px 6px);
+}
+.track .blocked[data-id] { cursor: pointer; }
+.track .blocked.selected { border: 1px solid var(--select); }
+.bar.cancelled { background: repeating-linear-gradient(135deg, #555 0 3px, #333 3px 6px); color: var(--muted); text-decoration: line-through; }
+.bar.dim { opacity: 0.25; }
+.bar { scroll-margin: 30px 0 0 120px; }
+.bar.selected { outline: 2px solid var(--select); outline-offset: 0; z-index: 1; }
+
+/* Sidebar */
+aside { display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--line); background: var(--panel); }
+aside section { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+aside p { margin: 0; }
+#alarms { flex: 0 0 auto; }
+#waitlist { flex: 1 1 20%; overflow: auto; min-height: 0; }
+/* Only the schedule scrolls, so the gate's details stay in view. */
+#gate { flex: 3 1 45%; min-height: 0; display: flex; flex-direction: column; }
+#gate .body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#gate .schedule { flex: 1; min-height: 0; overflow: auto; }
+#gate.empty { flex: 0 0 auto; }
+#flight { flex: 2 1 35%; overflow: auto; min-height: 0; }
+
+/* Gate panel: the gate's schedule as a vertical timeline */
+/* The left gutter holds the "Now" label; the spine is a background line so it scrolls with the list. */
+.schedule {
+  position: relative;
+  z-index: 0;
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0 0 0 34px;
+  background: linear-gradient(var(--line), var(--line)) 32px 0 / 2px 100% no-repeat local;
+}
+.schedule .entry { position: relative; display: grid; grid-template-columns: 76px 1fr; gap: 6px; padding: 4px 6px; margin: 0 10px 4px 6px; border-radius: 3px; border-left: 4px solid var(--arr); background: var(--bg); cursor: pointer; font-size: 0.9rem; }
+.schedule .entry.dep { border-left-color: var(--dep); }
+.schedule .entry.turn { border-image: linear-gradient(var(--arr), var(--dep)) 1; }
+.schedule .entry.emergency { border-left-color: var(--emergency); border-image: none; }
+.schedule .entry.turnback { border-left-color: var(--turnback); border-image: none; }
+.schedule .entry.away, .schedule .entry.cancelled { opacity: 0.5; }
+.schedule .entry.parked { border-left-color: var(--parked); border-image: none; cursor: default; }
+.schedule .entry.selected { outline: 1px solid var(--select); }
+.schedule .entry.outage { border-left-color: var(--outage); border-image: none; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--outage) 20%, transparent) 0 2px, transparent 2px 7px); cursor: default; }
+.schedule .when { color: var(--muted); font-variant-numeric: tabular-nums; }
+.schedule .what > div[data-id]:hover { text-decoration: underline; }
+/* Under the entry (z-index -1 within .schedule), visible off both sides of it. */
+.now-mark { position: absolute; z-index: -1; left: -40px; right: -10px; height: 2px; margin-top: -1px; background: var(--now); pointer-events: none; }
+.now-mark::before { content: "Now"; position: absolute; left: 0; top: -14px; color: var(--now); font-size: 0.75rem; font-weight: 700; }
+.schedule .gap {
+  position: relative;
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 6px;
+  align-items: center;
+  padding: 0 6px;
+  margin: 0 10px 4px 6px;
+  border: 1px dashed var(--line);
+  border-left: 4px solid transparent;
+  border-radius: 3px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.schedule .gap .when { font-variant-numeric: tabular-nums; }
+.now-divider { display: flex; align-items: center; gap: 6px; margin: 6px 0 6px -34px; color: var(--now); font-size: 0.8rem; font-weight: 700; }
+.now-divider::before, .now-divider::after { content: ""; height: 2px; background: var(--now); }
+.now-divider::before { display: none; }
+.now-divider::after { flex: 1; }
+#waitlist ol { list-style: none; margin: 0; padding: 0; }
+#waitlist .item { padding: 4px 6px; border-radius: 3px; cursor: pointer; }
+#waitlist .item:hover { background: var(--line); }
+#waitlist .item.selected { outline: 1px solid var(--select); }
+#waitlist .item.emergency b { color: var(--emergency); }
+#waitlist .overdue-note { color: var(--delayed); }
+.waited-note { color: var(--waited); }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 0; }
+dt { color: var(--muted); }
+dd { margin: 0; overflow-wrap: anywhere; }
+a { color: var(--early); }
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle.goosh, .toggle.nudge { animation: none; }
+}
