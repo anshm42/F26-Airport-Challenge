@@ -1050,7 +1050,9 @@ def repair_assignments_python(
             is_remote = gate.get("kind") == "remote"
             if fixed_gate and gate_id != fixed_gate:
                 continue
-            if is_remote and not include_remote and not session.get("remoteAllowed", False):
+            if is_remote and not include_remote:
+                continue
+            if is_remote and session.get("initiallyParked", False) and gate_id != fixed_gate:
                 continue
             if not allowed_width(aircraft_class, gate.get("widthClass")):
                 continue
