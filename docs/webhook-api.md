@@ -25,7 +25,7 @@ The body follows the
 required headers:
 
 - `X-Stream-Run-Id`: random run identifier.
-- `X-Stream-Event-Id`: `RUN_ID:INDEX`, with a zero-based file index.
+- `X-Stream-Event-Id`: `RUN_ID:INDEX`, with a zero-based request index, including reassessments.
 - `X-Stream-Simulated-Time`: the event's exact timestamp string.
 
 The receiver must accept `InitializeAirport` and all eight update actions, and use the supplied simulated

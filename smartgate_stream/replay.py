@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from .gates import GateState
+from .gates import GateState, utc_string
 from .validation import DEFAULT_RATE, flight_key, load_scenario, parse_utc, positive_number, read_json, require
 
 
@@ -160,9 +160,12 @@ class Run:
         # Set when an event's decisions were never applied, so the next request asks
         # the matcher for its full plan instead of only what changed.
         self.resync_pending = False
+        self.reassessment_enabled = False
+        self.reassessment_at = None
         self.state = {
             "run_id": self.id, "status": "running", "mode": mode, "speed": speed,
             "total_events": len(timestamps), "attempted": 0, "delivered": 0,
+            "reassessments_attempted": 0, "reassessments_delivered": 0,
             "retries": 0, "skipped": 0, "skipped_event_ids": [], "rejected_decisions": 0,
             "simulated_time": None, "http_seconds": 0, "lateness_seconds": 0,
             "max_lateness_seconds": 0, "failed_event_id": None, "error": None,
@@ -283,41 +286,61 @@ class Run:
                     wait(min(delay, threading.TIMEOUT_MAX))
             return not self.stop_event.is_set()
 
-        def advance_movements(until=None):
-            while (when := self.gate_state.next_movement()) is not None and (until is None or when <= until):
+        def scheduled_events():
+            index = 0
+            events = self.scenario["events"]
+            while not self.stop_event.is_set():
+                source = events[index] if index < len(events) else None
+                if source is None and not self.gate_state.initialized:
+                    return
+                source_time = parse_utc(source["timestamp"]) if source else None
+                times = [value for value in (source_time, self.gate_state.next_movement()) if value is not None]
+                if self.reassessment_enabled:
+                    times.extend(when for _, start, end in self.gate_state.outages
+                                 for when in (start, end) if when is not None and when > self.gate_state.now
+                                 and (self.gate_state.day_end is None or when < self.gate_state.day_end))
+                    if (self.reassessment_at is not None and (self.gate_state.day_end is None
+                            or self.reassessment_at < self.gate_state.day_end)):
+                        times.append(self.reassessment_at)
+                if not times:
+                    return
+                when = min(times)
                 deadline = initialization_seconds + (when - first_time).total_seconds() / self.speed if self.mode == "paced" else None
                 if not wait_until(deadline):
-                    return False
+                    return
                 with self.lock:
-                    if self.stop_event.is_set():
-                        return False
                     self.gate_state.advance(when)
                     self._save_gates()
-            return True
+                if self.reassessment_at is not None and self.reassessment_at <= when:
+                    self.reassessment_at = None
+                if source_time == when:
+                    yield index, source
+                    index += 1
+                elif self.reassessment_enabled:
+                    yield None, {"timestamp": utc_string(when), "message": {"action": "ReassessGates"}}
 
         try:
             with (self.directory / "deliveries.jsonl").open("a", encoding="utf-8") as records:
-                for index, event in enumerate(self.scenario["events"]):
-                    event_id = f"{self.id}:{index}"
-                    deadline = initialization_seconds + self.offsets[index] if self.mode == "paced" else None
+                for sequence, (index, event) in enumerate(scheduled_events()):
+                    event_id = f"{self.id}:{sequence}"
+                    deadline = initialization_seconds + (parse_utc(event["timestamp"]) - first_time).total_seconds() / self.speed if self.mode == "paced" else None
                     timestamp = parse_utc(event["timestamp"])
-                    if not advance_movements(timestamp) or not wait_until(deadline):
-                        break
                     with self.lock:
                         if self.stop_event.is_set():
                             break
-                        if event["message"]["action"] != "InitializeAirport":
+                        if event["message"]["action"] not in ("InitializeAirport", "ReassessGates"):
                             self.gate_state.apply_message(event["message"], timestamp)
                         payload = self.gate_state.request(event["message"])
                         gate_state_before_decision = copy.deepcopy(self.gate_state.gates)
                         self._save_gates()
                         sent = clock()
-                        self.state["attempted"] += 1
+                        self.state["attempted" if index is not None else "reassessments_attempted"] += 1
                         self.state["simulated_time"] = event["timestamp"]
                     lateness = 0 if deadline is None else max(0, sent - self.started - deadline)
                     initializing = event["message"]["action"] == "InitializeAirport"
                     record = {
-                        "event_id": event_id, "simulated_time": event["timestamp"],
+                        "event_id": event_id, "source_event_index": index, "event_type": event["message"]["action"],
+                        "simulated_time": event["timestamp"],
                         "intended_deadline_seconds": deadline,
                         "actual_send_seconds": sent - self.started,
                         "actual_send_time": datetime.now(timezone.utc).isoformat(),
@@ -338,11 +361,20 @@ class Run:
                     received_at = clock()
                     record["matcher_response"] = response
                     record["attempts"] = attempts
+                    opted_in = isinstance(response, dict) and "reassessment" in response
                     rejected = []
                     if record["error"] is None:
                         try:
                             with self.lock:
-                                rejected = apply_valid_decisions(self.gate_state, response, initializing=initializing)
+                                if initializing or opted_in or self.reassessment_enabled:
+                                    self.gate_state.apply_decisions(response, initializing=initializing)
+                                else:
+                                    rejected = apply_valid_decisions(self.gate_state, response)
+                                if opted_in:
+                                    self.reassessment_enabled = True
+                                if self.reassessment_enabled:
+                                    at = response.get("reassessment", {}).get("at") if isinstance(response, dict) else None
+                                    self.reassessment_at = parse_utc(at) if at is not None else None
                                 self._save_gates()
                         except Exception as error:
                             record["error"] = f"{type(error).__name__}: {error}"
@@ -365,7 +397,7 @@ class Run:
                         self.state["rejected_decisions"] += sum(
                             len(group["assignments"]) + len(group["moves"]) or 1 for group in rejected)
                         if record["error"] is None:
-                            self.state["delivered"] += 1
+                            self.state["delivered" if index is not None else "reassessments_delivered"] += 1
                             self.resync_pending = False
                         elif not initializing:
                             self.state["skipped"] += 1
@@ -411,12 +443,10 @@ class Run:
                     records.flush()
                     # Without an initialized matcher nothing later can be planned. A failed
                     # update is skipped instead; the next request asks for a resync.
-                    if record["error"] and initializing:
+                    if record["error"] and (initializing or opted_in or self.reassessment_enabled or index is None):
                         raise RuntimeError(record["error"])
                     if initializing:
                         initialization_seconds = clock() - self.started
-                if self.gate_state.initialized and not self.stop_event.is_set():
-                    advance_movements()
             with self.lock:
                 self.state["status"] = "stopped" if self.stop_event.is_set() else "completed"
                 self.finished = clock()

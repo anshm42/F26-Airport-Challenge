@@ -6,6 +6,25 @@ owns current passenger-gate occupancy and simulated aircraft movements.
 
 ## Run locally with one command
 
+For the complete **1,200-flight demo at 60×**, including both frontends:
+
+```sh
+python3 run_demo.py
+```
+
+Open the operator at `http://127.0.0.1:5173/` and passenger board at
+`http://127.0.0.1:5174/board.html`. The launcher installs locked frontend
+dependencies with `npm ci` if needed (Node/npm required). Julia/Gurobi requirements
+below still apply. Ports 8080, 9000, 5173, and 5174 must be free. Initialization
+finishes before the simulation clock starts; a complete day takes about 24 minutes.
+Ctrl-C stops both frontends, both backend services, and Julia. Run the same command
+again for a fresh day. To show a selected gate, use the passenger setup page at
+`http://127.0.0.1:5174/`.
+
+The native matcher opts into automatic reassessment, so quiet periods still update
+waiting aircraft after movements, outage boundaries, and delayed gate entry.
+Run status counts source events separately from `reassessments_delivered`.
+
 With Julia, the `JSON`, `JuMP`, and `Gurobi` Julia packages, and a Gurobi license
 already installed, run:
 

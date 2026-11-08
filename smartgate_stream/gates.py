@@ -223,8 +223,14 @@ class GateState:
         self.__dict__.update(candidate.__dict__)
 
     def _decisions(self, response, *, initializing):
-        require(isinstance(response, dict) and set(response) <= {"assignments", "moves"},
-                "matcher response must contain only assignments and moves")
+        require(isinstance(response, dict) and set(response) <= {"assignments", "moves", "reassessment"},
+                "matcher response must contain only assignments, moves and reassessment")
+        if "reassessment" in response:
+            timer = response["reassessment"]
+            require(isinstance(timer, dict) and set(timer) == {"at"}, "invalid reassessment fields")
+            if timer["at"] is not None:
+                require(self.now is not None and parse_utc(timer["at"]) > self.now,
+                        "reassessment at must be strictly in the future")
         assignments, moves = response.get("assignments", []), response.get("moves", [])
         require(isinstance(assignments, list) and isinstance(moves, list), "matcher decisions must be arrays")
         targets, references = {}, set()

@@ -238,6 +238,15 @@ not when the matcher returns its choice. Empty acknowledgments make no plan chan
 
 ## Clock and records
 
+The native matcher enables automatic `ReassessGates` notifications through the
+optional response `reassessment` field. Movement batches, outage boundaries, and
+future gate-entry timers then trigger requests even during quiet periods.
+Source updates at the same instant take priority. See the
+[reassessment contract](../GateStateSpecification.md#automatic-reassessment).
+`attempted`/`delivered` count source events; `reassessments_attempted` and
+`reassessments_delivered` count notifications. Every request shares the same
+sequence and appears in delivery/decision records.
+
 When the first event is `InitializeAirport`, its successful readiness response
 anchors the simulation clock. Otherwise the first event's send time is the anchor.
 At 60×, five simulated minutes

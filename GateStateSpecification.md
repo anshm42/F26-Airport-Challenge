@@ -219,6 +219,28 @@ original scenario remains separate from the evolving current state.
 
 ## Compatibility
 
+### Automatic reassessment
+
+A response may include `"reassessment": {"at": "2026-11-07T13:45:00Z"}` or
+`"reassessment": {"at": null}`. Presence opts the run into automatic reassessment.
+`at` must be a UTC ISO timestamp strictly after the request's simulated time, or
+null. The latest response replaces the timer; null or omission cancels an old timer.
+Malformed or non-future timers invalidate the entire response atomically.
+
+Opted-in runs send `{"action":"ReassessGates","gateState":{...},
+"unassignedAircraft":[...]}` after a batch of simultaneous aircraft movements,
+at outage starts/ends, and at the requested gate-entry time. This notification
+changes no flight data. An ordinary source event at the same instant supplies
+the reassessment instead. Requests remain sequential and share one increasing
+`X-Stream-Event-Id` sequence. Delivery records include `source_event_index` (null
+for notifications); source totals and reassessment totals stay separate.
+
+Initialization and opted-in decision responses are atomic; an invalid response
+fails the run without partial moves. Transport retry behavior is unchanged.
+Receivers omitting this field retain their ordinary movement/delivery behavior.
+Only known movements, outage boundaries, and timers before the initialized
+day's midnight are processed after the final source announcement.
+
 The wire request now contains occupancy and the updater consumes decision bodies;
 receivers that ignored these fields or returned only acknowledgments must implement
 the response above to affect the plan. New scenarios require initial gates for

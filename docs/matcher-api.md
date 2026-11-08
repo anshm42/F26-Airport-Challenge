@@ -51,6 +51,16 @@ otherwise. Both currently send the same messages; the board filters by gate.
 The sections below describe the older passenger message and are superseded.
 ## Occupied gates and outages
 
+Initialization preserves compatible starting gates. A starting gate that conflicts
+with traffic rules is relocated through an explicit move; that aircraft remains a
+mandatory immediate reservation. The joint solve supports swaps and fails if no
+valid placement exists. The complete plan and move batch pass validation before
+matcher state is committed.
+
+Every native response includes `reassessment: {at: <UTC timestamp or null>}`,
+enabling movement/outage notifications and the next delayed gate-entry timer.
+`ReassessGates` runs repair against current occupancy without changing the schedule.
+
 Each request's `gateState` is the source of physical occupancy. The matcher
 reserves each occupied gate for the remaining ground stay, including idle
 aircraft and aircraft whose flight assignment is missing. Cancelling a

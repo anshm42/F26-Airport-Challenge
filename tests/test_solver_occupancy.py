@@ -60,6 +60,18 @@ class SolverOccupancyTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "no feasible solution"):
             self.solve()
 
+    def test_relocatable_occupant_is_still_mandatory(self):
+        parked = self.sessions["parked"]
+        parked.pop("fixedGate")
+        parked.update(occupiedGate="D28", departureTrafficType="International")
+        self.gates[0]["allowedTrafficTypes"] = ["Domestic"]
+        self.gates.append({**self.gates[0], "id": "E70", "conflictGroup": "E70",
+                           "allowedTrafficTypes": ["International"]})
+        self.assertEqual(dict(self.solve()["assignments"])["parked"], "E70")
+        self.gates.pop()
+        with self.assertRaisesRegex(RuntimeError, "no feasible solution"):
+            self.solve()
+
 
 if __name__ == "__main__":
     unittest.main()
