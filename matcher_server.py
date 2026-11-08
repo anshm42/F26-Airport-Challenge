@@ -342,6 +342,10 @@ class ScenarioState:
             }
             for item in message.get("parkedAircraft", [])
         }
+        self.parked_gates = {
+            norm(item.get("registration")): str(item.get("gate"))
+            for item in message.get("parkedAircraft", []) if item.get("gate")
+        }
 
         for flight_message in message.get("flights", []):
             action = flight_message.get("action")
@@ -386,6 +390,17 @@ class ScenarioState:
                 "active": True,
                 "token": token,
             })
+            self.token_legs[token] = {
+                "carrier": carrier,
+                "leg": {
+                    "flightNumber": leg.get("flightNumber"),
+                    "flightSuffix": leg.get("flightSuffix"),
+                    "originatingDate": leg.get("originatingDate"),
+                    "departureStation": leg.get("departureStation"),
+                    "arrivalStation": leg.get("arrivalStation"),
+                    "trafficType": leg.get("trafficType"),
+                },
+            }
         self.routes[key] = {"carrier": carrier, "legs": route_entries}
 
     def _find_route_leg(self, carrier: str, reference: dict[str, Any]):
@@ -448,6 +463,17 @@ class ScenarioState:
             if "legType" not in updated:
                 updated["legType"] = entry["leg"].get("legType", "Originating")
             entry["leg"] = updated
+            self.token_legs[entry["token"]] = {
+                "carrier": carrier,
+                "leg": {
+                    "flightNumber": updated.get("flightNumber"),
+                    "flightSuffix": updated.get("flightSuffix"),
+                    "originatingDate": updated.get("originatingDate"),
+                    "departureStation": updated.get("departureStation"),
+                    "arrivalStation": updated.get("arrivalStation"),
+                    "trafficType": updated.get("trafficType"),
+                },
+            }
             # Aircraft details are present in the webhook and remain shared
             # for the updated leg.
             if flight:
@@ -478,12 +504,12 @@ class ScenarioState:
     def _add_outage(self, message: dict[str, Any], event_local: datetime) -> None:
         gate_raw = str(message.get("gate", "")).strip()
         gate_key = norm(gate_raw)
-
-        # First recognize an exact IFATC stand identifier. Otherwise check the
-        # passenger-facing labels and alias groups explicitly listed in
-        # pearson.json. Never synthesize a name or infer a stand crosswalk.
-        ifatc_stand_id = self.gate_ids.get(gate_key)
-        passenger_group = self.passenger_gate_groups.get(gate_key)
+        gate_id = self.stand_to_gate.get(gate_key)
+        conflict_group = self.stand_to_conflict_group.get(gate_key)
+        if gate_id is None or conflict_group is None:
+            raise ValueError(
+                f"GateOutage {gate_raw!r} is not an exact IFATC stand in passengerStandMapping."
+            )
 
         outage_date = event_local.date()
         start_dt = datetime.combine(outage_date, parse_hhmm(message["scheduledStartTime"]))
@@ -495,59 +521,17 @@ class ScenarioState:
         else:
             end_dt = self.horizon_end or (start_dt + timedelta(days=1))
 
-        outage_record = {
-            # Keep the exact identifier supplied by the event/JSON naming
-            # system. The solver only consumes IFATC stand identifiers.
-            "gate": ifatc_stand_id if ifatc_stand_id is not None else gate_raw,
+        record = {
+            "gate": gate_id,
+            "ifatc_stand": gate_raw,
+            "conflictGroup": conflict_group,
             "start": minutes_from_epoch(start_dt, self.epoch),
             "end": minutes_from_epoch(end_dt, self.epoch),
+            "lookup_status": "matched_exact_ifatc_stand",
+            "resource_type": "passenger_conflict_group",
         }
-
-        if ifatc_stand_id is not None:
-            outage_record["lookup_status"] = "matched_ifatc_stand"
-            outage_record["resource_type"] = "ifatc_stand"
-            self.outages.append(outage_record)
-        elif passenger_group is not None:
-            mapped_stand = self.passenger_gate_crosswalk.get(gate_key)
-            if mapped_stand is not None:
-                applied_record = {
-                    **outage_record,
-                    "gate": mapped_stand,
-                    "passenger_gate_label": gate_raw,
-                    "lookup_status": "matched_passenger_label_to_ifatc_stand",
-                    "resource_type": "ifatc_stand",
-                }
-                self.outages.append(applied_record)
-                self.recognized_passenger_gate_outages.append({
-                    **applied_record,
-                    "terminal": passenger_group["terminal"],
-                    "passenger_gate_group": passenger_group["labels"],
-                })
-            else:
-                self.recognized_passenger_gate_outages.append({
-                    **outage_record,
-                    "gate": gate_raw,
-                    "lookup_status": "recognized_passenger_label_unmapped",
-                    "resource_type": "passenger_gate_group",
-                    "terminal": passenger_group["terminal"],
-                    "passenger_gate_group": passenger_group["labels"],
-                    "reason": (
-                        "The passenger label is present in pearson.json, but "
-                        "there is no verified passengerGateCrosswalk entry to "
-                        "an exact IFATC stand ID. The outage has NOT been "
-                        "applied to a physical stand."
-                    ),
-                })
-        else:
-            self.unmatched_outages.append({
-                **outage_record,
-                "lookup_status": "unknown_gate_label",
-                "reason": (
-                    "The gate identifier was not found in either "
-                    "ifatcStands.records or passengerGateGroups.terminals "
-                    "in pearson.json."
-                ),
-            })
+        self.outages.append(record)
+        self.recognized_passenger_gate_outages.append(record.copy())
 
     def _leg_datetimes(self, leg: dict[str, Any]) -> tuple[datetime | None, datetime | None]:
         # The contract gives local departure and arrival times at their
@@ -663,7 +647,8 @@ class ScenarioState:
                         start_dt, anchor, meta = opened
                         if item["time"] > start_dt:
                             self._add_session(
-                                sessions, anchor, registration, meta, start_dt, item["time"]
+                                sessions, anchor, registration, meta, start_dt, item["time"],
+                                end_token=item["token"]
                             )
                         opened = None
 
@@ -671,12 +656,13 @@ class ScenarioState:
                 start_dt, anchor, meta = opened
                 if horizon > start_dt:
                     self._add_session(
-                        sessions, anchor, registration, meta, start_dt, horizon
+                        sessions, anchor, registration, meta, start_dt, horizon,
+                        end_token=None
                     )
 
         return sessions
 
-    def _add_session(self, sessions, anchor, registration, aircraft, start, end):
+    def _add_session(self, sessions, anchor, registration, aircraft, start, end, end_token=None):
         aircraft_type = norm(aircraft.get("aircraftType"))
         width_class = self.aircraft_classes.get(aircraft_type)
         session_id = anchor
@@ -709,17 +695,24 @@ class ScenarioState:
             "remoteAllowed": remote_allowed,
             "turnback": turnback,
             "initiallyParked": anchor.startswith("PARKED:"),
+            "start_token": None if anchor.startswith("PARKED:") else anchor,
+            "end_token": end_token,
+            "preferredTerminal": self.airline_terminals.get(norm(aircraft.get("carrier"))),
+            "trafficTypes": sorted({
+                str(self.token_legs[token]["leg"].get("trafficType"))
+                for token in (anchor, end_token)
+                if token in self.token_legs and self.token_legs[token]["leg"].get("trafficType")
+            }),
         }
 
     def outage_payload(self) -> dict[str, list[list[float]]]:
-        # The JuMP model's resources are IFATC stand IDs. Passenger-facing
-        # labels are recognized and reported separately, but must not be
-        # passed as if they were physical stand IDs.
+        # Any outage on an alternative IFATC stand closes its whole canonical
+        # passenger conflict group, exactly as the stream's GateState does.
         result: dict[str, list[list[float]]] = defaultdict(list)
         for outage in self.outages:
-            if outage.get("resource_type") != "ifatc_stand":
-                continue
-            result[outage["gate"]].append([outage["start"], outage["end"]])
+            group = outage.get("conflictGroup")
+            if group:
+                result[group].append([outage["start"], outage["end"]])
         return dict(result)
 
 
