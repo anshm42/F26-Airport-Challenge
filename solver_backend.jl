@@ -303,11 +303,11 @@ function solve_repair(payload)
     ))
 end
 
-function main()
-    input_text = read(stdin, String)
-    isempty(strip(input_text)) && error("No solver payload received on stdin.")
+
+function process_request(input_text)
     payload = JSON.parse(input_text)
     mode = as_string(field(payload, "mode", "initial"))
+
     if mode == "initial"
         solve_initial(payload)
     elseif mode == "repair"
@@ -315,7 +315,48 @@ function main()
     else
         error("Unknown solver mode: $mode")
     end
+
+    # The solver functions write one JSON result.
+    # Add a newline so Python can read exactly one response.
+    println(stdout)
+    flush(stdout)
 end
+
+
+function main()
+    # Tell Python that Julia has finished loading and is ready.
+    JSON.print(stdout, Dict("ready" => true))
+    println(stdout)
+    flush(stdout)
+
+    # Process one JSON request per line until Python closes stdin.
+    for input_text in eachline(stdin)
+        isempty(strip(input_text)) && continue
+
+        try
+            process_request(input_text)
+
+        catch err
+            # Return errors as JSON without terminating Julia.
+            error_message = sprint(showerror, err)
+
+            JSON.print(stdout, Dict("error" => error_message))
+            println(stdout)
+            flush(stdout)
+
+            println(
+                stderr,
+                "SOLVER_REQUEST_ERROR: ",
+                error_message,
+            )
+            flush(stderr)
+        end
+    end
+end
+
+
+main()
+
 
 try
     main()

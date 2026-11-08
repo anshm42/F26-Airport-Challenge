@@ -22,6 +22,7 @@ import struct
 import os
 import sys
 import threading
+import queue
 from collections import defaultdict
 from datetime import date, datetime, timedelta, time, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -863,45 +864,201 @@ class ScenarioState:
         return dict(result)
 
 
-def run_julia(backend: Path, payload: dict[str, Any]) -> dict[str, Any]:
-    if not backend.is_file():
-        raise FileNotFoundError(f"Julia backend not found: {backend}")
-    encoded = json.dumps(payload, separators=(",", ":"), allow_nan=False)
-    try:
-        proc = subprocess.run(
-            [JULIA, str(backend)],
-            input=encoded,
-            text=True,
-            capture_output=True,
-            cwd=str(HERE),
-            timeout=JULIA_TIMEOUT,
-            check=False,
-        )
-    except FileNotFoundError as exc:
-        raise RuntimeError(
-            f"Julia executable {JULIA!r} was not found. Install Julia and add it to PATH."
-        ) from exc
-    except subprocess.TimeoutExpired as exc:
-        raise RuntimeError(
-            f"{backend.name} exceeded the {JULIA_TIMEOUT:g}-second timeout."
-        ) from exc
 
-    if proc.returncode != 0:
-        raise RuntimeError(
-            f"{backend.name} failed:\n{proc.stderr.strip() or proc.stdout.strip()}"
-        )
+class JuliaWorker:
+    """Keeps one Julia process alive and sends it one JSON request at a time."""
 
-    decoder = json.JSONDecoder()
-    for pos, char in enumerate(proc.stdout):
-        if char != "{":
-            continue
+    def __init__(self, backend: Path, julia_executable: str, timeout: float):
+        self.backend = backend
+        self.julia_executable = julia_executable
+        self.timeout = timeout
+        self.process = None
+        self.responses = None
+        self.lock = threading.Lock()
+        self.start()
+
+    def _read_stdout(self, process, responses):
         try:
-            obj, _ = decoder.raw_decode(proc.stdout[pos:])
-        except json.JSONDecodeError:
-            continue
-        if isinstance(obj, dict) and "assignments" in obj:
-            return obj
-    raise RuntimeError(f"{backend.name} did not return JSON. Output: {proc.stdout[:2000]}")
+            for line in process.stdout:
+                responses.put(line)
+        finally:
+            responses.put(None)
+
+    def start(self):
+        if not self.backend.is_file():
+            raise FileNotFoundError(
+                f"Julia backend not found: {self.backend}"
+            )
+
+        try:
+            self.process = subprocess.Popen(
+                [self.julia_executable, str(self.backend)],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=None,
+                text=True,
+                encoding="utf-8",
+                bufsize=1,
+                cwd=str(HERE),
+            )
+        except FileNotFoundError as exc:
+            raise RuntimeError(
+                f"Julia executable {self.julia_executable!r} "
+                "was not found. Check that Julia is installed and on PATH."
+            ) from exc
+
+        self.responses = queue.Queue()
+
+        reader = threading.Thread(
+            target=self._read_stdout,
+            args=(self.process, self.responses),
+            daemon=True,
+        )
+        reader.start()
+
+        # Wait for Julia to finish loading packages and announce readiness.
+        try:
+            line = self.responses.get(timeout=120)
+        except queue.Empty:
+            self.process.kill()
+            self.process.wait()
+            self.process = None
+            raise RuntimeError(
+                "Julia did not become ready within 120 seconds."
+            )
+
+        if line is None:
+            return_code = self.process.poll()
+            self.process = None
+            raise RuntimeError(
+                f"Julia exited during startup. Exit code: {return_code}"
+            )
+
+        try:
+            ready_message = json.loads(line)
+        except json.JSONDecodeError as exc:
+            self.process.kill()
+            self.process.wait()
+            self.process = None
+            raise RuntimeError(
+                f"Unexpected Julia startup response: {line!r}"
+            ) from exc
+
+        if ready_message.get("ready") is not True:
+            self.process.kill()
+            self.process.wait()
+            self.process = None
+            raise RuntimeError(
+                f"Julia did not send its ready signal: {ready_message}"
+            )
+
+        print("Persistent Julia solver is ready.", flush=True)
+
+    def run(self, payload: dict[str, Any]) -> dict[str, Any]:
+        encoded = json.dumps(
+            payload,
+            separators=(",", ":"),
+            allow_nan=False,
+        )
+
+        with self.lock:
+            # Restart Julia if it exited unexpectedly.
+            if self.process is None or self.process.poll() is not None:
+                self.start()
+
+            try:
+                self.process.stdin.write(encoded + "\n")
+                self.process.stdin.flush()
+            except (BrokenPipeError, OSError) as exc:
+                self.process = None
+                raise RuntimeError(
+                    "Could not send the request to the Julia solver."
+                ) from exc
+
+            # Gurobi may print informational messages to stdout.
+            # Ignore those lines and wait for the actual JSON response.
+            while True:
+                try:
+                    line = self.responses.get(timeout=self.timeout)
+                except queue.Empty:
+                    self.process.kill()
+                    self.process.wait()
+                    self.process = None
+                    raise RuntimeError(
+                        f"Julia solver exceeded the "
+                        f"{self.timeout:g}-second timeout."
+                    )
+
+                if line is None:
+                    return_code = self.process.poll()
+                    self.process = None
+                    raise RuntimeError(
+                        f"Julia solver exited unexpectedly. "
+                        f"Exit code: {return_code}"
+                    )
+
+                try:
+                    result = json.loads(line)
+                except json.JSONDecodeError:
+                    print(
+                        f"Julia/Gurobi diagnostic: {line.strip()}",
+                        flush=True,
+                    )
+                    continue
+
+                if not isinstance(result, dict):
+                    continue
+
+                if "assignments" in result or "error" in result:
+                    break
+
+            if "error" in result:
+                raise RuntimeError(
+                    f"Julia solver error: {result['error']}"
+                )
+
+            if "assignments" not in result:
+                raise RuntimeError(
+                    f"Julia response is missing assignments: {result}"
+                )
+
+            return result
+
+    def close(self):
+        with self.lock:
+            if self.process is None:
+                return
+
+            process = self.process
+            self.process = None
+
+            if process.poll() is None:
+                try:
+                    process.stdin.close()
+                    process.wait(timeout=5)
+                except Exception:
+                    process.kill()
+                    process.wait()
+
+
+JULIA_WORKER = None
+
+
+def run_julia(backend: Path, payload: dict[str, Any]) -> dict[str, Any]:
+    global JULIA_WORKER
+
+    if not backend.is_file():
+        raise FileNotFoundError(
+            f"Julia backend not found: {backend}"
+        )
+
+    if JULIA_WORKER is None:
+        raise RuntimeError(
+            "Persistent Julia worker has not been started."
+        )
+
+    return JULIA_WORKER.run(payload)
+
 
 
 def assignment_map(pairs: list[list[str]]) -> dict[str, str]:
@@ -2259,20 +2416,64 @@ class MatcherHandler(BaseHTTPRequestHandler):
                 _json_response(self, 500, {"error": str(exc)})
 
 
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="SmartGate stream webhook matcher")
-    parser.add_argument("--host", default="127.0.0.1", help="Bind address (default: 127.0.0.1)")
-    parser.add_argument("--port", type=int, default=9000, help="HTTP port (default: 9000)")
+    global JULIA_WORKER
+
+    parser = argparse.ArgumentParser(
+        description="SmartGate stream webhook matcher"
+    )
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Bind address (default: 127.0.0.1)",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=9000,
+        help="HTTP port (default: 9000)",
+    )
     args = parser.parse_args()
-    server = ThreadingHTTPServer((args.host, args.port), MatcherHandler)
-    print(f"SmartGate matcher listening on http://{args.host}:{args.port}/updates", flush=True)
-    print(f"Health: http://{args.host}:{args.port}/health | assignments: http://{args.host}:{args.port}/assignments", flush=True)
+
+    server = ThreadingHTTPServer(
+        (args.host, args.port),
+        MatcherHandler,
+    )
+
     try:
+        # Start Julia before accepting any webhook events.
+        JULIA_WORKER = JuliaWorker(
+            SOLVER_BACKEND,
+            JULIA,
+            JULIA_TIMEOUT,
+        )
+
+        print(
+            f"SmartGate matcher listening on "
+            f"http://{args.host}:{args.port}/updates",
+            flush=True,
+        )
+        print(
+            f"Health: http://{args.host}:{args.port}/health | "
+            f"assignments: http://{args.host}:{args.port}/assignments",
+            flush=True,
+        )
+
         server.serve_forever()
+
     except KeyboardInterrupt:
         print("Stopping matcher.", flush=True)
+
     finally:
         server.server_close()
+
+        if JULIA_WORKER is not None:
+            JULIA_WORKER.close()
+            JULIA_WORKER = None
+
+        print("Julia solver stopped.", flush=True)
+
     return 0
 
 
