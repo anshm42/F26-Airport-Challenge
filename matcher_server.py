@@ -857,7 +857,10 @@ def repair_assignments_python(
         if aircraft_class not in WIDTH_CLASSES:
             return []
         result = []
+        fixed_gate = session.get("fixedGate")
         for gate in gates:
+            if fixed_gate and gate.get("id") != fixed_gate:
+                continue
             if not allowed_width(aircraft_class, gate.get("widthClass")):
                 continue
             result.append(gate)
@@ -921,7 +924,7 @@ def repair_assignments_python(
             future_options = []
             for gate in ranked:
                 gid = str(gate["id"])
-                available = _earliest_gate_start(session, gid, occupied, outages)
+                available = _earliest_gate_start(session, str(gate["conflictGroup"]), occupied, outages)
                 if available is not None:
                     future_options.append((available, cost(gate), gid))
             if future_options:
@@ -1108,6 +1111,184 @@ def build_aircraft_status(
         "unassigned_details": unassigned_details,
         # Compatibility field now contains only aircraft genuinely waiting for a gate.
         "waiting_for_gate": sorted(waiting_aircraft),
+    }
+
+
+LATEST_GATE_STATE: dict[str, Any] = {}
+LATEST_UNASSIGNED_AIRCRAFT: list[dict[str, Any]] = []
+LATEST_SIMULATED_TIME: str | None = None
+LAST_SOLVER_SUMMARY: dict[str, Any] = {}
+
+
+def active_token_legs(state: ScenarioState) -> dict[str, dict[str, Any]]:
+    active = {}
+    for route in state.routes.values():
+        for entry in route["legs"]:
+            if entry["active"]:
+                active[entry["token"]] = state.token_legs.get(entry["token"], {
+                    "carrier": route["carrier"], "leg": entry["leg"]
+                })
+    return active
+
+
+def current_minute(state: ScenarioState) -> float:
+    if not LATEST_SIMULATED_TIME:
+        return 0.0
+    local_now = local_event_time(LATEST_SIMULATED_TIME, state.airport_tz)
+    return minutes_from_epoch(local_now, state.epoch)
+
+
+def build_stream_decisions(
+    state: ScenarioState,
+    sessions: dict[str, dict[str, Any]],
+    assignments: dict[str, str],
+    gate_starts: dict[str, float],
+    session_ids: set[str] | None = None,
+    *,
+    include_all: bool = False,
+) -> dict[str, list[dict[str, Any]]]:
+    """Translate internal parking-session choices into the stream's exact contract."""
+    selected = set(sessions) if include_all else set(session_ids or ())
+    active_refs = active_token_legs(state)
+    decision_map: dict[tuple[Any, ...], dict[str, Any]] = {}
+    move_map: dict[str, dict[str, str]] = {}
+    occupied_now = {
+        str(plane.get("registration")): gate
+        for gate, plane in LATEST_GATE_STATE.items() if plane is not None
+    }
+    unassigned_now = {
+        str(plane.get("registration"))
+        for plane in LATEST_UNASSIGNED_AIRCRAFT if plane.get("registration")
+    }
+    now_minute = current_minute(state)
+
+    for sid in selected:
+        session = sessions.get(sid)
+        gate = assignments.get(sid)
+        if session is None or gate is None:
+            continue
+        start = float(session["start"])
+        gate_start = float(gate_starts.get(sid, start))
+        registration = str(session.get("registration", ""))
+        is_current = registration in occupied_now or registration in unassigned_now
+        # The stream does not schedule delayed tow-in times. Do not send a gate
+        # choice before its actual gate-entry time; send it when the aircraft is
+        # on the ground and the reserved slot has become usable.
+        effective_time = now_minute if is_current else start
+        if gate_start > effective_time:
+            continue
+
+        for token in (session.get("start_token"), session.get("end_token")):
+            if not token or token not in active_refs:
+                continue
+            reference = active_refs[token]
+            leg = dict(reference.get("leg", {}))
+            identity = (
+                reference.get("carrier"),
+                leg.get("flightNumber"),
+                leg.get("flightSuffix"),
+                leg.get("originatingDate"),
+                leg.get("departureStation"),
+                leg.get("arrivalStation"),
+            )
+            decision = {
+                "carrier": reference["carrier"],
+                "leg": {key: leg.get(key) for key in (
+                    "flightNumber", "flightSuffix", "originatingDate",
+                    "departureStation", "arrivalStation"
+                )},
+                "gate": gate,
+            }
+            previous = decision_map.get(identity)
+            if previous is not None and previous["gate"] != gate:
+                raise RuntimeError("One flight leg was assigned to two different passenger gates.")
+            decision_map[identity] = decision
+
+        # A currently grounded aircraft may need an immediate tow. Emit the
+        # explicit move as well as leg assignments so sessions without a
+        # matching active leg (e.g. idle parked aircraft) are still actionable.
+        if is_current:
+            current_gate = occupied_now.get(registration)
+            if current_gate != gate:
+                move_map[registration] = {"registration": registration, "gate": gate}
+
+    return {
+        "assignments": list(decision_map.values()),
+        "moves": list(move_map.values()),
+    }
+
+
+def dashboard_snapshot() -> dict[str, Any]:
+    if STATE is None:
+        return {
+            "status": "waiting_for_initialization",
+            "run_id": CURRENT_RUN_ID,
+            "last_event_id": LAST_EVENT_ID,
+            "simulated_time": LATEST_SIMULATED_TIME,
+            "assignments": [],
+            "gate_assignments": [],
+            "gate_state": {},
+            "unassigned_aircraft": [],
+            "gates": [],
+        }
+
+    sessions = STATE.build_sessions()
+    status = build_aircraft_status(sessions, ASSIGNMENTS, GATE_STARTS)
+    full = build_stream_decisions(
+        STATE, sessions, ASSIGNMENTS, GATE_STARTS, include_all=True
+    )
+    occupants = {
+        gate: plane for gate, plane in LATEST_GATE_STATE.items() if plane is not None
+    }
+    gates = []
+    for gate in STATE.gates:
+        gate_id = gate["id"]
+        gates.append({
+            "gate": gate_id,
+            "terminal": gate.get("terminal"),
+            "widthClass": gate.get("widthClass"),
+            "conflictGroup": gate.get("conflictGroup"),
+            "kind": gate.get("kind"),
+            "occupant": occupants.get(gate_id),
+            "outages": STATE.outage_payload().get(str(gate.get("conflictGroup")), []),
+        })
+
+    gate_assignments = []
+    for sid, session in sessions.items():
+        gate = ASSIGNMENTS.get(sid)
+        gate_assignments.append({
+            "session_id": sid,
+            "registration": session.get("registration"),
+            "carrier": next((route["carrier"] for route in STATE.routes.values()
+                             for entry in route["legs"]
+                             if entry["token"] in (session.get("start_token"), session.get("end_token"))),
+                            session.get("carrier")),
+            "aircraft_type": session.get("aircraftType"),
+            "gate": gate,
+            "arrival_minute": session.get("start"),
+            "departure_minute": session.get("end"),
+            "gate_entry_minute": GATE_STARTS.get(sid, session.get("start")),
+            "status": ("unassigned" if gate is None else
+                       "waiting_for_gate" if GATE_STARTS.get(sid, session.get("start")) > session.get("start")
+                       else "assigned"),
+            "traffic_types": session.get("trafficTypes", []),
+            "preferred_terminal": session.get("preferredTerminal"),
+        })
+
+    return {
+        "status": "ready",
+        "run_id": CURRENT_RUN_ID,
+        "last_event_id": LAST_EVENT_ID,
+        "simulated_time": LATEST_SIMULATED_TIME,
+        "assignments": full["assignments"],
+        "gate_assignments": gate_assignments,
+        "unassigned": status["unassigned_sessions"],
+        "unassigned_details": status["unassigned_details"],
+        "gate_state": copy.deepcopy(LATEST_GATE_STATE),
+        "unassigned_aircraft": copy.deepcopy(LATEST_UNASSIGNED_AIRCRAFT),
+        "gates": gates,
+        "outages": copy.deepcopy(STATE.outages),
+        "solver": copy.deepcopy(LAST_SOLVER_SUMMARY),
     }
 
 
