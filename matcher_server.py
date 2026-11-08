@@ -764,35 +764,37 @@ class ScenarioState:
                 )
                 meta = first_future_departure["aircraft"] if first_future_departure else current_aircraft
                 opened = (
-                    current_start, f"PARKED:{registration}", meta, current_start_token
+                    current_start, f"PARKED:{registration}", meta, current_start_token, []
                 )
 
             for item in future_events:
                 if item["kind"] == "ARRIVE":
                     if opened is None:
-                        opened = (item["time"], item["token"], item["aircraft"], item["token"])
+                        opened = (item["time"], item["token"], item["aircraft"], item["token"], [])
+                    # Cancellation can merge visits; every arrival needs the resulting gate plan.
+                    opened[4].append(item["token"])
                 elif opened is not None:
-                    start_dt, anchor, meta, start_token = opened
+                    start_dt, anchor, meta, start_token, arrival_tokens = opened
                     if item["time"] > start_dt:
                         self._add_session(
                             sessions, anchor, registration, item["aircraft"],
                             start_dt, item["time"], start_token=start_token,
-                            end_token=item["token"],
+                            end_token=item["token"], arrival_tokens=arrival_tokens,
                         )
                     opened = None
 
             if opened is not None:
-                start_dt, anchor, meta, start_token = opened
+                start_dt, anchor, meta, start_token, arrival_tokens = opened
                 if horizon > start_dt:
                     self._add_session(
                         sessions, anchor, registration, meta, start_dt, horizon,
-                        start_token=start_token, end_token=None,
+                        start_token=start_token, end_token=None, arrival_tokens=arrival_tokens,
                     )
 
         return sessions
 
     def _add_session(self, sessions, anchor, registration, aircraft, start, end,
-                     start_token=None, end_token=None):
+                     start_token=None, end_token=None, arrival_tokens=None):
         aircraft_type = norm(aircraft.get("aircraftType"))
         width_class = self.aircraft_classes.get(aircraft_type)
         session_id = anchor
@@ -843,6 +845,7 @@ class ScenarioState:
             "initiallyParked": anchor.startswith("PARKED:"),
             "start_token": session_start_token,
             "end_token": end_token,
+            "leg_tokens": [token for token in dict.fromkeys([*(arrival_tokens or []), session_start_token, end_token]) if token],
             "arrivalTrafficType": arrival_traffic_type,
             "departureTrafficType": departure_traffic_type,
             "preferredTerminal": self.airline_terminals.get(norm(aircraft.get("carrier"))),
@@ -1615,7 +1618,7 @@ def build_stream_decisions(
         if respect_gate_start and gate_start > effective_time:
             continue
 
-        for token in (session.get("start_token"), session.get("end_token")):
+        for token in session.get("leg_tokens", (session.get("start_token"), session.get("end_token"))):
             if not token or token not in active_refs:
                 continue
             reference = active_refs[token]
@@ -2040,7 +2043,7 @@ def build_passenger_message() -> dict[str, Any]:
     for sid, session in sessions.items():
         gate = ASSIGNMENTS.get(sid)
         if gate:
-            for token in (session.get("start_token"), session.get("end_token")):
+            for token in session.get("leg_tokens", (session.get("start_token"), session.get("end_token"))):
                 if token:
                     gate_by_token[token] = gate
 
