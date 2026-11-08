@@ -527,9 +527,9 @@ class ScenarioState:
             gate_state = message.get("gateState", {})
             unassigned = message.get("unassignedAircraft", [])
             currently_grounded = (
-                any(plane is not None and norm(plane.get("registration")) == old_tail
+                any(plane is not None and norm(plane.get("registration")) == new_tail
                     for plane in gate_state.values())
-                or any(norm(plane.get("registration")) == old_tail for plane in unassigned)
+                or any(norm(plane.get("registration")) == new_tail for plane in unassigned)
             )
             if (old_tail and new_tail and old_tail != new_tail and old_tail in self.parked
                     and (scope == "ALLLEGS" or currently_grounded)):
