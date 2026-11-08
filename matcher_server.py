@@ -1306,6 +1306,10 @@ def build_aircraft_status(
     assigned_aircraft: dict[str, dict[str, Any]] = {}
     waiting_sessions: dict[str, dict[str, Any]] = {}
     waiting_aircraft: dict[str, dict[str, Any]] = {}
+    gate_kinds = {
+        str(gate.get("id")): gate.get("kind")
+        for gate in (STATE.gates if STATE is not None else [])
+    }
     unassigned_sessions = sorted(sid for sid in sessions if sid not in assignments)
     unassigned_details: dict[str, dict[str, Any]] = {}
 
@@ -1324,16 +1328,22 @@ def build_aircraft_status(
             if session.get("initiallyParked", False):
                 parked_aircraft[sid] = {**record, "status": "parked_at_initialization"}
             elif gate_start > start:
+                is_overflow = gate_kinds.get(str(assignments[sid])) == "remote"
                 waiting_sessions[sid] = {
                     "gate": assignments[sid],
                     "arrival_minute": start,
                     "gate_entry_minute": gate_start,
                     "wait_minutes": gate_start - start,
+                    "overflow": is_overflow,
                 }
                 waiting_aircraft[sid] = {
                     **record,
-                    "status": "waiting_for_reserved_gate",
+                    "status": (
+                        "waiting_for_overflow_stand"
+                        if is_overflow else "waiting_for_reserved_gate"
+                    ),
                     "wait_minutes": gate_start - start,
+                    "overflow": is_overflow,
                 }
             else:
                 assigned_aircraft[sid] = {**record, "status": "gate_assigned"}
@@ -1621,10 +1631,31 @@ def dashboard_snapshot() -> dict[str, Any]:
             "arrival_minute": session.get("start"),
             "departure_minute": session.get("end"),
             "gate_entry_minute": GATE_STARTS.get(sid, session.get("start")),
-            "status": ("unassigned" if gate is None else
-                       "waiting_for_gate" if GATE_STARTS.get(sid, session.get("start")) > session.get("start")
-                       else "assigned"),
+            "waiting_minutes": max(
+                0.0,
+                float(GATE_STARTS.get(sid, session.get("start"))) - float(session.get("start"))
+            ),
+            "gate_kind": (
+                STATE.gate_by_id.get(gate, {}).get("kind") if gate else None
+            ),
+            "overflow": bool(
+                gate and STATE.gate_by_id.get(gate, {}).get("kind") == "remote"
+            ),
+            "status": (
+                "unassigned" if gate is None else
+                "waiting_for_overflow" if (
+                    STATE.gate_by_id.get(gate, {}).get("kind") == "remote"
+                    and GATE_STARTS.get(sid, session.get("start")) > session.get("start")
+                ) else
+                "waiting_for_gate" if GATE_STARTS.get(sid, session.get("start")) > session.get("start")
+                else "assigned"
+            ),
             "traffic_types": session.get("trafficTypes", []),
+            "arrival_traffic_type": session.get("arrivalTrafficType"),
+            "departure_traffic_type": session.get("departureTrafficType"),
+            "walking_distance_class": (
+                STATE.gate_by_id.get(gate, {}).get("walkingDistanceClass") if gate else None
+            ),
             "preferred_terminal": session.get("preferredTerminal"),
         })
 
@@ -1640,6 +1671,8 @@ def dashboard_snapshot() -> dict[str, Any]:
         "gate_assignments": gate_assignments,
         "unassigned": status["unassigned_sessions"],
         "unassigned_details": status["unassigned_details"],
+        "waiting_sessions": status["waiting_sessions"],
+        "waiting_aircraft": status["waiting_aircraft"],
         "gate_state": copy.deepcopy(gate_state_for_dashboard),
         "gate_state_before_decision": copy.deepcopy(LATEST_GATE_STATE),
         "gate_state_source": "matcher-predicted post-decision; stream event feed is authoritative",
@@ -1715,6 +1748,8 @@ def _handle_initialize(message: dict[str, Any], simulated_time: str) -> dict[str
         "sessions": len(sessions),
         "assigned_sessions": len(assignments),
         "unassigned_sessions": sorted(sid for sid in sessions if sid not in assignments),
+        "waiting_sessions": waiting_result.get("waiting", {}),
+        "waiting_count": len(waiting_result.get("waiting", {})),
     }
 
     decisions = build_stream_decisions(
@@ -1808,6 +1843,8 @@ def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, An
         "unassigned_sessions": sorted(sid for sid in after if sid not in assignments),
         "new_assignments": len(solver_result.get("assignments", [])),
         "reassignments": len(solver_result.get("reassignments", [])),
+        "waiting_sessions": solver_result.get("waiting", {}),
+        "waiting_count": len(solver_result.get("waiting", {})),
     }
     decisions = build_stream_decisions(
         candidate, after, assignments, gate_starts, decision_sessions
