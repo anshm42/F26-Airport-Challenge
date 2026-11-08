@@ -146,11 +146,12 @@ class GateState:
                     # stream's grounded index and gateState occupant identity
                     # synchronized so matcher moves reference the new tail.
                     for old_tail in old_tails:
-                        if old_tail == new_tail or old_tail not in self.grounded:
+                        if old_tail not in self.grounded:
                             continue
-                        require(new_tail not in self.grounded,
-                                "equipment update would duplicate a grounded registration")
-                        self.grounded.pop(old_tail)
+                        if old_tail != new_tail:
+                            require(new_tail not in self.grounded,
+                                    "equipment update would duplicate a grounded registration")
+                            self.grounded.pop(old_tail)
                         self.grounded[new_tail] = new_plane.copy()
                         self.gates = {
                             gate: (new_plane.copy()
