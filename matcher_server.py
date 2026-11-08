@@ -1642,7 +1642,7 @@ def build_passenger_message() -> dict[str, Any]:
             suffix = str(leg.get("flightSuffix") or "")
             primary = f"{carrier}{number}{suffix}"
             codes = [primary] if primary else []
-            for share in leg.get("codeshare", []):
+            for share in leg.get("codeshare") or []:
                 share_code = str(share.get("carrier") or "") + str(share.get("flightNumber") or "")
                 if share_code and share_code not in codes:
                     codes.append(share_code)
