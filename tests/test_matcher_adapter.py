@@ -152,6 +152,22 @@ class AdapterTests(unittest.TestCase):
         self.assertIn(assignment(self.inbound, "D41"), response["assignments"])
         self.assertIsNone(self.stream.gates["D41"])
 
+    def test_diversion_policy_reaches_the_allocator_without_changing_v0_rules(self):
+        self.initialize([])
+        emergency = flight("300", "YUL", "YYZ", "06:00", "07:00", SPARE)
+        emergency.update(action="DivertFlight", reason="Medical")
+        self.send(emergency, "2026-11-07T10:30:00Z")
+        sessions = self.algorithm.repair_assignments_python.call_args.args[0]
+        session = next(s for s in sessions.values() if s["registration"] == SPARE["registration"])
+        self.assertTrue(session["remoteAllowed"])
+        turnback = flight("301", "YYZ", "YYZ", "05:00", "07:00")
+        turnback.update(action="DivertFlight", emergencyState="Turnback")
+        self.send(turnback, "2026-11-07T10:31:00Z")
+        sessions = self.algorithm.repair_assignments_python.call_args.args[0]
+        session = next(s for s in sessions.values() if s["registration"] == INBOUND["registration"])
+        self.assertTrue(session["priority"])
+        self.assertFalse(session["remoteAllowed"])
+
     def test_invalid_allocator_output_leaves_last_valid_matcher_state(self):
         for result in ({"assignments": [["unknown", "D31"]]},
                        {"assignments": "invalid"},

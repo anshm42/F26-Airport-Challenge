@@ -1,15 +1,19 @@
 """Stream-contract adapter for an allocator loaded from a separate checkout."""
 
+import argparse
 import copy
 import importlib.util
 import json
 import math
+import sys
+import threading
 from collections import defaultdict
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from smartgate_stream.gates import GateState, LEG_FIELDS
 from smartgate_stream.inventory import catalog, gate_fits
-from smartgate_stream.validation import flight_key, require, validate_gate_state
+from smartgate_stream.validation import flight_key, parse_utc, read_json, require, validate_gate_state
 
 
 def load_algorithm(path):
@@ -17,6 +21,8 @@ def load_algorithm(path):
     spec = importlib.util.spec_from_file_location("smartgate_allocator", path)
     require(spec is not None and spec.loader is not None, "algorithm must be a Python module")
     algorithm = importlib.util.module_from_spec(spec)
+    sys.path.insert(0, str(path.parent))
+    sys.modules[spec.name] = algorithm
     spec.loader.exec_module(algorithm)
     for name in ("run_julia", "repair_assignments_python"):
         require(callable(getattr(algorithm, name, None)), f"algorithm must provide {name}")
@@ -34,7 +40,7 @@ def parking_sessions(state):
         policy = policy or {}
         diversion = policy.get("action") == "DivertFlight"
         emergency = policy.get("emergencyState")
-        reason = policy.get("reason")
+        reason = str(policy.get("reason") or "").strip().lower()
         remote = emergency == "Emergency" or (emergency is None and diversion and reason in ("medical", "diversion"))
         turnback = emergency == "Turnback" or (emergency is None and diversion and reason == "turnback")
         sessions[sid] = {
@@ -244,3 +250,103 @@ class Matcher:
             require(not any(start < other_end and other_start < end for other_start, other_end in occupied[gate]),
                     "allocator bookings overlap another aircraft or a gate outage")
             occupied[gate].append([start, end])
+
+
+class MatcherServer(ThreadingHTTPServer):
+    def __init__(self, algorithm, port=9000):
+        self.matcher = Matcher(algorithm)
+        self.lock = threading.Lock()
+        self.run_id = None
+        self.last_index = -1
+        self.last_event_id = None
+        super().__init__(("127.0.0.1", port), MatcherHandler)
+
+
+class MatcherHandler(BaseHTTPRequestHandler):
+    def log_message(self, format, *args):
+        pass
+
+    def setup(self):
+        super().setup()
+        self.connection.settimeout(10)
+
+    def respond(self, status, body):
+        data = json.dumps(body, allow_nan=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def do_GET(self):
+        if self.path not in ("/health", "/assignments"):
+            self.respond(404, {"error": "unknown endpoint"})
+            return
+        with self.server.lock:
+            matcher = self.server.matcher
+            body = {"status": "ready" if matcher.state else "waiting_for_initialization",
+                    "run_id": self.server.run_id, "last_event_id": self.server.last_event_id,
+                    "conflicts": matcher.conflicts}
+            if self.path == "/assignments" and matcher.state:
+                body.update(matcher.state.snapshot())
+            self.respond(200, body)
+
+    def do_POST(self):
+        if self.path != "/updates":
+            self.respond(404, {"error": "POST endpoint must be /updates"})
+            return
+        try:
+            require(self.headers.get("Content-Type", "").split(";")[0].strip().lower() == "application/json",
+                    "Content-Type must be application/json")
+            require(self.headers.get("Transfer-Encoding") is None, "chunked requests are not supported")
+            length = int(self.headers.get("Content-Length", "0"))
+            require(0 < length <= 10_000_000, "request body must be between 1 byte and 10 MB")
+            raw = self.rfile.read(length)
+            require(len(raw) == length, "incomplete request body")
+            message = read_json(raw)
+            require(isinstance(message, dict), "request must be a message object")
+            run_id = self.headers.get("X-Stream-Run-Id", "").strip()
+            event_id = self.headers.get("X-Stream-Event-Id", "").strip()
+            timestamp = self.headers.get("X-Stream-Simulated-Time", "").strip()
+            require(run_id and event_id.startswith(run_id + ":"), "missing or invalid stream run/event headers")
+            suffix = event_id[len(run_id) + 1:]
+            require(suffix.isascii() and suffix.isdigit(), "event ID requires a nonnegative integer index")
+            index = int(suffix)
+            parse_utc(timestamp)
+            with self.server.lock:
+                if message.get("action") == "InitializeAirport":
+                    if index != 0 or run_id == self.server.run_id:
+                        self.respond(409, {"error": "initialization requires event 0 of a new run"})
+                        return
+                elif run_id != self.server.run_id or index != self.server.last_index + 1:
+                    self.respond(409, {"error": "initialize the run first and send events in sequence"})
+                    return
+                decisions = self.server.matcher.update(message, timestamp)
+                self.server.run_id, self.server.last_index, self.server.last_event_id = run_id, index, event_id
+                print(json.dumps({"event_id": event_id, "simulated_time": timestamp, "decisions": decisions,
+                                  "conflicts": self.server.matcher.conflicts}, allow_nan=False), flush=True)
+                self.respond(200, decisions)
+        except (ValueError, UnicodeError, OSError, RecursionError) as error:
+            self.respond(400, {"error": str(error)})
+        except Exception as error:
+            self.respond(500, {"error": str(error)})
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Connect a separate SmartGate allocator checkout to the stream")
+    parser.add_argument("--algorithm", required=True, type=Path, help="path to the partner's matcher_server.py")
+    parser.add_argument("--port", default=9000, type=int)
+    args = parser.parse_args()
+    try:
+        algorithm = load_algorithm(args.algorithm)
+        with MatcherServer(algorithm, args.port) as server:
+            print(f"Matcher adapter: http://127.0.0.1:{server.server_port}/updates", file=sys.stderr, flush=True)
+            server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    except (ValueError, OSError, ImportError) as error:
+        parser.error(str(error))
+
+
+if __name__ == "__main__":
+    main()
