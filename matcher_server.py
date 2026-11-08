@@ -1100,6 +1100,7 @@ def _json_response(handler: BaseHTTPRequestHandler, status: int, payload: dict[s
     handler.send_header("Access-Control-Allow-Origin", "*")
     handler.send_header("Access-Control-Allow-Headers", "Content-Type")
     handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    handler.send_header("Cache-Control", "no-store")
     handler.send_header("Content-Length", str(len(body)))
     handler.end_headers()
     handler.wfile.write(body)
@@ -1997,6 +1998,8 @@ class MatcherHandler(BaseHTTPRequestHandler):
                     "status": "ready" if STATE is not None else "waiting_for_initialization",
                     "run_id": CURRENT_RUN_ID,
                     "last_event_id": LAST_EVENT_ID,
+                    "passenger_websocket": "/passenger/ws",
+                    "operator_snapshot": "/assignments",
                 })
             return
         if self.path == "/assignments":
