@@ -878,7 +878,11 @@ class JuliaWorker:
         self.process = None
         self.responses = None
         self.lock = threading.Lock()
-        self.start()
+        try:
+            self.start()
+        except BaseException:
+            self.close()
+            raise
 
     def _read_stdout(self, process, responses):
         try:

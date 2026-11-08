@@ -4,6 +4,42 @@ The dynamic update server replays synthetic Pearson flight updates to a matching
 algorithm over an HTTP(S) webhook. The matcher chooses future gates; the stream
 owns current passenger-gate occupancy and simulated aircraft movements.
 
+## Run locally with one command
+
+With Julia, the `JSON`, `JuMP`, and `Gurobi` Julia packages, and a Gurobi license
+already installed, run:
+
+```sh
+python3 run_local.py
+```
+
+This starts the matcher on `http://127.0.0.1:9000` and the updater on
+`http://127.0.0.1:8080`, then replays the checked-in **400-flight day at 480×**.
+The replay takes about three minutes. The first ordinary update arrives about
+40 seconds after initialization; the initial quiet period is intentional.
+
+The script warms the persistent Julia solver before sending the initial webhook,
+then prints the run-status URL, progress, and log/record paths. After the
+replay, the APIs remain available until **Ctrl-C**, which stops both servers and
+the Julia worker. Existing servers are not reused or stopped; ports 8080 and
+9000 must be free. Failed runs print the error and exit with a nonzero status.
+
+Set the speed explicitly with `python3 run_local.py --speed 480`, or use
+`python3 run_local.py --speed 60` for a slower replay. Speed must be finite and
+greater than zero. The script finds Julia
+on `PATH` or in the default Juliaup directory; `GMS_JULIA` can specify its path.
+It does not install packages or change algorithm settings. The manual steps below
+remain available for separate processes or another scenario.
+
+To run the 1,200-flight day without pacing:
+
+```sh
+python3 run_local.py --scenario fixtures/pearson-2026-11-07-seed42.json --mode unpaced
+```
+
+`--scenario` selects the input file. `--mode unpaced` delivers updates as quickly
+as matching acknowledges them; `--speed` only controls timing in paced mode.
+
 ## Dynamic update server
 
 Requires **Python 3.11+**, with no third-party dependencies. Run all commands from

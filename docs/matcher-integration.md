@@ -1,11 +1,37 @@
 # Matching branch integration
 
+## One-command local replay
+
+When this checkout contains `matcher_server.py` and `run_local.py`, run:
+
+```sh
+python3 run_local.py
+```
+
+This starts both local HTTP services and the persistent Julia worker, then runs
+the 400-flight fixture in paced mode at 480×. It prints progress and the run URL.
+The replay takes about three minutes. After completion, press Ctrl-C to stop the
+services. Julia packages and a working Gurobi license must already be installed.
+Use `python3 run_local.py --speed 60` to slow the replay, or supply any other
+finite positive multiplier with `--speed`. Logs and run records remain on disk after
+shutdown. The script does not reuse services already listening on ports 8080/9000.
+
+For the 1,200-flight fixture in unpaced mode:
+
+```sh
+python3 run_local.py --scenario fixtures/pearson-2026-11-07-seed42.json --mode unpaced
+```
+
+`--speed` controls paced runs; unpaced runs wait only for each matcher response.
+
+## Manual setup with separate checkouts
+
 The active matcher and allocator are on the **`matching` branch**. Run the stream
 from `integration` and the matcher from a separate `matching` checkout. The
 matching branch now provides its own stream-compatible HTTP receiver.
 
-These instructions refer to `matching` commit `90f9089`. Leave your partner's
-working checkout and branch alone.
+The separate-checkout instructions were originally checked against `90f9089`.
+Leave your partner's working checkout and branch alone.
 
 ## Prepare the matching checkout
 
@@ -53,20 +79,17 @@ Test the real matching backend with one parking session:
 
 ```sh
 julia /tmp/smartgate-algorithm/solver_backend.jl <<'JSON'
-{
-  "mode": "initial",
-  "sessions": [{"id": "check", "widthClass": "C", "start": 0, "end": 1}],
-  "gates": [{"id": "check-gate", "conflictGroup": "check-group", "widthClass": "C", "kind": "gate"}],
-  "outages": {}
-}
+{"mode":"initial","sessions":[{"id":"check","widthClass":"C","start":0,"end":1}],"gates":[{"id":"check-gate","conflictGroup":"check-group","widthClass":"C","kind":"gate"}],"outages":{}}
 JSON
 ```
 
 The result must assign `check` to `check-gate`. Resolve license or package errors
 before replay. The matcher uses `GMS_JULIA`, `GMS_JL_BACKEND`, and
 `GMS_JL_TIMEOUT`; its default Julia timeout is nine seconds. The stream's socket
-timeout is ten seconds. Each initial solve starts a new Julia process. A small
-successful check does not prove that a complete day's solve meets the timeout.
+timeout is ten seconds. The current receiver starts one persistent Julia worker
+before accepting webhooks and allows up to 120 seconds for worker startup. A
+small successful check does not prove that a complete day's solve meets the
+per-request timeout.
 
 ## Start the connection
 
@@ -112,10 +135,10 @@ for its inspection endpoints and passenger WebSocket feed.
 `matcher_adapter.py` remains on `integration`. It was tested against the earlier
 v0 interface at commit `53d9362` and has not been adapted to current `matching`.
 
-The current matching allocator requires `gates[].conflictGroup`. The adapter
-does not yet supply that field. Its payload needs an update and new compatibility
-checks before use with current `matching`. Use the matching branch's own receiver
-as shown above for now. No algorithm changes are needed for this docs update.
+The current matching allocator requires `gates[].conflictGroup` and a started
+persistent Julia worker. The adapter does not yet provide that setup. It needs
+an update and new compatibility checks before use with current `matching`.
+Use `run_local.py` or the matching branch's own receiver as shown above.
 
 The earlier v0 width and remote-stand restrictions no longer describe current
 `matching`: the current allocator accepts a mapped gate whose maximum width class
