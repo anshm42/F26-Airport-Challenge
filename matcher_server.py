@@ -35,6 +35,8 @@ AIRCRAFT_JSON = Path(os.environ.get("GMS_AIRCRAFT_JSON", AIRCRAFT_DEFAULT))
 PEARSON_JSON = Path(os.environ.get("GMS_PEARSON_JSON", PEARSON_DEFAULT))
 STATION_TZ_DEFAULT = _DATA_DIR / "station_timezones.json" if (_DATA_DIR / "station_timezones.json").is_file() else HERE / "station_timezones.json"
 STATION_TZ_JSON = Path(os.environ.get("GMS_STATION_TIMEZONES_JSON", STATION_TZ_DEFAULT))
+STREAM_PROFILES_JSON = _DATA_DIR / "stream_profiles.json"
+AIRLINE_TERMINALS: dict[str, str] = {}
 JULIA_TIMEOUT = float(os.environ.get("GMS_JL_TIMEOUT", "9.0"))
 WIDTH_CLASSES = ("A", "B", "C", "D", "E", "F")
 
@@ -156,52 +158,77 @@ def minutes_from_epoch(value: datetime, epoch: datetime) -> float:
     return (value - epoch).total_seconds() / 60.0
 
 
-def load_references() -> tuple[dict[str, str], list[dict[str, str]], str]:
-    if not AIRCRAFT_JSON.is_file():
-        raise FileNotFoundError(f"Aircraft reference not found: {AIRCRAFT_JSON}")
-    if not PEARSON_JSON.is_file():
-        raise FileNotFoundError(f"Pearson stand reference not found: {PEARSON_JSON}")
+def load_references() -> tuple[dict[str, str], list[dict[str, Any]], str]:
+    """Load only the current passenger-gate crosswalk and eligible aircraft data."""
+    profiles_path = _DATA_DIR / "stream_profiles.json"
+    for path in (AIRCRAFT_JSON, PEARSON_JSON, profiles_path):
+        if not path.is_file():
+            raise FileNotFoundError(f"Required matcher reference not found: {path}")
 
     aircraft_data = json.loads(AIRCRAFT_JSON.read_text(encoding="utf-8"))
     pearson_data = json.loads(PEARSON_JSON.read_text(encoding="utf-8"))
+    profiles = json.loads(profiles_path.read_text(encoding="utf-8"))
 
+    configured_types = {
+        str(code).strip().upper()
+        for carrier in profiles.get("carriers", [])
+        for service in carrier.get("services", [])
+        for code in service.get("aircraft", [])
+    }
     aircraft_classes: dict[str, str] = {}
     for record in aircraft_data.get("aircraftTypes", {}).get("records", []):
         code = norm(record.get("aircraftType"))
         width_class = norm(record.get("widthClass"))
-        if code and width_class in WIDTH_CLASSES:
+        # Eligibility is deliberately the exact Passenger-only classification
+        # in aircraft.json, intersected with stream_profiles.json.
+        if (code in configured_types
+                and record.get("serviceTypes") == ["Passenger"]
+                and width_class in WIDTH_CLASSES):
             aircraft_classes[code] = width_class
 
-    closed_stands = {
-        norm(item.get("name"))
-        for item in pearson_data.get("knownStandExceptions", [])
-        if norm(item.get("status")) == "CLOSED"
+    terminal_by_gate: dict[str, str] = {}
+    for terminal, terminal_data in pearson_data.get("passengerGateGroups", {}).get("terminals", {}).items():
+        for group in terminal_data.get("groups", []):
+            if group:
+                terminal_by_gate[str(group[0]).strip()] = str(terminal)
+
+    airline_terminals = {
+        norm(row.get("carrier")): str(row.get("terminal"))
+        for row in pearson_data.get("airlineTerminals", {}).get("records", [])
+        if row.get("carrier") and row.get("terminal")
     }
 
-    gates: list[dict[str, str]] = []
+    gates: list[dict[str, Any]] = []
     seen: set[str] = set()
-    for record in pearson_data.get("ifatcStands", {}).get("records", []):
-        name = str(record.get("name", "")).strip()
+    for record in pearson_data.get("passengerStandMapping", {}).get("records", []):
+        gate_id = str(record.get("gate", "")).strip()
         width_class = norm(record.get("widthClass"))
-        key = norm(name)
-
-        # Ordinary passenger flights use named gates. Remote stands are kept
-        # as a separate resource class and are enabled only for eligible diversions.
-        is_gate = key.startswith("GATE ")
-        is_remote = key.startswith("REMOTE STAND ")
-        if not (is_gate or is_remote):
+        conflict_group = str(record.get("conflictGroup", "")).strip()
+        stands = [str(value).strip() for value in record.get("ifatcStandNames", []) if str(value).strip()]
+        if not gate_id or not conflict_group or gate_id in seen or not stands:
             continue
-        if key in closed_stands or width_class not in WIDTH_CLASSES or key in seen:
-            continue
-        seen.add(key)
-        gates.append({"id": name, "widthClass": width_class, "kind": "remote" if is_remote else "gate"})
+        seen.add(gate_id)
+        gates.append({
+            "id": gate_id,
+            "widthClass": width_class if width_class in WIDTH_CLASSES else None,
+            "conflictGroup": conflict_group,
+            "ifatcStandNames": stands,
+            "terminal": terminal_by_gate.get(gate_id),
+            "kind": "remote" if gate_id.startswith("Remote Stand H") else "gate",
+            "basis": record.get("basis"),
+        })
 
     gates.sort(key=lambda item: item["id"])
     if not gates:
-        raise RuntimeError("No usable named gates were found in pearson.json.")
+        raise RuntimeError("No passenger gate resources were found in passengerStandMapping.records.")
     airport_timezone = pearson_data.get("airport", {}).get("timeZone")
     if not airport_timezone:
         raise ValueError("pearson.json is missing airport.timeZone.")
+
+    # Keep the existing global airline-terminal reference available to the
+    # scenario builder without treating it as an exclusive gate restriction.
+    global AIRLINE_TERMINALS
+    AIRLINE_TERMINALS = airline_terminals
     return aircraft_classes, gates, str(airport_timezone)
 
 
