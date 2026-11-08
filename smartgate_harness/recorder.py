@@ -3,7 +3,11 @@
 The stream's webhook points at this proxy, which forwards every request to the
 algorithm unchanged and relays its response. That makes the moment the update
 is heard exact. The algorithm's passenger feed is attributed to the update it
-answers; feed waitlist episodes are tracked per flight.
+answers. Two kinds of waiting are tracked:
+
+- unassigned: a flight shown on the algorithm's board without a gate.
+- tarmac: an aircraft the stream reports on the ground without a gate, observed
+  in every webhook body and in the stream's run status between updates.
 """
 
 import csv
@@ -12,7 +16,7 @@ import json
 import re
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
@@ -47,6 +51,24 @@ class Recorder:
         self.flights = {}
         self.feed_messages = 0
         self.stale_feed_messages = 0
+        self.observations = []  # (simulated seconds, order, aircraft on the ground without a gate)
+        self.moved = {}         # registration -> simulated seconds of each explicit move decision
+
+    def observe(self, simulated_time, registrations, order):
+        """Order 0 is a webhook body (before its decision); 1 is a stream status poll."""
+        with self.lock:
+            self.observations.append((epoch_seconds(simulated_time), order, frozenset(registrations)))
+
+    def observe_exchange(self, event, request, response):
+        try:
+            message = json.loads(request)
+            decisions = json.loads(response) if response else {}
+        except ValueError:
+            return
+        self.observe(event["simulated_time"], (plane["registration"] for plane in message.get("unassignedAircraft", [])), 0)
+        with self.lock:
+            for move in decisions.get("moves", []) if isinstance(decisions, dict) else []:
+                self.moved.setdefault(move["registration"], []).append(epoch_seconds(event["simulated_time"]))
 
     def heard(self, headers, action, size, at):
         with self.lock:
@@ -130,7 +152,7 @@ class Recorder:
         record["since_simulated"] = record["since_wall"] = None
 
     def finalize(self, directory, final_simulated=None):
-        """Write events.csv and waitlist.csv; return the summary metrics."""
+        """Write events.csv, unassigned.csv, and tarmac.csv; return the summary metrics."""
         with self.lock:
             events, flights = [dict(event) for event in self.events], self.flights
             end_wall = time.perf_counter()
@@ -155,7 +177,7 @@ class Recorder:
                                  event["feed_messages"], event["http_status"], event["response_bytes"],
                                  event["assignments"], event["moves"], event["error"]])
         waitlisted = {fid: record for fid, record in flights.items() if record["episodes"]}
-        with (directory / "waitlist.csv").open("w", newline="", encoding="utf-8") as output:
+        with (directory / "unassigned.csv").open("w", newline="", encoding="utf-8") as output:
             writer = csv.writer(output)
             writer.writerow(["flight_id", "flight_code", "episodes", "waited_simulated_minutes",
                              "longest_simulated_minutes", "waited_wall_seconds", "reported_waitlisted_since",
@@ -182,17 +204,75 @@ class Recorder:
             "update_feed_max_seconds": _round(percentile(feeds, 1)),
             "updates_without_feed": sum(value is None for value in feeds),
             "feed_messages": self.feed_messages,
-            "waitlisted_flights": len(waitlisted),
-            "waitlist_episodes": sum(record["episodes"] for record in waitlisted.values()),
-            "waitlist_total_minutes": round(sum(waits), 3),
-            "waitlist_mean_minutes": round(sum(waits) / len(waits), 3) if waits else None,
-            "waitlist_max_minutes": round(max(waits), 3) if waits else None,
-            "waitlist_unresolved": unresolved,
+            "unassigned_flights": len(waitlisted),
+            "unassigned_episodes": sum(record["episodes"] for record in waitlisted.values()),
+            "unassigned_total_minutes": round(sum(waits), 3),
+            "unassigned_mean_minutes": round(sum(waits) / len(waits), 3) if waits else None,
+            "unassigned_max_minutes": round(max(waits), 3) if waits else None,
+            "unassigned_unresolved": unresolved,
+            **self._tarmac(directory),
+        }
+
+    def _tarmac(self, directory):
+        """Episodes of aircraft on the ground without a gate, bounded by the observations around them.
+
+        An arrival happened after the last observation that didn't show the aircraft; it got a gate
+        at its explicit move, or else somewhere before the first observation that no longer shows it.
+        """
+        with self.lock:
+            observations, moved = sorted(self.observations, key=lambda item: item[:2]), self.moved
+        times = sorted({when for when, _, _ in observations})
+        gaps = [later - earlier for earlier, later in zip(times, times[1:])]
+        open_, episodes, previous = {}, [], None
+        for when, _, registrations in observations:
+            for tail in registrations - open_.keys():
+                open_[tail] = {"registration": tail, "arrived_after": previous if previous is not None else when,
+                               "arrived_by": when, "last_seen": when}
+            for tail in open_.keys() - registrations:
+                episode = open_.pop(tail)
+                move = next((at for at in moved.get(tail, []) if episode["last_seen"] <= at <= when), None)
+                episode.update(gated_after=move if move is not None else episode["last_seen"],
+                               gated_by=move if move is not None else when, resolved=True)
+                episodes.append(episode)
+            for tail in registrations:
+                open_[tail]["last_seen"] = when
+            previous = when
+        for episode in open_.values():
+            episode.update(gated_after=episode["last_seen"], gated_by=episode["last_seen"], resolved=False)
+            episodes.append(episode)
+        for episode in episodes:
+            episode["low"] = max(0.0, episode["gated_after"] - episode["arrived_by"]) / 60
+            episode["high"] = (episode["gated_by"] - episode["arrived_after"]) / 60
+            episode["estimate"] = (episode["low"] + episode["high"]) / 2
+        with (directory / "tarmac.csv").open("w", newline="", encoding="utf-8") as output:
+            writer = csv.writer(output)
+            writer.writerow(["registration", "arrived_after", "arrived_by", "gated_after", "gated_by",
+                             "waited_low_minutes", "waited_high_minutes", "resolved"])
+            for episode in sorted(episodes, key=lambda item: (item["arrived_by"], item["registration"])):
+                writer.writerow([episode["registration"], *(_iso(episode[key]) for key in
+                                                            ("arrived_after", "arrived_by", "gated_after", "gated_by")),
+                                 round(episode["low"], 3), round(episode["high"], 3), episode["resolved"]])
+        estimates = [episode["estimate"] for episode in episodes]
+        return {
+            "tarmac_aircraft": len({episode["registration"] for episode in episodes}),
+            "tarmac_episodes": len(episodes),
+            "tarmac_total_minutes": round(sum(estimates), 3),
+            "tarmac_total_minutes_low": round(sum(episode["low"] for episode in episodes), 3),
+            "tarmac_total_minutes_high": round(sum(episode["high"] for episode in episodes), 3),
+            "tarmac_mean_minutes": round(sum(estimates) / len(estimates), 3) if estimates else None,
+            "tarmac_max_minutes": round(max(estimates), 3) if estimates else None,
+            "tarmac_unresolved": sum(not episode["resolved"] for episode in episodes),
+            "tarmac_observations": len(observations),
+            "tarmac_resolution_seconds": _round(percentile(gaps, 0.5)),
         }
 
 
 def _round(value):
     return None if value is None else round(value, 6)
+
+
+def _iso(seconds):
+    return datetime.fromtimestamp(seconds, timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def forward(url, body, headers):
@@ -252,3 +332,5 @@ class ProxyHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
         recorder.answered(event, answered, status, data)
+        if status == 200 or status == 204:
+            recorder.observe_exchange(event, body, data)

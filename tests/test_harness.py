@@ -7,6 +7,7 @@ import threading
 import unittest
 from pathlib import Path
 
+from smartgate_harness.recorder import Recorder
 from smartgate_harness.runner import Harness
 from smartgate_naive.server import NaiveServer
 from smartgate_stream.server import ControlServer
@@ -64,8 +65,36 @@ class HarnessTest(unittest.TestCase):
             self.assertEqual(events[0]["assignments"], "400")
             self.assertTrue(all(event["http_status"] == "200" for event in events))
             self.assertEqual(sum(not event["feed_latency_seconds"] for event in events), row["updates_without_feed"])
+            self.assertGreater(row["tarmac_observations"], EVENTS)
+            self.assertTrue((session / "runs" / "small" / name / "tarmac.csv").exists())
+            self.assertTrue((session / "runs" / "small" / name / "unassigned.csv").exists())
         with (session / "summary.csv").open() as source:
             self.assertEqual(len(list(csv.DictReader(source))), 3)
+
+
+class TarmacTest(unittest.TestCase):
+    def test_waits_are_bounded_by_surrounding_observations_and_exact_moves(self):
+        recorder = Recorder("algorithm", "http://127.0.0.1:1/updates")
+        event = {"simulated_time": "2026-11-07T10:10:00Z"}
+        recorder.observe("2026-11-07T10:00:00Z", [], 0)
+        recorder.observe("2026-11-07T10:04:00Z", ["C-AAAA"], 1)
+        recorder.observe_exchange(event, json.dumps({"unassignedAircraft": [
+            {"registration": "C-AAAA"}, {"registration": "C-BBBB"}]}),
+            json.dumps({"moves": [{"registration": "C-AAAA", "gate": "D20"}]}).encode())
+        recorder.observe("2026-11-07T10:20:00Z", ["C-BBBB"], 0)
+        recorder.observe("2026-11-07T10:30:00Z", [], 0)
+        recorder.observe("2026-11-07T10:40:00Z", ["C-CCCC"], 0)
+        directory = Path(tempfile.mkdtemp())
+        summary = recorder._tarmac(directory)
+        with (directory / "tarmac.csv").open() as source:
+            rows = {row["registration"]: row for row in csv.DictReader(source)}
+        # Arrived between 10:00 and 10:04, towed in by the 10:10 move.
+        self.assertEqual((rows["C-AAAA"]["waited_low_minutes"], rows["C-AAAA"]["waited_high_minutes"]), ("6.0", "10.0"))
+        # Arrived between 10:04 and 10:10, gone by 10:30 without a recorded move.
+        self.assertEqual((rows["C-BBBB"]["waited_low_minutes"], rows["C-BBBB"]["waited_high_minutes"]), ("10.0", "26.0"))
+        self.assertEqual(rows["C-CCCC"]["resolved"], "False")
+        self.assertEqual((summary["tarmac_aircraft"], summary["tarmac_unresolved"]), (3, 1))
+        self.assertEqual(summary["tarmac_total_minutes"], 8 + 18 + 5)
 
 
 if __name__ == "__main__":

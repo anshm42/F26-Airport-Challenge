@@ -145,8 +145,15 @@ class Harness:
             return {**row, "status": "rejected", "error": (status or {}).get("error")}
         url = f"{self.streams[name]}/runs/{status['run_id']}"
         deadline = time.monotonic() + run.get("timeout_seconds", self.config.get("run_timeout_seconds", 3600))
-        while status["status"] not in TERMINAL_STATUSES:
-            time.sleep(0.25)
+        poll = self.config.get("status_poll_seconds", 0.1)
+        while True:
+            # Status polls add tarmac observations between webhook updates; denser in paced runs.
+            if status.get("gate_state_time"):
+                recorder.observe(status["gate_state_time"],
+                                 (plane["registration"] for plane in status["unassigned_aircraft"]), 1)
+            if status["status"] in TERMINAL_STATUSES:
+                break
+            time.sleep(poll)
             if time.monotonic() > deadline and status["status"] == "running":
                 request_json("POST", f"{url}/stop")
             status = request_json("GET", url)[1]
@@ -206,7 +213,8 @@ class Harness:
                     self.log(f"  {name}: {row.get('status')}" + "".join(
                         f", {label} {row[key]}" for label, key in (
                             ("init", "init_response_seconds"), ("response p50", "update_response_p50_seconds"),
-                            ("feed p50", "update_feed_p50_seconds"), ("waitlisted", "waitlisted_flights"),
+                            ("feed p50", "update_feed_p50_seconds"), ("unassigned flights", "unassigned_flights"),
+                            ("tarmac aircraft", "tarmac_aircraft"), ("tarmac minutes", "tarmac_total_minutes"),
                             ("error", "error"))
                         if row.get(key) is not None))
                 self.write_summary()

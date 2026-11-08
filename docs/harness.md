@@ -85,7 +85,8 @@ Each invocation writes `output_dir/<UTC timestamp>/`:
 - `summary.csv` / `summary.json`: one row per run and algorithm, rewritten after
   every run so partial sweeps are kept. This is the table to plot from.
 - `runs/<run>/<algorithm>/events.csv`: one row per update.
-- `runs/<run>/<algorithm>/waitlist.csv`: one row per flight that waited without a gate.
+- `runs/<run>/<algorithm>/unassigned.csv`: one row per flight shown on the board without a gate.
+- `runs/<run>/<algorithm>/tarmac.csv`: one row per stretch an aircraft spent on the ground without a gate.
 - `runs/<run>/<algorithm>/stream-status.json`: the stream's final run status, including lateness.
 - `logs/`: output from the processes the harness started. The naive matcher logs
   its compute time per event.
@@ -96,14 +97,27 @@ Each invocation writes `output_dir/<UTC timestamp>/`:
 | `feed_latency_seconds` | Update heard by the proxy → first passenger-feed message for that update. The primary "time to assign". |
 | `init_*` | The same for `InitializeAirport`, which carries the whole day. |
 | `updates_without_feed` | Updates that changed nothing on the board. Feeds send only when the flight list changes. |
-| `waitlist_*` | Per flight, simulated time spent on the feed with no gate (and not cancelled), until it gets one or leaves the board. |
+| `unassigned_*` | No gate assignment: per flight, simulated time shown on the board with no gate (and not cancelled), until it gets one or leaves the board. Counts the arriving and departing flight of a stay separately. |
+| `tarmac_*` | Waiting on the tarmac: per aircraft, simulated time the stream reports it on the ground without a gate. `tarmac_total_minutes` is the midpoint estimate; `_low` / `_high` are its bounds. |
+| `tarmac_resolution_seconds` | Median simulated gap between tarmac observations. |
 | `max_lateness_seconds` | The stream's own measure of falling behind the paced schedule. |
 
-Waitlist time is read from the feed, so it's the same measurement for every
-algorithm. If a feed includes `waitlistedSince` / `assignedAt` per flight, those
-values are copied into `waitlist.csv`. The naive matcher emits both. The
-matcher's field names aren't settled yet. A gate the matcher reserves for later
-entry shows as assigned on the board and so counts as no wait.
+Both waits are read the same way for every algorithm.
+
+**No assignment** comes from the board. If a feed includes `waitlistedSince` /
+`assignedAt` per flight, those values are copied into `unassigned.csv`. The
+naive matcher emits both; the matcher's field names aren't settled yet. A gate
+reserved for later entry shows as assigned on the board, so it counts as no
+wait here but shows up as tarmac time.
+
+**Tarmac** comes from the stream, which owns physical occupancy. Every webhook
+body carries `unassignedAircraft` (before that update's decision), and the
+harness also polls the stream's run status every `status_poll_seconds` (default
+0.1) for movements between updates. An arrival is bounded by the last
+observation without the aircraft and the first one with it. The wait ends
+exactly at the algorithm's explicit move for that registration; without a move
+(for example, it departed), the end is bounded by the next observation. Paced
+runs give finer resolution; unpaced runs are bounded by the gap between updates.
 
 ## Naive baseline
 
