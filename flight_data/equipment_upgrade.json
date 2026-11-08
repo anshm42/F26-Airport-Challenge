@@ -1,0 +1,46 @@
+{
+  "0500": [
+    {
+      "action": "CreateFlight",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "501",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "73G",
+          "departureStation": "YVR",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "09:00",
+          "scheduledArrivalTime": "12:00"
+        },
+        {
+          "legType": "Through",
+          "aircraftType": "73G",
+          "departureStation": "YYZ",
+          "arrivalStation": "YVR",
+          "scheduledDepartureTime": "14:00",
+          "scheduledArrivalTime": "17:00"
+        }
+      ]
+    }
+  ],
+  "0900": [
+    {
+      "action": "UpdateEquipment",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "501",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "equipmentUpdate": {
+        "scope": "AllLegs",
+        "aircraftType": "789"
+      }
+    }
+  ]
+}

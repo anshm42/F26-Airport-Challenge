@@ -1,0 +1,90 @@
+{
+  "0500": [
+    {
+      "action": "CreateFlight",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "123",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "73G",
+          "departureStation": "YVR",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "10:00",
+          "scheduledArrivalTime": "12:30"
+        }
+      ]
+    },
+    {
+      "action": "CreateFlight",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "456",
+        "flightSuffix": null,
+        "originatingDate": "2025-08-20"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "321",
+          "departureStation": "YYZ",
+          "arrivalStation": "YUL",
+          "scheduledDepartureTime": "08:00",
+          "scheduledArrivalTime": "10:00"
+        },
+        {
+          "legType": "Through",
+          "aircraftType": "321",
+          "departureStation": "YUL",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "11:00",
+          "scheduledArrivalTime": "13:00"
+        }
+      ]
+    },
+    {
+      "action": "CreateFlight",
+      "flight": {
+        "carrier": "DL",
+        "flightNumber": "789",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "73G",
+          "departureStation": "LHR",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "12:00",
+          "scheduledArrivalTime": "19:30"
+        }
+      ]
+    }
+  ],
+  "1000": [
+    {
+      "action": "UpdateTiming",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "123",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "73G",
+          "departureStation": "YVR",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "11:00",
+          "scheduledArrivalTime": "13:00"
+        }
+      ]
+    }
+  ]
+}

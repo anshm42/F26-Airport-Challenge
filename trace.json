@@ -1,0 +1,356 @@
+{
+    "solution": "Julia JuMP + Gurobi",
+    "ticks": [
+        {
+            "time_label": "05:00",
+            "time": 300,
+            "decisions": {
+                "reassignments": [],
+                "assignments": []
+            },
+            "queue": [
+                {
+                    "flight_id": "AC-101--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "AC-102--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "AC-103--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "AC-104--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "AC-306--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "AF-302--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "BA-301--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "DL-305--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "FX-401--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "FX-402--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "LH-303--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "UA-304--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "WS-201--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "WS-202--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "WS-203--2025-06-15",
+                    "category": 1
+                }
+            ],
+            "outages": {},
+            "log": [
+                "[UPDATE] Flight AC-101--2025-06-15 added to schedule",
+                "[UPDATE] Flight WS-201--2025-06-15 added to schedule",
+                "[UPDATE] Flight FX-401--2025-06-15 added to schedule",
+                "[UPDATE] Flight BA-301--2025-06-15 added to schedule",
+                "[UPDATE] Flight AC-102--2025-06-15 added to schedule",
+                "[UPDATE] Flight WS-202--2025-06-15 added to schedule",
+                "[UPDATE] Flight AF-302--2025-06-15 added to schedule",
+                "[UPDATE] Flight LH-303--2025-06-15 added to schedule",
+                "[UPDATE] Flight AC-103--2025-06-15 added to schedule",
+                "[UPDATE] Flight UA-304--2025-06-15 added to schedule",
+                "[UPDATE] Flight DL-305--2025-06-15 added to schedule",
+                "[UPDATE] Flight FX-402--2025-06-15 added to schedule",
+                "[UPDATE] Flight AC-104--2025-06-15 added to schedule",
+                "[UPDATE] Flight AC-306--2025-06-15 added to schedule",
+                "[UPDATE] Flight WS-203--2025-06-15 added to schedule",
+                "[WARN] AC-101--2025-06-15 remains unassigned",
+                "[WARN] AC-102--2025-06-15 remains unassigned",
+                "[WARN] AC-103--2025-06-15 remains unassigned",
+                "[WARN] AC-104--2025-06-15 remains unassigned",
+                "[WARN] AC-306--2025-06-15 remains unassigned",
+                "[WARN] AF-302--2025-06-15 remains unassigned",
+                "[WARN] BA-301--2025-06-15 remains unassigned",
+                "[WARN] DL-305--2025-06-15 remains unassigned",
+                "[WARN] FX-401--2025-06-15 remains unassigned",
+                "[WARN] FX-402--2025-06-15 remains unassigned",
+                "[WARN] LH-303--2025-06-15 remains unassigned",
+                "[WARN] UA-304--2025-06-15 remains unassigned",
+                "[WARN] WS-201--2025-06-15 remains unassigned",
+                "[WARN] WS-202--2025-06-15 remains unassigned",
+                "[WARN] WS-203--2025-06-15 remains unassigned"
+            ],
+            "plan": {}
+        },
+        {
+            "time_label": "09:30",
+            "time": 570,
+            "decisions": {
+                "reassignments": [],
+                "assignments": []
+            },
+            "queue": [
+                {
+                    "flight_id": "AC-101--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "AC-102--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "AC-104--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "AC-306--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "AF-302--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "BA-301--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "DL-305--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "FX-401--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "FX-402--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "LH-303--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "UA-304--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "WS-201--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "WS-202--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "WS-203--2025-06-15",
+                    "category": 1
+                }
+            ],
+            "outages": {},
+            "log": [
+                "[CANCEL] Flight AC-103--2025-06-15 cancelled",
+                "[WARN] AC-101--2025-06-15 remains unassigned",
+                "[WARN] AC-102--2025-06-15 remains unassigned",
+                "[WARN] AC-104--2025-06-15 remains unassigned",
+                "[WARN] AC-306--2025-06-15 remains unassigned",
+                "[WARN] AF-302--2025-06-15 remains unassigned",
+                "[WARN] BA-301--2025-06-15 remains unassigned",
+                "[WARN] DL-305--2025-06-15 remains unassigned",
+                "[WARN] FX-401--2025-06-15 remains unassigned",
+                "[WARN] FX-402--2025-06-15 remains unassigned",
+                "[WARN] LH-303--2025-06-15 remains unassigned",
+                "[WARN] UA-304--2025-06-15 remains unassigned",
+                "[WARN] WS-201--2025-06-15 remains unassigned",
+                "[WARN] WS-202--2025-06-15 remains unassigned",
+                "[WARN] WS-203--2025-06-15 remains unassigned"
+            ],
+            "plan": {}
+        },
+        {
+            "time_label": "10:00",
+            "time": 600,
+            "decisions": {
+                "reassignments": [],
+                "assignments": []
+            },
+            "queue": [
+                {
+                    "flight_id": "AC-101--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "AC-102--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "AC-104--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "AC-306--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "AF-302--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "BA-301--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "DL-305--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "FX-401--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "FX-402--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "LH-303--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "UA-304--2025-06-15",
+                    "category": 2
+                },
+                {
+                    "flight_id": "WS-201--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "WS-202--2025-06-15",
+                    "category": 1
+                },
+                {
+                    "flight_id": "WS-203--2025-06-15",
+                    "category": 1
+                }
+            ],
+            "outages": {},
+            "log": [
+                "[UPDATE] Timing updated for flight WS-203--2025-06-15",
+                "[WARN] AC-101--2025-06-15 remains unassigned",
+                "[WARN] AC-102--2025-06-15 remains unassigned",
+                "[WARN] AC-104--2025-06-15 remains unassigned",
+                "[WARN] AC-306--2025-06-15 remains unassigned",
+                "[WARN] AF-302--2025-06-15 remains unassigned",
+                "[WARN] BA-301--2025-06-15 remains unassigned",
+                "[WARN] DL-305--2025-06-15 remains unassigned",
+                "[WARN] FX-401--2025-06-15 remains unassigned",
+                "[WARN] FX-402--2025-06-15 remains unassigned",
+                "[WARN] LH-303--2025-06-15 remains unassigned",
+                "[WARN] UA-304--2025-06-15 remains unassigned",
+                "[WARN] WS-201--2025-06-15 remains unassigned",
+                "[WARN] WS-202--2025-06-15 remains unassigned",
+                "[WARN] WS-203--2025-06-15 remains unassigned"
+            ],
+            "plan": {}
+        }
+    ],
+    "result": {
+        "reason": "",
+        "assigned": 0,
+        "score": 1.4e6,
+        "status": "OK",
+        "breakdown": {},
+        "unassigned": 14
+    },
+    "scenario_name": "busy_day",
+    "outage_open_end": 1441,
+    "time_max": 1440,
+    "gates": [
+        {
+            "max_wingspan": 65.0,
+            "type": 0,
+            "id": "C1",
+            "jetbridge": false,
+            "dist": -1.0
+        },
+        {
+            "max_wingspan": 80.0,
+            "type": 0,
+            "id": "C2",
+            "jetbridge": false,
+            "dist": -1.0
+        },
+        {
+            "max_wingspan": 52.0,
+            "type": 1,
+            "id": "D1",
+            "jetbridge": true,
+            "dist": 150.0
+        },
+        {
+            "max_wingspan": 52.0,
+            "type": 1,
+            "id": "D2",
+            "jetbridge": true,
+            "dist": 200.0
+        },
+        {
+            "max_wingspan": 45.0,
+            "type": 1,
+            "id": "D3",
+            "jetbridge": false,
+            "dist": 250.0
+        },
+        {
+            "max_wingspan": 65.0,
+            "type": 2,
+            "id": "I1",
+            "jetbridge": true,
+            "dist": 100.0
+        },
+        {
+            "max_wingspan": 65.0,
+            "type": 2,
+            "id": "I2",
+            "jetbridge": true,
+            "dist": 180.0
+        },
+        {
+            "max_wingspan": 60.0,
+            "type": 2,
+            "id": "I3",
+            "jetbridge": false,
+            "dist": 300.0
+        },
+        {
+            "max_wingspan": 80.0,
+            "type": 2,
+            "id": "I4",
+            "jetbridge": true,
+            "dist": 120.0
+        }
+    ],
+    "time_min": 0
+}

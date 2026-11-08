@@ -1,0 +1,87 @@
+{
+  "0500": [
+    {
+      "action": "CreateFlight",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "301",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "321",
+          "departureStation": "YOW",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "09:30",
+          "scheduledArrivalTime": "11:00"
+        },
+        {
+          "legType": "Through",
+          "aircraftType": "321",
+          "departureStation": "YYZ",
+          "arrivalStation": "YOW",
+          "scheduledDepartureTime": "14:00",
+          "scheduledArrivalTime": "15:00"
+        }
+      ]
+    },
+    {
+      "action": "CreateFlight",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "302",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "73G",
+          "departureStation": "YHZ",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "12:30",
+          "scheduledArrivalTime": "14:30"
+        },
+        {
+          "legType": "Through",
+          "aircraftType": "73G",
+          "departureStation": "YYZ",
+          "arrivalStation": "YHZ",
+          "scheduledDepartureTime": "17:00",
+          "scheduledArrivalTime": "18:30"
+        }
+      ]
+    }
+  ],
+  "1000": [
+    {
+      "action": "UpdateTiming",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "301",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "321",
+          "departureStation": "YOW",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "09:30",
+          "scheduledArrivalTime": "11:00"
+        },
+        {
+          "legType": "Through",
+          "aircraftType": "321",
+          "departureStation": "YYZ",
+          "arrivalStation": "YOW",
+          "scheduledDepartureTime": "15:30",
+          "scheduledArrivalTime": "16:30"
+        }
+      ]
+    }
+  ]
+}

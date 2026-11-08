@@ -1,0 +1,72 @@
+{
+  "0500": [
+    {
+      "action": "CreateFlight",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "201",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "321",
+          "departureStation": "YUL",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "09:00",
+          "scheduledArrivalTime": "11:00"
+        },
+        {
+          "legType": "Through",
+          "aircraftType": "321",
+          "departureStation": "YYZ",
+          "arrivalStation": "YUL",
+          "scheduledDepartureTime": "13:00",
+          "scheduledArrivalTime": "15:00"
+        }
+      ]
+    },
+    {
+      "action": "CreateFlight",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "202",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "321",
+          "departureStation": "YOW",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "10:00",
+          "scheduledArrivalTime": "11:30"
+        },
+        {
+          "legType": "Through",
+          "aircraftType": "321",
+          "departureStation": "YYZ",
+          "arrivalStation": "YOW",
+          "scheduledDepartureTime": "12:30",
+          "scheduledArrivalTime": "14:00"
+        }
+      ]
+    }
+  ],
+  "0900": [
+    {
+      "action": "CancelFlight",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "201",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "cancelScope": {
+        "type": "AllLegs"
+      }
+    }
+  ]
+}

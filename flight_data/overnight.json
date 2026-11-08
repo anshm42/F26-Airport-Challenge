@@ -1,0 +1,42 @@
+{
+  "0500": [
+    {
+      "action": "CreateFlight",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "700",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "789",
+          "departureStation": "LHR",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "22:00",
+          "scheduledArrivalTime": "02:00"
+        }
+      ]
+    },
+    {
+      "action": "CreateFlight",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "701",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "73G",
+          "departureStation": "YOW",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "23:30",
+          "scheduledArrivalTime": "00:30"
+        }
+      ]
+    }
+  ]
+}

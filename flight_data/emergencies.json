@@ -1,0 +1,54 @@
+{
+  "0500": [
+    {
+      "action": "CreateFlight",
+      "flight": { "carrier": "AC", "flightNumber": "201", "flightSuffix": null, "originatingDate": "2025-06-15" },
+      "legs": [
+        { "legType": "Originating", "aircraftType": "321", "departureStation": "YUL", "arrivalStation": "YYZ", "scheduledDepartureTime": "09:30", "scheduledArrivalTime": "11:00" },
+        { "legType": "Through", "aircraftType": "321", "departureStation": "YYZ", "arrivalStation": "YUL", "scheduledDepartureTime": "13:00", "scheduledArrivalTime": "14:30" }
+      ]
+    },
+    {
+      "action": "CreateFlight",
+      "flight": { "carrier": "AC", "flightNumber": "202", "flightSuffix": null, "originatingDate": "2025-06-15" },
+      "legs": [
+        { "legType": "Originating", "aircraftType": "73G", "departureStation": "YOW", "arrivalStation": "YYZ", "scheduledDepartureTime": "08:00", "scheduledArrivalTime": "10:00" }
+      ]
+    },
+    {
+      "action": "CreateFlight",
+      "flight": { "carrier": "BA", "flightNumber": "301", "flightSuffix": null, "originatingDate": "2025-06-15" },
+      "legs": [
+        { "legType": "Originating", "aircraftType": "789", "departureStation": "LHR", "arrivalStation": "YYZ", "scheduledDepartureTime": "01:00", "scheduledArrivalTime": "09:30" }
+      ]
+    },
+    {
+      "action": "CreateFlight",
+      "flight": { "carrier": "WS", "flightNumber": "203", "flightSuffix": null, "originatingDate": "2025-06-15" },
+      "legs": [
+        { "legType": "Originating", "aircraftType": "73G", "departureStation": "YYC", "arrivalStation": "YYZ", "scheduledDepartureTime": "09:00", "scheduledArrivalTime": "12:00" },
+        { "legType": "Through", "aircraftType": "73G", "departureStation": "YYZ", "arrivalStation": "YYC", "scheduledDepartureTime": "14:00", "scheduledArrivalTime": "16:30" }
+      ]
+    }
+  ],
+  "1100": [
+    {
+      "action": "DivertFlight",
+      "reason": "medical",
+      "flight": { "carrier": "QK", "flightNumber": "501", "flightSuffix": null, "originatingDate": "2025-06-15" },
+      "legs": [
+        { "legType": "Originating", "aircraftType": "321", "departureStation": "YQB", "arrivalStation": "YYZ", "scheduledDepartureTime": "10:00", "scheduledArrivalTime": "11:15" }
+      ]
+    }
+  ],
+  "1330": [
+    {
+      "action": "DivertFlight",
+      "reason": "turnback",
+      "flight": { "carrier": "AC", "flightNumber": "201", "flightSuffix": "R", "originatingDate": "2025-06-15" },
+      "legs": [
+        { "legType": "Originating", "aircraftType": "321", "departureStation": "YUL", "arrivalStation": "YYZ", "scheduledDepartureTime": "13:15", "scheduledArrivalTime": "13:45" }
+      ]
+    }
+  ]
+}

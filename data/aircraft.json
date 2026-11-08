@@ -1,0 +1,2974 @@
+{
+  "retrievedOn": "2026-11-07",
+  "sources": {
+    "ifatcGates": {
+      "title": "IFATC Info - CYYZ gates and width-class key",
+      "url": "https://www.ifatc.org/gates?code=CYYZ",
+      "kind": "Simulation",
+      "note": "Stand labels, types and width classes are preserved as published; these are not GTAA approvals."
+    },
+    "wikipediaAircraftDesignators": {
+      "title": "Wikipedia - List of aircraft type designators",
+      "url": "https://en.wikipedia.org/wiki/List_of_aircraft_type_designators",
+      "kind": "Encyclopedia",
+      "note": "Partial list, not the complete IATA SSIM inventory. Uses the IATA type-code column; repeated codes are grouped without dropping source models. Does not supply width classes."
+    },
+    "iataEquipmentReference": {
+      "title": "The Aviation Codes Web Site - Aircraft Type Codes",
+      "url": "https://www.avcodes.co.uk/acrtypes.asp",
+      "kind": "AviationReference",
+      "note": "Secondary reference used to resolve the 76X and D8T cargo labels and flag the DHC model disagreement; not an official IATA SSIM source."
+    },
+    "an225Dimensions": {
+      "title": "Wikipedia - Antonov An-225 Mriya specifications",
+      "url": "https://en.wikipedia.org/wiki/Antonov_An-225_Mriya#Specifications_(An-225-100)",
+      "kind": "Encyclopedia",
+      "note": "88.4 m wingspan; no IFATC class is assigned by this source."
+    },
+    "boeing777xDimensions": {
+      "title": "Boeing - 777X specifications",
+      "url": "https://www.boeing.com/commercial/777x",
+      "kind": "Manufacturer",
+      "note": "777-8/777-9 wingspans are 71.8 m extended and 64.8 m on ground; does not supply IFATC classes."
+    }
+  },
+  "gateWidthClasses": {
+    "sourceIds": [
+      "ifatcGates"
+    ],
+    "scope": "IFATC maximum-aircraft-size examples as published; not exact variant compatibility or a GTAA approved-equipment list.",
+    "classes": {
+      "A": "Small GA, most fighters",
+      "B": "A-10, C208, Citation X, CRJs, P-38",
+      "C": "A321, 737, Dash-8, Embraers",
+      "D": "757, 767, C-17, C-130, MD11/DC10",
+      "E": "A340, 747-400, 777, 787",
+      "F": "A380, 747-800"
+    }
+  },
+  "aircraftTypes": {
+    "sourceIds": [
+      "wikipediaAircraftDesignators",
+      "ifatcGates"
+    ],
+    "codeSystem": "IATA",
+    "scope": "Static reference for flight.aircraftType. One record per IATA type code, retaining all source-listed models. Historical and proposed models are included; presence does not imply active service or Pearson use.",
+    "classificationBasis": "Reference assignments to the existing IFATC A-F key, not ICAO aerodrome code letters. IFATCFamilyExample follows a listed family; SizeEstimate is an editorial size analogy; ConservativeGroupEstimate uses the largest class among models sharing a code. No per-stand compatibility is established. Null means no supported class.",
+    "serviceTypes": {
+      "Passenger": "Source-listed passenger configuration, including business aviation.",
+      "Cargo": "Dedicated freighter or cargo transport configuration.",
+      "Combi": "A source-listed mixed passenger/cargo configuration; not a cargo-only flight.",
+      "SpecialPurpose": "Survey, tanker or other special mission; not an ordinary passenger or cargo service."
+    },
+    "serviceTypeScope": "Multiple serviceTypes mean the code can cover different roles, not that the current flight performs them all. Generic commuter and utility types with cargo conversions list Passenger and Cargo. This is not a complete conversion inventory; establish actual service from flight or operator data before selecting passenger gates or cargo stands.",
+    "records": [
+      {
+        "aircraftType": "100",
+        "models": [
+          "Fokker 100"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "141",
+        "models": [
+          "BAe 146-100"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "142",
+        "models": [
+          "BAe 146-200"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "143",
+        "models": [
+          "BAe 146-300"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "221",
+        "models": [
+          "Bombardier CSeries CS100 / Airbus A220-100"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "223",
+        "models": [
+          "Bombardier CSeries CS300 / Airbus A220-300"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "290",
+        "models": [
+          "Embraer E190-E2"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "295",
+        "models": [
+          "Embraer E195-E2"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "312",
+        "models": [
+          "Airbus A310-200"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "313",
+        "models": [
+          "Airbus A310-300"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "318",
+        "models": [
+          "Airbus A318"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "319",
+        "models": [
+          "Airbus A319"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "31N",
+        "models": [
+          "Airbus A319neo"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "320",
+        "models": [
+          "Airbus A320"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "321",
+        "models": [
+          "Airbus A321"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "32A",
+        "models": [
+          "Airbus A320 (sharklets)"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "32B",
+        "models": [
+          "Airbus A321 (sharklets)"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "32C",
+        "models": [
+          "Airbus A318 (sharklets)"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "32D",
+        "models": [
+          "Airbus A319 (sharklets)"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "32N",
+        "models": [
+          "Airbus A320neo"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "32Q",
+        "models": [
+          "Airbus A321neo/LR/XLR"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "332",
+        "models": [
+          "Airbus A330-200"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "333",
+        "models": [
+          "Airbus A330-300"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "338",
+        "models": [
+          "Airbus A330-800"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "339",
+        "models": [
+          "Airbus A330-900"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "33B",
+        "models": [
+          "Airbus A330-700 \"BelugaXL\""
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "33X",
+        "models": [
+          "Airbus A330-200 Freighter"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "33Y",
+        "models": [
+          "Airbus A330-300 Freighter"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "342",
+        "models": [
+          "Airbus A340-200"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "343",
+        "models": [
+          "Airbus A340-300"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "345",
+        "models": [
+          "Airbus A340-500"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "346",
+        "models": [
+          "Airbus A340-600"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "351",
+        "models": [
+          "Airbus A350-1000"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "359",
+        "models": [
+          "Airbus A350-900"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "388",
+        "models": [
+          "Airbus A380-800"
+        ],
+        "widthClass": "F",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "703",
+        "models": [
+          "Boeing 707"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "717",
+        "models": [
+          "Boeing 717"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "721",
+        "models": [
+          "Boeing 727-100"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "722",
+        "models": [
+          "Boeing 727-200"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "732",
+        "models": [
+          "Boeing 737-200"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "733",
+        "models": [
+          "Boeing 737-300"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "734",
+        "models": [
+          "Boeing 737-400"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "735",
+        "models": [
+          "Boeing 737-500"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "736",
+        "models": [
+          "Boeing 737-600"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "738",
+        "models": [
+          "Boeing 737-800"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "739",
+        "models": [
+          "Boeing 737-900 / Boeing 737-900ER"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "73C",
+        "models": [
+          "Boeing 737-300 Winglets"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "73E",
+        "models": [
+          "Boeing 737-500 Winglets"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "73F",
+        "models": [
+          "Boeing 737-200 Freighter"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "73G",
+        "models": [
+          "Boeing 737-700 / Boeing 737-700ER"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "73H",
+        "models": [
+          "Boeing 737-800 Winglets"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "73J",
+        "models": [
+          "Boeing 737-900 Winglets"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "73K",
+        "models": [
+          "Boeing 737-800 Freighter Winglets"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "73L",
+        "models": [
+          "Boeing 737-200 Combi"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Combi"
+        ]
+      },
+      {
+        "aircraftType": "73P",
+        "models": [
+          "Boeing 737-400 Freighter"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "73U",
+        "models": [
+          "Boeing 737-800 Freighter"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "73W",
+        "models": [
+          "Boeing 737-700 Winglets"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "73Y",
+        "models": [
+          "Boeing 737-300 Freighter"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "741",
+        "models": [
+          "Boeing 747-100"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "742",
+        "models": [
+          "Boeing 747-200"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "743",
+        "models": [
+          "Boeing 747-300"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "744",
+        "models": [
+          "Boeing 747-400 / Boeing 747-400ER"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "74B",
+        "models": [
+          "Boeing 747-400 LCF Dreamlifter"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "74C",
+        "models": [
+          "Boeing 747-200M"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Combi"
+        ]
+      },
+      {
+        "aircraftType": "74D",
+        "models": [
+          "Boeing 747-300M"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Combi"
+        ]
+      },
+      {
+        "aircraftType": "74E",
+        "models": [
+          "Boeing 747-400M"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Combi"
+        ]
+      },
+      {
+        "aircraftType": "74H",
+        "models": [
+          "Boeing 747-8I"
+        ],
+        "widthClass": "F",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "74L",
+        "models": [
+          "Boeing 747SP"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "74N",
+        "models": [
+          "Boeing 747-8F"
+        ],
+        "widthClass": "F",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "74R",
+        "models": [
+          "Boeing 747SR"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "74T",
+        "models": [
+          "Boeing 747-100 Freighter"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "74V",
+        "models": [
+          "Boeing 747SR Freighter"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "74X",
+        "models": [
+          "Boeing 747-200F"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "74Y",
+        "models": [
+          "Boeing 747-400F / Boeing 747-400ERF"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "752",
+        "models": [
+          "Boeing 757-200"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "753",
+        "models": [
+          "Boeing 757-300"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "75F",
+        "models": [
+          "Boeing 757F"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "75W",
+        "models": [
+          "Boeing 757-200 Winglets"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "762",
+        "models": [
+          "Boeing 767-200 / Boeing 767-200ER"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "763",
+        "models": [
+          "Boeing 767-300 / Boeing 767-300ER"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "764",
+        "models": [
+          "Boeing 767-400ER"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "76W",
+        "models": [
+          "Boeing 767-300ER Winglets"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "76X",
+        "models": [
+          "Boeing 767-200 Freighter / Boeing 767-200ER"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ],
+        "sourceIds": [
+          "iataEquipmentReference"
+        ],
+        "note": "The secondary IATA reference identifies 76X as a 767-200 freighter; the Wikipedia row also includes an unqualified 767-200ER name. Cargo role follows the IATA reference."
+      },
+      {
+        "aircraftType": "76Y",
+        "models": [
+          "Boeing 767-300 Freighter"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "772",
+        "models": [
+          "Boeing 777-200 / Boeing 777-200ER"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "773",
+        "models": [
+          "Boeing 777-300"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "778",
+        "models": [
+          "Boeing 777-8 / Boeing 777-8F"
+        ],
+        "widthClass": "F",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ],
+        "sourceIds": [
+          "boeing777xDimensions"
+        ],
+        "note": "Conservative F estimate for the extended 71.8 m wingspan. Folding wingtips can reduce ground span to 64.8 m; this lookup does not establish wingtip state or stand approval."
+      },
+      {
+        "aircraftType": "779",
+        "models": [
+          "Boeing 777-9"
+        ],
+        "widthClass": "F",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ],
+        "sourceIds": [
+          "boeing777xDimensions"
+        ],
+        "note": "Conservative F estimate for the extended 71.8 m wingspan. Folding wingtips can reduce ground span to 64.8 m; this lookup does not establish wingtip state or stand approval."
+      },
+      {
+        "aircraftType": "77L",
+        "models": [
+          "Boeing 777-200LR"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "77W",
+        "models": [
+          "Boeing 777-300ER"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "77X",
+        "models": [
+          "Boeing 777-200 Freighter"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "781",
+        "models": [
+          "Boeing 787-10"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "788",
+        "models": [
+          "Boeing 787-8"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "789",
+        "models": [
+          "Boeing 787-9"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "7M7",
+        "models": [
+          "Boeing 737 MAX 7"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "7M8",
+        "models": [
+          "Boeing 737 MAX 8"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "7M9",
+        "models": [
+          "Boeing 737 MAX 9"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "7MJ",
+        "models": [
+          "Boeing 737 MAX 10"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "919",
+        "models": [
+          "Comac C919"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "A26",
+        "models": [
+          "Antonov An-26"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "A28",
+        "models": [
+          "Antonov An-28"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "A30",
+        "models": [
+          "Antonov An-30"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "SpecialPurpose"
+        ]
+      },
+      {
+        "aircraftType": "A32",
+        "models": [
+          "Antonov An-32"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "A40",
+        "models": [
+          "Antonov An-140"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "A4F",
+        "models": [
+          "Antonov An-124 Ruslan"
+        ],
+        "widthClass": "F",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "A58",
+        "models": [
+          "Antonov An-158"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "A5F",
+        "models": [
+          "Antonov An-225 Mriya"
+        ],
+        "widthClass": null,
+        "widthClassBasis": "Unclassified",
+        "serviceTypes": [
+          "Cargo"
+        ],
+        "sourceIds": [
+          "an225Dimensions"
+        ],
+        "note": "The An-225 has an 88.4 m wingspan, larger than the IFATC F examples. No supported class is inferred; special stand assessment is required."
+      },
+      {
+        "aircraftType": "A81",
+        "models": [
+          "Antonov An-148"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "AB4",
+        "models": [
+          "Airbus A300B2, A300B4 and A300C4"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "AB6",
+        "models": [
+          "Airbus A300-600"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "ABB",
+        "models": [
+          "Airbus A300-600ST \"Super Transporter\" / \"Beluga\""
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "ABY",
+        "models": [
+          "Airbus A300-600 Freighter"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "ACT",
+        "models": [
+          "Gulfstream/Rockwell (Aero) Turbo Commander 690"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "AI4",
+        "models": [
+          "Airbus A400M Atlas"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "AN4",
+        "models": [
+          "Antonov An-24"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "AN7",
+        "models": [
+          "Antonov An-72 / An-74"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "ANF",
+        "models": [
+          "Antonov An-12"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "AR1",
+        "models": [
+          "Avro RJ100"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "AR7",
+        "models": [
+          "Avro RJ70"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "AR8",
+        "models": [
+          "Avro RJ85"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "AT4",
+        "models": [
+          "Aerospatiale/Alenia ATR 42-300 / 320"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "AT5",
+        "models": [
+          "Aerospatiale/Alenia ATR 42-500"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "AT7",
+        "models": [
+          "Aerospatiale/Alenia ATR 72-201/-202"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "ATP",
+        "models": [
+          "British Aerospace ATP"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "ATR",
+        "models": [
+          "Aerospatiale/Alenia ATR 42-600",
+          "Aerospatiale/Alenia ATR 72-211/-212",
+          "Aerospatiale/Alenia ATR 72-212A (500)",
+          "Aerospatiale/Alenia ATR 72-212A (600)"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "B11",
+        "models": [
+          "British Aerospace (BAC) One Eleven"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "B20",
+        "models": [
+          "Beechcraft (Super) King Air 200"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "B72",
+        "models": [
+          "Boeing 720B"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "B99",
+        "models": [
+          "Beechcraft Model 99"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "BE4",
+        "models": [
+          "Hawker 400"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "BEH",
+        "models": [
+          "Beechcraft 1900"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "C08",
+        "models": [
+          "Cessna 208 Caravan"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "C17",
+        "models": [
+          "Boeing C-17 Globemaster III"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "C27",
+        "models": [
+          "Comac ARJ21-700 / C909"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "CCJ",
+        "models": [
+          "Canadair Challenger 600"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "CCX",
+        "models": [
+          "Bombardier Global 5000",
+          "Bombardier Global 7500 / Global 8000",
+          "Bombardier Global Express / Raytheon Sentinel"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "SpecialPurpose"
+        ]
+      },
+      {
+        "aircraftType": "CD2",
+        "models": [
+          "Government Aircraft Factories N22B / N24A Nomad"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "CJ1",
+        "models": [
+          "Cessna Citation CJ2",
+          "Cessna Citation CJ3",
+          "Cessna Citation CJ4",
+          "Cessna Citation I",
+          "Cessna Citation Mustang",
+          "Cessna CitationJet",
+          "Cessna Citation II",
+          "Cessna Citation V",
+          "Cessna Citation Excel",
+          "Cessna Citation III, VI, VII",
+          "Cessna Citation Sovereign",
+          "Cessna Citation Latitude",
+          "Cessna Citation Longitude",
+          "Cessna Citation X"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "ConservativeGroupEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ],
+        "note": "Shared IATA code; uses the largest reference class of the listed models. A specific model can require a smaller class."
+      },
+      {
+        "aircraftType": "CL3",
+        "models": [
+          "Bombardier BD-100 Challenger 300",
+          "Bombardier BD-100 Challenger 350"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "CNT",
+        "models": [
+          "Reims-Cessna F406 Caravan II"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "CR1",
+        "models": [
+          "Canadair Regional Jet 100"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "CR2",
+        "models": [
+          "Canadair Regional Jet 200"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "CR7",
+        "models": [
+          "Canadair Regional Jet 550"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "CR9",
+        "models": [
+          "Canadair Regional Jet 900"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "CRK",
+        "models": [
+          "Canadair Regional Jet 1000"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "CS2",
+        "models": [
+          "CASA / IPTN 212 Aviocar"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "CS4",
+        "models": [
+          "Cessna 408 SkyCourier"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "CS5",
+        "models": [
+          "CASA/IPTN CN-235"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "CV5",
+        "models": [
+          "Convair CV-580, Convair CV-600, Convair CV-640"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "D11",
+        "models": [
+          "Douglas DC-10-10 / -15 Passenger"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "D1C",
+        "models": [
+          "Douglas DC-10-30 / -40 Passenger"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "D1M",
+        "models": [
+          "Douglas DC-10-30 Combi"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Combi"
+        ]
+      },
+      {
+        "aircraftType": "D1X",
+        "models": [
+          "Douglas DC-10-10 Freighter"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "D1Y",
+        "models": [
+          "Douglas DC-10-30 / -40 Freighter"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "D20",
+        "models": [
+          "Dassault Falcon 2000"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "D28",
+        "models": [
+          "Dornier 228"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "D38",
+        "models": [
+          "Fairchild Dornier Do.328"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "D8L",
+        "models": [
+          "Douglas DC-8-62"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "D8Q",
+        "models": [
+          "Douglas DC-8-72"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "D8T",
+        "models": [
+          "Douglas DC-8-50"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ],
+        "sourceIds": [
+          "iataEquipmentReference"
+        ],
+        "note": "The secondary IATA reference identifies D8T as a DC-8-50 freighter; the Wikipedia model label omits the freighter qualifier."
+      },
+      {
+        "aircraftType": "D91",
+        "models": [
+          "Douglas DC-9-10"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "D92",
+        "models": [
+          "Douglas DC-9-20"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "D93",
+        "models": [
+          "Douglas DC-9-30"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "D94",
+        "models": [
+          "Douglas DC-9-40"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "D95",
+        "models": [
+          "Douglas DC-9-50"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "DF3",
+        "models": [
+          "Dassault Falcon 50"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "DF6",
+        "models": [
+          "Dassault Falcon 6X"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "DF7",
+        "models": [
+          "Dassault Falcon 7X"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "DF9",
+        "models": [
+          "Dassault Falcon 900"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "DH1",
+        "models": [
+          "De Havilland Canada DHC-8-100 Dash 8 / 8Q"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "DH2",
+        "models": [
+          "De Havilland Canada DHC-8-200 Dash 8 / 8Q"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "DH3",
+        "models": [
+          "De Havilland Canada DHC-8-300 Dash 8 / 8Q"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "DH4",
+        "models": [
+          "De Havilland Canada DHC-8-400 Dash 8Q"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "DH7",
+        "models": [
+          "De Havilland Canada DHC-7 Dash 7"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "DHC",
+        "models": [
+          "De Havilland Canada DHC-5 Buffalo"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ],
+        "sourceIds": [
+          "iataEquipmentReference"
+        ],
+        "note": "Wikipedia lists the DHC-5 Buffalo; the secondary IATA reference lists the DHC-4 Caribou for this code. Source model retained; exact equipment needs confirmation."
+      },
+      {
+        "aircraftType": "DHT",
+        "models": [
+          "De Havilland Canada DHC-6 Twin Otter"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "E54",
+        "models": [
+          "Embraer Legacy 450 / Praetor 500"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "E55",
+        "models": [
+          "Embraer Legacy 500 / Praetor 600"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "E70",
+        "models": [
+          "Embraer 170"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "E75",
+        "models": [
+          "Embraer 175 (short wing)"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "E7W",
+        "models": [
+          "Embraer 175 (long wing)"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "E90",
+        "models": [
+          "Embraer 190 / Lineage 1000"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "E95",
+        "models": [
+          "Embraer 195"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "EA5",
+        "models": [
+          "Eclipse 500"
+        ],
+        "widthClass": "A",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "EM2",
+        "models": [
+          "Embraer EMB 120 Brasilia"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "EMB",
+        "models": [
+          "Embraer EMB 110 Bandeirante"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "EP1",
+        "models": [
+          "Embraer Phenom 100"
+        ],
+        "widthClass": "A",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "EP3",
+        "models": [
+          "Embraer Phenom 300"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "ER3",
+        "models": [
+          "Embraer RJ135",
+          "Embraer Legacy 600 / Legacy 650"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "ConservativeGroupEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ],
+        "note": "Shared IATA code; uses the largest reference class of the listed models. A specific model can require a smaller class."
+      },
+      {
+        "aircraftType": "ER4",
+        "models": [
+          "Embraer RJ145"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "ERD",
+        "models": [
+          "Embraer RJ140"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "F21",
+        "models": [
+          "Fokker F28 Fellowship"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "F27",
+        "models": [
+          "Fokker F27 Friendship"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "F50",
+        "models": [
+          "Fokker 50"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "F70",
+        "models": [
+          "Fokker 70"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "FRJ",
+        "models": [
+          "Fairchild Dornier 328JET"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "GJ4",
+        "models": [
+          "Gulfstream IV"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "GJ5",
+        "models": [
+          "Gulfstream V"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "GJ6",
+        "models": [
+          "Gulfstream G650"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "GL7",
+        "models": [
+          "Gulfstream G700"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "GR1",
+        "models": [
+          "Gulfstream G100"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "GR3",
+        "models": [
+          "Gulfstream G280"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "GRM",
+        "models": [
+          "Grumman G-73 Turbo Mallard"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "GRS",
+        "models": [
+          "Gulfstream Aerospace G-159 Gulfstream I"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "H25",
+        "models": [
+          "British Aerospace 125 series / Hawker/Raytheon 700/800/800XP/850/900",
+          "British Aerospace 125-1000 series / Hawker/Raytheon 1000"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "HHJ",
+        "models": [
+          "Honda HA-420"
+        ],
+        "widthClass": "A",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "HS7",
+        "models": [
+          "Hawker Siddeley HS 748"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "I14",
+        "models": [
+          "Ilyushin Il-114"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "I93",
+        "models": [
+          "Ilyushin Il-96"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "IL6",
+        "models": [
+          "Ilyushin Il-62"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "IL7",
+        "models": [
+          "Ilyushin Il-76"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "IL8",
+        "models": [
+          "Ilyushin Il-18"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "ILW",
+        "models": [
+          "Ilyushin Il-86"
+        ],
+        "widthClass": "E",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "J31",
+        "models": [
+          "British Aerospace Jetstream 31"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "J32",
+        "models": [
+          "British Aerospace Jetstream 32"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "J41",
+        "models": [
+          "British Aerospace Jetstream 41"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "K35",
+        "models": [
+          "Boeing KC-135 Stratotanker"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "SpecialPurpose"
+        ]
+      },
+      {
+        "aircraftType": "L10",
+        "models": [
+          "Lockheed L-1011 Tristar"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "L4T",
+        "models": [
+          "Let 410 Turbolet"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "LOE",
+        "models": [
+          "Lockheed L-188 Electra"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "LOH",
+        "models": [
+          "Lockheed L-182 / 282 / 382 (L-100) Hercules",
+          "Lockheed Martin C-130J Hercules"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "LRJ",
+        "models": [
+          "Learjet 35 / 36 / C-21A",
+          "Learjet 60"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "M11",
+        "models": [
+          "McDonnell Douglas MD-11"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "M1F",
+        "models": [
+          "McDonnell Douglas MD-11F"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "M1M",
+        "models": [
+          "McDonnell Douglas MD-11C"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "IFATCFamilyExample",
+        "serviceTypes": [
+          "Combi"
+        ]
+      },
+      {
+        "aircraftType": "M81",
+        "models": [
+          "McDonnell Douglas MD-81"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "M82",
+        "models": [
+          "McDonnell Douglas MD-82"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "M83",
+        "models": [
+          "McDonnell Douglas MD-83"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "M87",
+        "models": [
+          "McDonnell Douglas MD-87"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "M88",
+        "models": [
+          "McDonnell Douglas MD-88"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "M90",
+        "models": [
+          "McDonnell Douglas MD-90"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "MU2",
+        "models": [
+          "Mitsubishi Mu-2"
+        ],
+        "widthClass": "A",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "ND2",
+        "models": [
+          "Aerospatiale (Nord) 262"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "NDC",
+        "models": [
+          "Aerospatiale SN.601 Corvette"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "P18",
+        "models": [
+          "Piaggio P.180 Avanti"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "PL2",
+        "models": [
+          "Pilatus PC-12"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "PL4",
+        "models": [
+          "Pilatus PC-24"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "PY2",
+        "models": [
+          "Piper Cheyenne 2"
+        ],
+        "widthClass": "A",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "S20",
+        "models": [
+          "Saab 2000"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "SF3",
+        "models": [
+          "Saab SF340A/B"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "SH3",
+        "models": [
+          "Shorts SD.330"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "SH6",
+        "models": [
+          "Shorts SD.360"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "SHB",
+        "models": [
+          "Shorts SC-5 Belfast"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "SHS",
+        "models": [
+          "Shorts SC-7 Skyvan"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "SU9",
+        "models": [
+          "Sukhoi Superjet 100-95"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "SW4",
+        "models": [
+          "Fairchild Swearingen Metroliner"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "T20",
+        "models": [
+          "Tupolev Tu-204 / Tu-214"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "TU3",
+        "models": [
+          "Tupolev Tu-134"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "TU5",
+        "models": [
+          "Tupolev Tu-154"
+        ],
+        "widthClass": "D",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "WWP",
+        "models": [
+          "Israel Aircraft Industries 1124 Westwind"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "YK2",
+        "models": [
+          "Yakovlev Yak-42"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "YK4",
+        "models": [
+          "Yakovlev Yak-40"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger"
+        ]
+      },
+      {
+        "aircraftType": "YN2",
+        "models": [
+          "Harbin Y-12"
+        ],
+        "widthClass": "B",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      },
+      {
+        "aircraftType": "YS1",
+        "models": [
+          "NAMC YS-11"
+        ],
+        "widthClass": "C",
+        "widthClassBasis": "SizeEstimate",
+        "serviceTypes": [
+          "Passenger",
+          "Cargo"
+        ]
+      }
+    ],
+    "excludedModelsWithoutIataCode": [
+      "Boeing B-52 Stratofortress",
+      "Beriev Be-200 Altair",
+      "Lockheed C-5M Super Galaxy",
+      "Bombardier 415",
+      "Gulfstream G200 / IAI Galaxy",
+      "Boeing P-8 Poseidon"
+    ]
+  },
+  "limitations": [
+    "aircraftTypes supplies static IATA-code-to-IFATC reference estimates, not verified aircraft/stand compatibility. Shared IATA codes use the largest listed model class; service roles can remain ambiguous and null width classes must remain unclassified."
+  ]
+}

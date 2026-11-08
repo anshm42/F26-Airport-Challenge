@@ -1,0 +1,50 @@
+{
+  "0500": [
+    {
+      "action": "CreateFlight",
+      "flight": {
+        "carrier": "FX",
+        "flightNumber": "900",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "76F",
+          "departureStation": "YHZ",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "08:00",
+          "scheduledArrivalTime": "10:00"
+        },
+        {
+          "legType": "Through",
+          "aircraftType": "76F",
+          "departureStation": "YYZ",
+          "arrivalStation": "YHZ",
+          "scheduledDepartureTime": "12:00",
+          "scheduledArrivalTime": "14:00"
+        }
+      ]
+    },
+    {
+      "action": "CreateFlight",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "123",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "73G",
+          "departureStation": "YVR",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "09:00",
+          "scheduledArrivalTime": "11:00"
+        }
+      ]
+    }
+  ]
+}

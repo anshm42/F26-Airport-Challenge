@@ -1,0 +1,42 @@
+{
+  "gate_info": {
+    "C1": { "gate_type": 0, "max_wingspan": 65, "dist": -1, "jetbridge": 0 },
+    "C2": { "gate_type": 0, "max_wingspan": 80, "dist": -1, "jetbridge": 0 },
+    "D1": { "gate_type": 1, "max_wingspan": 52, "dist": 150, "jetbridge": 1 },
+    "D2": { "gate_type": 1, "max_wingspan": 52, "dist": 200, "jetbridge": 1 },
+    "D3": { "gate_type": 1, "max_wingspan": 45, "dist": 250, "jetbridge": 0 },
+    "I1": { "gate_type": 2, "max_wingspan": 65, "dist": 100, "jetbridge": 1 },
+    "I2": { "gate_type": 2, "max_wingspan": 65, "dist": 180, "jetbridge": 1 },
+    "I3": { "gate_type": 2, "max_wingspan": 60, "dist": 300, "jetbridge": 0 },
+    "I4": { "gate_type": 2, "max_wingspan": 80, "dist": 120, "jetbridge": 1 }
+  },
+
+  "aircraft_info": {
+    "73G": { "name": "Boeing 737-700", "wingspan": 36, "jetbridge_required": 0, "cargo": false },
+    "321": { "name": "Airbus A321", "wingspan": 36, "jetbridge_required": 0, "cargo": false },
+    "789": { "name": "Boeing 787-9", "wingspan": 60, "jetbridge_required": 1, "cargo": false },
+    "76F": { "name": "Boeing 767-300F (freighter)", "wingspan": 48, "jetbridge_required": 0, "cargo": true }
+  },
+
+  "stations": {
+    "YVR": "domestic",
+    "YUL": "domestic",
+    "YOW": "domestic",
+    "YYC": "domestic",
+    "YHZ": "domestic",
+    "YYJ": "domestic",
+    "YEG": "domestic",
+    "YWG": "domestic",
+    "YQB": "domestic",
+    "LHR": "international",
+    "CDG": "international",
+    "FRA": "international",
+    "NRT": "international",
+    "DXB": "international",
+    "JFK": "international",
+    "LAX": "international",
+    "SFO": "international",
+    "AMS": "international",
+    "ORD": "international"
+  }
+}

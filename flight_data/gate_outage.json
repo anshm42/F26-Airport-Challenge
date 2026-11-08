@@ -1,0 +1,39 @@
+{
+  "0500": [
+    {
+      "action": "CreateFlight",
+      "flight": {
+        "carrier": "AC",
+        "flightNumber": "401",
+        "flightSuffix": null,
+        "originatingDate": "2025-06-15"
+      },
+      "legs": [
+        {
+          "legType": "Originating",
+          "aircraftType": "321",
+          "departureStation": "YUL",
+          "arrivalStation": "YYZ",
+          "scheduledDepartureTime": "09:00",
+          "scheduledArrivalTime": "11:00"
+        },
+        {
+          "legType": "Through",
+          "aircraftType": "321",
+          "departureStation": "YYZ",
+          "arrivalStation": "YUL",
+          "scheduledDepartureTime": "13:00",
+          "scheduledArrivalTime": "15:00"
+        }
+      ]
+    }
+  ],
+  "0900": [
+    {
+      "action": "GateOutage",
+      "gate": "D1",
+      "scheduledStartTime": "10:00",
+      "scheduledEndTime": "15:00"
+    }
+  ]
+}
