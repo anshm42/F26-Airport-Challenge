@@ -242,11 +242,15 @@ function renderFreshness() {
   const age = receivedAt ? Date.now() - receivedAt : Infinity;
   const fresh = $("#fresh");
   const updated = receivedAt ? `updated ${Math.floor(age / 1000)} s ago` : "";
+  const stale = connection === "closed" || age > STALE_AFTER_MS;
+  // The age only matters once updates stop arriving.
   fresh.textContent =
     connection === "closed" ? (receivedAt ? `disconnected · ${updated}` : "no data source")
     : connection === "connecting" ? "connecting…"
-    : updated || "waiting for data…";
-  fresh.classList.toggle("stale", connection === "closed" || age > STALE_AFTER_MS);
+    : !receivedAt ? "waiting for data…"
+    : stale ? updated
+    : "Live information";
+  fresh.classList.toggle("stale", stale);
   renderNotice();
 }
 
@@ -410,8 +414,10 @@ document.addEventListener("click", (e) => {
   // A drag that selects text also fires a click; don't treat it as one.
   if (!target || !document.getSelection()?.isCollapsed) return;
   e.preventDefault();
-  // A flight picked outside the timeline (gate panel, details link, waitlist) is brought into view there.
-  if (target.dataset.id && !target.closest("#timeline") && selection.flightId !== target.dataset.id) centerOn = target.dataset.id;
+  // A flight picked outside the timeline (gate panel, details link, waitlist), or through a shared gate it blocks,
+  // is brought into view there.
+  const remote = !target.closest("#timeline") || target.classList.contains("blocked");
+  if (target.dataset.id && remote && selection.flightId !== target.dataset.id) centerOn = target.dataset.id;
   if (target.dataset.id) toggle("flightId", target.dataset.id);
   else toggle("gate", target.dataset.gate!);
 });

@@ -295,6 +295,8 @@ main { flex: 1; display: grid; grid-template-columns: 1fr 340px; min-height: 0; 
   border-radius: 3px;
   background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--parked) 40%, transparent) 0 2px, transparent 2px 6px);
 }
+.track .blocked[data-id] { cursor: pointer; }
+.track .blocked.selected { border: 1px solid var(--select); }
 .bar.cancelled { background: repeating-linear-gradient(135deg, #555 0 3px, #333 3px 6px); color: var(--muted); text-decoration: line-through; }
 .bar.dim { opacity: 0.25; }
 .bar { scroll-margin: 30px 0 0 120px; }

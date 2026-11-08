@@ -297,7 +297,11 @@ export function renderTimeline(msg: AssignmentsMessage, byId: Map<string, Flight
         if (!(b.end > from && b.start < to)) continue;
         const left = x(b.start);
         const who = b.parked ? b.parked.registration : b.flights.map((f) => f.flightCodes[0]).join(" / ");
-        track += `<div class="blocked" style="left:${left}px;width:${x(b.end) - left}px" title="${esc(`Blocked: ${who} at ${gateLabel(s.gate)} shares this space`)}"></div>`;
+        // Clicking it selects the flight holding the space, like clicking that flight's own bar.
+        const selected = b.flights.some((f) => f.flightId === selection.flightId) ? " selected" : "";
+        track +=
+          `<div class="blocked${selected}"${b.parked ? "" : ` data-id="${esc(b.flights[0].flightId)}"`}` +
+          ` style="left:${left}px;width:${x(b.end) - left}px" title="${esc(`Blocked: ${who} at ${gateLabel(s.gate)} shares this space`)}"></div>`;
       }
     }
     for (const b of visible) {
