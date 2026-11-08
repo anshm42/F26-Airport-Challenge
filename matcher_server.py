@@ -299,6 +299,7 @@ class ScenarioState:
         self.recognized_passenger_gate_outages: list[dict[str, Any]] = []
         self.token_policy: dict[str, dict[str, Any]] = {}
         self.epoch: datetime | None = None
+        self.snapshot_time: datetime | None = None
         self.horizon_end: datetime | None = None
         self.initialized = False
 
@@ -342,7 +343,8 @@ class ScenarioState:
         if message.get("action") != "InitializeAirport":
             raise ValueError("events[0].message must be InitializeAirport.")
 
-        self.epoch = local_event_time(event["timestamp"], self.airport_tz).replace(
+        self.snapshot_time = local_event_time(event["timestamp"], self.airport_tz)
+        self.epoch = self.snapshot_time.replace(
             hour=0, minute=0, second=0, microsecond=0
         )
         self.parked = {
@@ -666,8 +668,6 @@ class ScenarioState:
         if self.epoch is None or self.horizon_end is None:
             raise RuntimeError("Scenario state has not been initialized.")
 
-        # Events are grouped by registration and represent the moments an
-        # aircraft arrives at or departs from YYZ.
         by_registration: dict[str, list[dict[str, Any]]] = defaultdict(list)
         for route in self.routes.values():
             for entry in route["legs"]:
@@ -695,7 +695,6 @@ class ScenarioState:
 
         sessions: dict[str, dict[str, Any]] = {}
         horizon = self.horizon_end
-
         registrations = set(by_registration) | set(self.parked)
         for registration in registrations:
             events = sorted(
@@ -706,39 +705,44 @@ class ScenarioState:
             opened = None
 
             if parked_aircraft:
-                # If an equipment update has assigned a different aircraft to
-                # a scheduled departure, use that leg's aircraft metadata.
-                first_departure = next(
-                    (e for e in events if e["kind"] == "DEPART"), None
-                )
+                first_departure = next((e for e in events if e["kind"] == "DEPART"), None)
                 meta = first_departure["aircraft"] if first_departure else parked_aircraft
-                opened = (self.epoch, f"PARKED:{registration}", meta)
+                # Keep the PARKED anchor (and therefore its fixed initial
+                # position) but remember the arrival leg that brought this
+                # aircraft to its current stand when it is in the schedule.
+                opened = (self.epoch, f"PARKED:{registration}", meta, None)
 
             for item in events:
                 if item["kind"] == "ARRIVE":
                     if opened is None:
-                        opened = (item["time"], item["token"], item["aircraft"])
-                else:  # DEPART
+                        opened = (item["time"], item["token"], item["aircraft"], item["token"])
+                    elif (opened[1].startswith("PARKED:")
+                          and self.snapshot_time is not None
+                          and item["time"] <= self.snapshot_time):
+                        opened = (opened[0], opened[1], opened[2], item["token"])
+                else:
                     if opened is not None:
-                        start_dt, anchor, meta = opened
+                        start_dt, anchor, meta, start_token = opened
                         if item["time"] > start_dt:
                             self._add_session(
-                                sessions, anchor, registration, meta, start_dt, item["time"],
-                                end_token=item["token"]
+                                sessions, anchor, registration, item["aircraft"],
+                                start_dt, item["time"], start_token=start_token,
+                                end_token=item["token"],
                             )
                         opened = None
 
             if opened is not None:
-                start_dt, anchor, meta = opened
+                start_dt, anchor, meta, start_token = opened
                 if horizon > start_dt:
                     self._add_session(
                         sessions, anchor, registration, meta, start_dt, horizon,
-                        end_token=None
+                        start_token=start_token, end_token=None,
                     )
 
         return sessions
 
-    def _add_session(self, sessions, anchor, registration, aircraft, start, end, end_token=None):
+    def _add_session(self, sessions, anchor, registration, aircraft, start, end,
+                     start_token=None, end_token=None):
         aircraft_type = norm(aircraft.get("aircraftType"))
         width_class = self.aircraft_classes.get(aircraft_type)
         session_id = anchor
@@ -772,12 +776,14 @@ class ScenarioState:
             "remoteAllowed": remote_allowed,
             "turnback": turnback,
             "initiallyParked": anchor.startswith("PARKED:"),
-            "start_token": None if anchor.startswith("PARKED:") else anchor,
+            "start_token": start_token if start_token is not None else (
+                None if anchor.startswith("PARKED:") else anchor
+            ),
             "end_token": end_token,
             "preferredTerminal": self.airline_terminals.get(norm(aircraft.get("carrier"))),
             "trafficTypes": sorted({
                 str(self.token_legs[token]["leg"].get("trafficType"))
-                for token in (anchor, end_token)
+                for token in (start_token or (None if anchor.startswith("PARKED:") else anchor), end_token)
                 if token in self.token_legs and self.token_legs[token]["leg"].get("trafficType")
             }),
         }
