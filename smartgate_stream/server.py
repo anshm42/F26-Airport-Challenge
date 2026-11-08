@@ -87,10 +87,10 @@ class ControlHandler(BaseHTTPRequestHandler):
                     for event in events:
                         after = event["sequence"]
                         payload = json.dumps(event, allow_nan=False, separators=(",", ":"))
-                        frame = f"id: {after}\\nevent: decision\\ndata: {payload}\\n\\n"
+                        frame = f"id: {after}\nevent: decision\ndata: {payload}\n\n"
                         self.wfile.write(frame.encode("utf-8"))
                 else:
-                    self.wfile.write(b": keep-alive\\n\\n")
+                    self.wfile.write(b": keep-alive\n\n")
                 self.wfile.flush()
                 if run.snapshot()["status"] not in ACTIVE_STATUSES and not run.events_after(after):
                     break
@@ -125,8 +125,8 @@ class ControlHandler(BaseHTTPRequestHandler):
                     "events": events,
                     "latest_sequence": events[-1]["sequence"] if events else after,
                 })
-            elif self.command == "GET" and len(path) == 4 and path[0] == "runs"
-                    and path[2] == "events" and path[3] == "stream":
+            elif (self.command == "GET" and len(path) == 4 and path[0] == "runs"
+                  and path[2] == "events" and path[3] == "stream"):
                 after = int(query.get("after", ["0"])[0])
                 require(after >= 0, "after must be a nonnegative event sequence")
                 self.stream_events(self.server.manager.get(path[1]), after)
