@@ -149,3 +149,8 @@ python3 -m unittest discover -s tests
 
 Tests include localhost webhook integration and require permission to bind local
 sockets; they do not require internet access or a running matcher.
+
+
+## Matcher and dashboards
+
+The matcher returns validated passenger-gate `assignments` and aircraft `moves` on every webhook. It serves the passenger dashboard WebSocket at `/passenger/ws` and the shared operator JSON snapshot at `/assignments`. See [Matcher API](docs/matcher-api.md) for both dashboard contracts.
