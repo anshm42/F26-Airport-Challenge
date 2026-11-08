@@ -121,7 +121,9 @@ class MatcherServerTests(unittest.TestCase):
         self.assertEqual(self.get("/health")["missed_events"], [[1, 2]])
         self.assertEqual(self.post(self.outage(), 2, "2026-11-07T06:00:00Z")[0], 409)
         status, response = self.post(self.outage(), 4, "2026-11-07T06:01:00Z")
-        self.assertEqual((status, response), (200, {"assignments": [], "moves": []}))
+        self.assertEqual(status, 200)
+        self.assertFalse(response["moves"])
+        self.assertEqual(response["reassessment"], {"at": None})
         status, response = self.post(self.outage(), 5, "2026-11-07T06:02:00Z", {"X-Stream-Resync": "true"})
         self.assertEqual(leg_numbers(response), ["100", "200", "201"])
 
@@ -216,7 +218,7 @@ class MatcherServerTests(unittest.TestCase):
         self.assertEqual(passenger()["type"], "heartbeat")
 
         with patch.object(matcher, "repair_assignments_python",
-                          return_value={"assignments": [], "unassigned": [], "unassigned_reasons": {}}):
+                          wraps=matcher.repair_assignments_python):
             self.post(self.outage(), 1, "2026-11-07T06:00:00Z")
             self.post({"action": "CancelFlight", "flight": PARKED, "legs": [flight("100", "YYZ", "YUL", "06:00",
                        "07:15", PARKED)["legs"][0]], "cancelScope": {"type": "AllLegs"},

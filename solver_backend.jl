@@ -110,6 +110,7 @@ function candidate_gates(session, gates, outages)
     ac_class = as_string(field(session, "widthClass", nothing))
     fixed_gate = as_string(field(session, "fixedGate", ""))
     remote_allowed = as_bool(field(session, "remoteAllowed", false))
+    occupied_gate = as_string(field(session, "occupiedGate", ""))
     for (index, gate) in enumerate(gates)
         gate_id = as_string(field(gate, "id", ""))
         isempty(gate_id) && continue
@@ -118,7 +119,7 @@ function candidate_gates(session, gates, outages)
         # Ordinary flights use remote stands only in the Python overflow
         # fallback after the 60-minute tarmac window. Emergency-authorized
         # flights and aircraft already fixed at a remote stand are exceptions.
-        is_remote && !remote_allowed && gate_id != fixed_gate && continue
+        is_remote && !remote_allowed && gate_id != fixed_gate && gate_id != occupied_gate && continue
         gate_class = as_string(field(gate, "widthClass", nothing))
         width_compatible(ac_class, gate_class) || continue
         traffic_compatible(session, gate) || continue
@@ -163,7 +164,7 @@ function solve_initial(payload)
         end
         unassigned[i] = @variable(model, binary=true)
         # A physical occupant cannot be dropped to make room for future visits.
-        if !isempty(as_string(field(sessions[i], "fixedGate", "")))
+        if !isempty(as_string(field(sessions[i], "fixedGate", ""))) || !isempty(as_string(field(sessions[i], "occupiedGate", "")))
             fix(unassigned[i], 0.0; force=true)
         end
         add_to_expression!(expr, 1.0, unassigned[i])

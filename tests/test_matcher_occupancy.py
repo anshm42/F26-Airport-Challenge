@@ -62,6 +62,24 @@ class MatcherOccupancyTests(unittest.TestCase):
         self.assertEqual(self.stream.gates["D22"], INBOUND)
         self.assertEqual(self.stream.gates["D20"], PARKED)
 
+    def test_initial_traffic_relocation_and_swap(self):
+        self.gates[1] = {**self.gates[1], "allowedTrafficTypes": ["International"]}
+        international = flight("300", "YYZ", "LHR", "06:00", "18:00", PARKED)
+        domestic = flight("301", "YYZ", "YUL", "06:00", "07:00", SPARE)
+        self.initialize([international, domestic], [{**PARKED, "gate": "D20"}, {**SPARE, "gate": "D22"}])
+        self.assertEqual(self.stream.gates["D20"], SPARE)
+        self.assertEqual(self.stream.gates["D22"], PARKED)
+        self.assertEqual(len(matcher.LAST_DECISION_RESPONSE["moves"]), 2)
+
+    def test_initial_incompatible_position_without_destination_fails(self):
+        self.initialize([self.outbound])
+        state, before = matcher.STATE, self.accepted_state()
+        international = flight("300", "YYZ", "LHR", "06:00", "18:00", PARKED)
+        with self.assertRaisesRegex(RuntimeError, "No immediate compatible gate"):
+            self.initialize([international])
+        self.assertIs(matcher.STATE, state)
+        self.assertEqual(self.accepted_state(), before)
+
     def test_without_alternate_gate_future_choice_is_cleared_and_arrival_waits(self):
         self.gates = [g for g in self.gates if g["id"] == "D20"]
         self.initialize()
@@ -112,8 +130,8 @@ class MatcherOccupancyTests(unittest.TestCase):
         return copy.deepcopy({name: getattr(matcher, name) for name in (
             "ASSIGNMENTS", "GATE_STARTS", "LATEST_GATE_STATE", "LATEST_UNASSIGNED_AIRCRAFT",
             "LATEST_SIMULATED_TIME", "PREDICTED_GATE_STATE", "PREDICTED_UNASSIGNED_AIRCRAFT",
-            "LAST_SOLVER_SUMMARY", "LAST_DECISION_RESPONSE", "PASSENGER_LAST_FIELDS",
-            "PASSENGER_PREVIOUS_FIELDS", "LAST_PASSENGER_FLIGHTS_JSON",
+            "LAST_SOLVER_SUMMARY", "LAST_DECISION_RESPONSE", "ASSIGNED_AT", "VISIT_POSITIONS",
+            "UNASSIGNED_REASONS", "DEFERRED_SESSIONS",
         )})
 
     def test_failed_outage_relocation_preserves_all_accepted_state(self):
@@ -131,7 +149,7 @@ class MatcherOccupancyTests(unittest.TestCase):
 
     def test_invalid_initial_plan_does_not_reset_accepted_state_or_passenger_cache(self):
         initial = self.initialize()
-        matcher.PASSENGER_LAST_FIELDS = {"existing": {"gate": "D20"}}
+        matcher.ASSIGNED_AT = {"existing": "2026-11-07T05:00:00Z"}
         state, before = matcher.STATE, self.accepted_state()
         with patch.object(matcher, "run_julia", return_value={"assignments": [], "unassigned": []}):
             with self.assertRaisesRegex(RuntimeError, "Missing immediate reservation"):
