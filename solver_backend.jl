@@ -6,8 +6,8 @@
 # sessions, minimizing unnecessary gate moves.
 #
 # Aircraft and stand width classes are supplied by Python after reading the
-# repository's static JSON references. The same-or-next-larger rule is a
-# simulator heuristic only, NOT verified Pearson/GTAA operational approval.
+# repository's static JSON references. The passenger crosswalk widthClass is treated as maximum mapped capacity;
+# this is a simulator rule, NOT verified Pearson/GTAA operational approval.
 
 using JSON
 using JuMP
