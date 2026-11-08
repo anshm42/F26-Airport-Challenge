@@ -122,8 +122,10 @@ def build_assignments_message(snapshot: ViewSnapshot, now: datetime) -> dict[str
     for sid, session in sessions.items():
         if session.get("end_token"):
             token_role.setdefault(session["end_token"], (sid, "outbound"))
-        if session.get("start_token"):
-            token_role[session["start_token"]] = (sid, "inbound")
+        # A merged visit (its departure was cancelled) has several arrivals.
+        for token in session.get("leg_tokens") or (session.get("start_token"),):
+            if token and token != session.get("end_token"):
+                token_role[token] = (sid, "inbound")
 
     def placement(sid: str, role: str) -> tuple[str | None, dict[str, str] | None, str | None]:
         """Gate, occupancy and assignedAt for one half of a visit.
