@@ -51,20 +51,57 @@ function overlaps_outage(session, gate, outages)
     return false
 end
 
-function gate_cost(session, gate, index::Int)
+function is_domestic_to_international(session)
+    arrival = as_string(field(session, "arrivalTrafficType", ""))
+    departure = as_string(field(session, "departureTrafficType", ""))
+    return arrival == "Domestic" && departure == "International"
+end
+
+function traffic_compatible(session, gate)
+    arrival = as_string(field(session, "arrivalTrafficType", ""))
+    departure = as_string(field(session, "departureTrafficType", ""))
+
+    # International arrivals may not be turned into domestic departures.
+    arrival == "International" && departure == "Domestic" && return false
+
+    required = Set(filter(x -> !isempty(x), [arrival, departure]))
+    isempty(required) && return true
+
+    allowed_raw = field(gate, "allowedTrafficTypes", Any[])
+    allowed = Set(as_string(x) for x in allowed_raw)
+    # An empty list means the reference has no zoning classification for this
+    # resource (e.g. an overflow stand); do not invent a restriction.
+    isempty(allowed) && return true
+    return issubset(required, allowed)
+end
+
+function gate_cost(session, gate, index::Int, costs=Dict{String,Any}())
     ac_class = as_string(field(session, "widthClass", nothing))
     gate_class = as_string(field(gate, "widthClass", nothing))
     cost = ac_class == gate_class ? 0.0 : NEXT_LARGER_CLASS_PENALTY
-    # Remote H positions are valid passenger resources in the checked-in
-    # crosswalk, but remain a last resort when a terminal gate is feasible.
-    if as_string(field(gate, "kind", "gate")) == "remote"
+
+    is_remote = as_string(field(gate, "kind", "gate")) == "remote"
+    if is_remote
         cost += TURNBACK_REMOTE_PENALTY
+        if as_bool(field(session, "remoteAllowed", false))
+            cost += Float64(field(costs, "emergencyRemotePenalty", EMERGENCY_GATE_PENALTY))
+        end
     end
+
     preferred = as_string(field(session, "preferredTerminal", ""))
     terminal = as_string(field(gate, "terminal", ""))
     if !isempty(preferred) && !isempty(terminal) && preferred != terminal
-        cost += 75.0 # soft preference only; terminals are not exclusive
+        cost += 75.0
     end
+
+    walking_class = Float64(field(gate, "walkingDistanceClass", 10.0))
+    walking_weight = Float64(field(costs, "walkingDistancePerClass", 10.0))
+    cost += walking_class * walking_weight
+
+    if is_domestic_to_international(session)
+        cost += Float64(field(costs, "domesticToInternationalPenalty", 1_000.0))
+    end
+
     return cost + index * 0.001
 end
 
@@ -72,12 +109,19 @@ function candidate_gates(session, gates, outages)
     result = Tuple{String,Int}[]
     ac_class = as_string(field(session, "widthClass", nothing))
     fixed_gate = as_string(field(session, "fixedGate", ""))
+    remote_allowed = as_bool(field(session, "remoteAllowed", false))
     for (index, gate) in enumerate(gates)
         gate_id = as_string(field(gate, "id", ""))
         isempty(gate_id) && continue
         !isempty(fixed_gate) && gate_id != fixed_gate && continue
+        is_remote = as_string(field(gate, "kind", "gate")) == "remote"
+        # Ordinary flights use remote stands only in the Python overflow
+        # fallback after the 60-minute tarmac window. Emergency-authorized
+        # flights and aircraft already fixed at a remote stand are exceptions.
+        is_remote && !remote_allowed && gate_id != fixed_gate && continue
         gate_class = as_string(field(gate, "widthClass", nothing))
         width_compatible(ac_class, gate_class) || continue
+        traffic_compatible(session, gate) || continue
         overlaps_outage(session, gate, outages) && continue
         push!(result, (gate_id, index))
     end
@@ -88,6 +132,7 @@ function solve_initial(payload)
     sessions = field(payload, "sessions", Any[])
     gates = field(payload, "gates", Any[])
     outages = field(payload, "outages", Dict{String,Any}())
+    costs = field(payload, "costs", Dict{String,Any}())
     n = length(sessions)
     if n == 0
         JSON.print(stdout, Dict("assignments" => Any[], "unassigned" => Any[]))
@@ -154,7 +199,7 @@ function solve_initial(payload)
         add_to_expression!(objective, penalty, unassigned[i])
         for (gate_id, index) in candidates[i]
             gate = gates[index]
-            add_to_expression!(objective, gate_cost(sessions[i], gate, index), x[(i, gate_id)])
+            add_to_expression!(objective, gate_cost(sessions[i], gate, index, costs), x[(i, gate_id)])
         end
     end
     @objective(model, Min, objective)
@@ -189,6 +234,7 @@ function solve_repair(payload)
     sessions = field(payload, "sessions", Any[])
     gates = field(payload, "gates", Any[])
     outages = field(payload, "outages", Dict{String,Any}())
+    costs = field(payload, "costs", Dict{String,Any}())
     old_assignments_raw = field(payload, "assignments", Dict{String,Any}())
     changed_raw = field(payload, "changed", Any[])
     changed = Set(as_string(x) for x in changed_raw)
@@ -226,7 +272,7 @@ function solve_repair(payload)
         candidates = copy(candidate_map[sid])
         sort!(candidates, by = item -> (
             old_gate !== nothing && item[1] == old_gate ? 0 : 1,
-            gate_cost(session, gates[item[2]], item[2]),
+            gate_cost(session, gates[item[2]], item[2], costs),
             item[1],
         ))
         selected = nothing
