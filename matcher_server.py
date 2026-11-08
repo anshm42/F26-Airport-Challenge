@@ -1318,7 +1318,11 @@ def dashboard_snapshot() -> dict[str, Any]:
 def _handle_initialize(message: dict[str, Any], simulated_time: str) -> dict[str, Any]:
     global STATE, ASSIGNMENTS, GATE_STARTS
     global LATEST_GATE_STATE, LATEST_UNASSIGNED_AIRCRAFT, LATEST_SIMULATED_TIME, LAST_SOLVER_SUMMARY
+    global PASSENGER_LAST_FIELDS, PASSENGER_PREVIOUS_FIELDS, LAST_PASSENGER_FLIGHTS_JSON
 
+    PASSENGER_LAST_FIELDS = {}
+    PASSENGER_PREVIOUS_FIELDS = {}
+    LAST_PASSENGER_FLIGHTS_JSON = None
     aircraft_classes, gates, airport_timezone = load_references()
     candidate = ScenarioState({}, aircraft_classes, gates, airport_timezone)
     candidate.initialize({"timestamp": simulated_time, "message": message})
@@ -1717,7 +1721,55 @@ class MatcherHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt: str, *args) -> None:
         sys.stdout.write("[%s] %s\n" % (self.log_date_time_string(), fmt % args))
 
+    def _serve_passenger_websocket(self, query: str) -> None:
+        if self.headers.get("Upgrade", "").lower() != "websocket":
+            _json_response(self, 426, {"error": "WebSocket upgrade required"})
+            return
+        key = self.headers.get("Sec-WebSocket-Key", "").strip()
+        if not key:
+            _json_response(self, 400, {"error": "Missing Sec-WebSocket-Key"})
+            return
+        accept = base64.b64encode(
+            hashlib.sha1((key + WEBSOCKET_GUID).encode("ascii")).digest()
+        ).decode("ascii")
+        self.send_response(101, "Switching Protocols")
+        self.send_header("Upgrade", "websocket")
+        self.send_header("Connection", "Upgrade")
+        self.send_header("Sec-WebSocket-Accept", accept)
+        self.end_headers()
+
+        selectors = parse_passenger_gate_selectors(parse_qs(query).get("gates", [None])[0])
+        sock = self.connection
+        with PASSENGER_CLIENT_LOCK:
+            PASSENGER_CLIENTS[sock] = selectors
+        try:
+            with STATE_LOCK:
+                message = build_passenger_message()
+            outgoing = {
+                **message,
+                "flights": filter_passenger_flights(message["flights"], selectors),
+            }
+            _ws_send(sock, json.dumps(outgoing, separators=(",", ":"), allow_nan=False).encode("utf-8"))
+            while True:
+                opcode, payload = _ws_read_frame(sock)
+                if opcode is None:
+                    break
+                if opcode == 8:
+                    _ws_send(sock, payload, opcode=8)
+                    break
+                if opcode == 9:
+                    _ws_send(sock, payload, opcode=10)
+        except (ConnectionError, OSError):
+            pass
+        finally:
+            with PASSENGER_CLIENT_LOCK:
+                PASSENGER_CLIENTS.pop(sock, None)
+
     def do_GET(self) -> None:
+        parsed = urlsplit(self.path)
+        if parsed.path == "/passenger/ws":
+            self._serve_passenger_websocket(parsed.query)
+            return
         if self.path == "/health":
             with STATE_LOCK:
                 _json_response(self, 200, {
@@ -1760,6 +1812,7 @@ class MatcherHandler(BaseHTTPRequestHandler):
                     CURRENT_RUN_ID = run_id
                     LAST_EVENT_INDEX = 0
                     LAST_EVENT_ID = self.headers.get("X-Stream-Event-Id")
+                    broadcast_passenger_assignments(force=True)
                     _json_response(self, 200, summary)
                     return
 
@@ -1774,6 +1827,7 @@ class MatcherHandler(BaseHTTPRequestHandler):
                 summary = _handle_update(message, simulated_time)
                 LAST_EVENT_INDEX = index
                 LAST_EVENT_ID = self.headers.get("X-Stream-Event-Id")
+                broadcast_passenger_assignments()
                 print(json.dumps({
                     "event_id": LAST_EVENT_ID,
                     "simulated_time": simulated_time,
