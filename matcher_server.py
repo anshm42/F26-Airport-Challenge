@@ -37,6 +37,7 @@ STATION_TZ_DEFAULT = _DATA_DIR / "station_timezones.json" if (_DATA_DIR / "stati
 STATION_TZ_JSON = Path(os.environ.get("GMS_STATION_TIMEZONES_JSON", STATION_TZ_DEFAULT))
 STREAM_PROFILES_JSON = _DATA_DIR / "stream_profiles.json"
 AIRLINE_TERMINALS: dict[str, str] = {}
+AIRLINE_NAMES: dict[str, str] = {}
 JULIA_TIMEOUT = float(os.environ.get("GMS_JL_TIMEOUT", "9.0"))
 WIDTH_CLASSES = ("A", "B", "C", "D", "E", "F")
 
@@ -227,8 +228,12 @@ def load_references() -> tuple[dict[str, str], list[dict[str, Any]], str]:
 
     # Keep the existing global airline-terminal reference available to the
     # scenario builder without treating it as an exclusive gate restriction.
-    global AIRLINE_TERMINALS
+    global AIRLINE_TERMINALS, AIRLINE_NAMES
     AIRLINE_TERMINALS = airline_terminals
+    AIRLINE_NAMES = {
+        norm(row.get("carrier")): str(row.get("name") or row.get("carrier") or "")
+        for row in pearson_data.get("airlineTerminals", {}).get("records", [])
+    }
     return aircraft_classes, gates, str(airport_timezone)
 
 
@@ -1146,6 +1151,7 @@ def build_stream_decisions(
     session_ids: set[str] | None = None,
     *,
     include_all: bool = False,
+    respect_gate_start: bool = True,
 ) -> dict[str, list[dict[str, Any]]]:
     """Translate internal parking-session choices into the stream's exact contract."""
     selected = set(sessions) if include_all else set(session_ids or ())
@@ -1175,7 +1181,7 @@ def build_stream_decisions(
         # choice before its actual gate-entry time; send it when the aircraft is
         # on the ground and the reserved slot has become usable.
         effective_time = now_minute if is_current else start
-        if gate_start > effective_time:
+        if respect_gate_start and gate_start > effective_time:
             continue
 
         for token in (session.get("start_token"), session.get("end_token")):
@@ -1235,7 +1241,8 @@ def dashboard_snapshot() -> dict[str, Any]:
     sessions = STATE.build_sessions()
     status = build_aircraft_status(sessions, ASSIGNMENTS, GATE_STARTS)
     full = build_stream_decisions(
-        STATE, sessions, ASSIGNMENTS, GATE_STARTS, include_all=True
+        STATE, sessions, ASSIGNMENTS, GATE_STARTS, include_all=True,
+        respect_gate_start=False
     )
     occupants = {
         gate: plane for gate, plane in LATEST_GATE_STATE.items() if plane is not None
