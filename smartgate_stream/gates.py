@@ -136,10 +136,30 @@ class GateState:
                             or message.get("equipmentUpdate", {}).get("scope") == "AllLegs")
                 affected = [value for key, value in self.flights.items()
                             if value["route"] == target["route"]] if all_legs else [target]
-                for record in affected:
-                    if action == "UpdateEquipment":
-                        record["aircraft"] = self._aircraft(message["flight"]).copy()
-                    else:
+                if action == "UpdateEquipment":
+                    old_tails = {record["aircraft"]["registration"] for record in affected}
+                    new_plane = self._aircraft(message["flight"]).copy()
+                    new_tail = new_plane["registration"]
+                    for record in affected:
+                        record["aircraft"] = new_plane.copy()
+                    # Equipment changes can change registration. Keep the
+                    # stream's grounded index and gateState occupant identity
+                    # synchronized so matcher moves reference the new tail.
+                    for old_tail in old_tails:
+                        if old_tail == new_tail or old_tail not in self.grounded:
+                            continue
+                        require(new_tail not in self.grounded,
+                                "equipment update would duplicate a grounded registration")
+                        self.grounded.pop(old_tail)
+                        self.grounded[new_tail] = new_plane.copy()
+                        self.gates = {
+                            gate: (new_plane.copy()
+                                   if occupant is not None and occupant["registration"] == old_tail
+                                   else occupant)
+                            for gate, occupant in self.gates.items()
+                        }
+                else:
+                    for record in affected:
                         record["cancelled"] = action == "CancelFlight"
         self.advance(timestamp)
 
