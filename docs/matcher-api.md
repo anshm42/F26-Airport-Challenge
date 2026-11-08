@@ -124,6 +124,8 @@ The JSON response includes:
   occupant, and outage windows.
 - `outages`, `solver`, `last_decision_response`, `last_decision_timestamp`,
   `run_id`, `last_event_id`, and `simulated_time`.
+- `airport_timezone`, `schedule_epoch`, and `current_minute` so the operator
+  view can convert session and outage minute offsets into local clock times.
 
 The same endpoint can be polled by the operator dashboard. It does not need to
 know whether an assignment came from the initial JuMP/Gurobi optimization or
