@@ -66,7 +66,7 @@ On a heartbeat the view keeps the last flight list and only updates its clock ("
 
 - **`flightCodes`** is never empty. The first entry is the primary: `flight.carrier` + the leg's `flightNumber` (+ `flightSuffix`) from [`../JsonFlightMessageSpecification.md`](../JsonFlightMessageSpecification.md). The alternates follow in the order of the leg's `codeshare` array (`carrier` + `flightNumber`). Codeshares are aliases for the same leg, never separate flights or gate assignments. The view shows each code with its airline's logo and, when they don't fit, scrolls through them automatically in a continuous loop.
 - **`airline`** is the airline's name, from `airlineTerminals` in [`../data/pearson.json`](../data/pearson.json) (as in the operator API).
-- **Arrival vs departure** is derived from whether `from` or `to` is `YYZ`.
+- **Arrival vs departure**: a flight is an arrival when `to` is `YYZ`, otherwise a departure. A turnback (`YYZ` → `YYZ`) is an arrival.
 - **Times** are ISO 8601 strings and must include a UTC offset. The server rejects times without one; the view never assumes local time and always formats in `America/Toronto`, regardless of the device's timezone.
 - **`previous`** holds the last value of any field that changed. It may contain any top-level field except `flightId` and `previous`. The server only has to remember the last value per field, not a history. The view displays whatever is present and ignores what isn't.
 - **`misc`** is for information we may or may not have access to (status, aircraft, …). The view renders keys it recognises and ignores the rest; the server can add keys without coordinating. Recognised so far: `status` (string, shown as-is).
