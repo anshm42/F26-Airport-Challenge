@@ -1500,7 +1500,8 @@ def dashboard_snapshot() -> dict[str, Any]:
 
 def _handle_initialize(message: dict[str, Any], simulated_time: str) -> dict[str, Any]:
     global STATE, ASSIGNMENTS, GATE_STARTS
-    global LATEST_GATE_STATE, LATEST_UNASSIGNED_AIRCRAFT, LATEST_SIMULATED_TIME, LAST_SOLVER_SUMMARY
+    global LATEST_GATE_STATE, PREDICTED_GATE_STATE, PREDICTED_UNASSIGNED_AIRCRAFT
+    global LATEST_UNASSIGNED_AIRCRAFT, LATEST_SIMULATED_TIME, LAST_SOLVER_SUMMARY
     global PASSENGER_LAST_FIELDS, PASSENGER_PREVIOUS_FIELDS, LAST_PASSENGER_FLIGHTS_JSON
     global LAST_DECISION_RESPONSE
 
@@ -1565,13 +1566,17 @@ def _handle_initialize(message: dict[str, Any], simulated_time: str) -> dict[str
     decisions = build_stream_decisions(
         candidate, sessions, assignments, gate_starts, include_all=True
     )
+    PREDICTED_GATE_STATE, PREDICTED_UNASSIGNED_AIRCRAFT = predict_post_decision_gate_state(
+        candidate, sessions, assignments, gate_starts, set(sessions)
+    )
     LAST_DECISION_RESPONSE = copy.deepcopy(decisions)
     return decisions
 
 
 def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, Any]:
     global STATE, ASSIGNMENTS, GATE_STARTS
-    global LATEST_GATE_STATE, LATEST_UNASSIGNED_AIRCRAFT, LATEST_SIMULATED_TIME, LAST_SOLVER_SUMMARY
+    global LATEST_GATE_STATE, PREDICTED_GATE_STATE, PREDICTED_UNASSIGNED_AIRCRAFT
+    global LATEST_UNASSIGNED_AIRCRAFT, LATEST_SIMULATED_TIME, LAST_SOLVER_SUMMARY
     global LAST_DECISION_RESPONSE
 
     if STATE is None or not STATE.initialized:
@@ -1651,6 +1656,9 @@ def _handle_update(message: dict[str, Any], simulated_time: str) -> dict[str, An
         "reassignments": len(solver_result.get("reassignments", [])),
     }
     decisions = build_stream_decisions(
+        candidate, after, assignments, gate_starts, decision_sessions
+    )
+    PREDICTED_GATE_STATE, PREDICTED_UNASSIGNED_AIRCRAFT = predict_post_decision_gate_state(
         candidate, after, assignments, gate_starts, decision_sessions
     )
     LAST_DECISION_RESPONSE = copy.deepcopy(decisions)
