@@ -130,6 +130,16 @@ See the [JSON Flight Message Specification](JsonFlightMessageSpecification.md)
 for initialization and all eight update actions, and the
 [stream guide](docs/stream.md) for complete timing, generation, and delivery rules.
 
+## Operator view
+
+A read-only gate timeline for operators, reading the matcher's WebSocket API. Until the matcher exists it replays
+the stream's scenarios with a stand-in matcher whose gate choices are potentially incorrect. See the
+[operator API and viewer](operator/SPEC.md).
+
+```sh
+cd operator && npm install && npm run dev
+```
+
 ## Reference data
 
 - [Pearson airport data](data/pearson.json) and [sources and usage notes](data/README.md).
