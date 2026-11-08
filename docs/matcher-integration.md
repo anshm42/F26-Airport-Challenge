@@ -161,11 +161,10 @@ Julia/Gurobi environment and a valid license:
 RUN_GUROBI_TESTS=1 python3 -m unittest discover -s tests -p test_solver_occupancy.py -v
 ```
 
-The case has one occupied gate and two non-overlapping future arrivals. The
-parked aircraft must keep its reservation; both arrivals must remain unassigned.
-This regression currently fails because the initial model permits dropping the
-parked aircraft. It is opt-in so the ordinary suite does not require a Gurobi
-license. The reservation fix has not yet been applied.
+The cases check that an occupied gate keeps its reservation, later arrivals
+use another compatible gate when one is available, and a departure releases the
+gate. They also check shared conflict groups and invalid mandatory reservations.
+These checks are opt-in so the ordinary suite does not require a Gurobi license.
 
 To roll back a matcher revision, stop its process and restore the previous
 detached checkout revision. Restart the matcher and start a new stream run.
