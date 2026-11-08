@@ -1,305 +1,274 @@
 #!/usr/bin/env julia
 
-# JuMP + Gurobi backend for the GMS evaluator.
+# SmartGate session allocator.
+# Initial mode: one joint JuMP/Gurobi ILP over all parking sessions.
+# Repair mode: preserve unaffected bookings and greedily reassign only changed
+# sessions, minimizing unnecessary gate moves.
 #
-# Input: one JSON observation on stdin (the evaluator's decide() observation).
-# Output: one JSON object on stdout:
-#   {"assignments":[[flight_id,gate_id],...],
-#    "reassignments":[[flight_id,gate_id],...]}
-#
-# Existing, unchanged assignments are treated as fixed occupancy. Waiting
-# flights and changed flights are optimized jointly. Changed flights are
-# removed from their old occupancy before optimization, then either retained
-# at their current gate or moved if necessary / worthwhile.
+# Aircraft and stand width classes are supplied by Python after reading the
+# repository's static JSON references. The same-or-next-larger rule is a
+# simulator heuristic only, NOT verified Pearson/GTAA operational approval.
 
 using JSON
 using JuMP
 using Gurobi
 
-const CARGO = 0
-const DOMESTIC = 1
-const INTERNATIONAL = 2
+const WIDTH_CLASSES = ["A", "B", "C", "D", "E", "F"]
+const UNASSIGNED_PENALTY = 1.0e7
+const PRIORITY_UNASSIGNED_PENALTY = 1.0e9
+const NEXT_LARGER_CLASS_PENALTY = 500.0
+const TURNBACK_REMOTE_PENALTY = 5_000.0
+const EMERGENCY_GATE_PENALTY = 1_000.0
+const SOLVER_TIME_LIMIT = 6.0
 
-# These penalties reflect the evaluator's priorities: avoid unassigned
-# flights first, then avoid unnecessary moves and premium-gate use.
-const UNASSIGNED_PENALTY = 100_000.0
-const EMERGENCY_UNASSIGNED_PENALTY = 10_000_000.0
-const REASSIGNMENT_PENALTY = 1_000.0
-const DOMESTIC_ON_INTERNATIONAL_PENALTY = 1_000.0
+field(obj, key, default=nothing) = obj isa AbstractDict ? get(obj, key, default) : default
+as_string(x, default="") = x === nothing ? default : string(x)
+as_bool(x) = x isa Bool ? x : (x === nothing ? false : lowercase(string(x)) in ("true", "1", "yes"))
 
-function field(obj, key, default=nothing)
-    obj isa AbstractDict || return default
-    return get(obj, key, default)
+function intervals_overlap(a_start::Float64, a_end::Float64, b_start::Float64, b_end::Float64)
+    return a_start < b_end && b_start < a_end
 end
 
-function as_float(x, label)
-    x === nothing && error("Missing required numeric field: $label")
-    return Float64(x)
+function width_compatible(aircraft_class, stand_class)
+    aircraft_class in WIDTH_CLASSES || return false
+    stand_class in WIDTH_CLASSES || return false
+    ai = findfirst(==(aircraft_class), WIDTH_CLASSES)
+    gi = findfirst(==(stand_class), WIDTH_CLASSES)
+    return gi == ai || gi == ai + 1
 end
 
-function as_int(x, label)
-    x === nothing && error("Missing required integer field: $label")
-    return Int(x)
-end
-
-function as_bool(x)
-    x === nothing && return false
-    x isa Bool && return x
-    x isa Number && return x != 0
-    s = lowercase(strip(string(x)))
-    return s in ("true", "1", "yes", "y")
-end
-
-function intervals_of(flight, label)
-    raw = field(flight, "intervals", nothing)
-    raw === nothing && error("Flight $label has no 'intervals' field.")
-    intervals = Tuple{Float64,Float64}[]
-    for item in raw
-        length(item) == 2 || error("Invalid interval for flight $label: $item")
-        a, b = Float64(item[1]), Float64(item[2])
-        b > a || error("Non-positive occupancy interval for flight $label: $item")
-        push!(intervals, (a, b))
-    end
-    return intervals
-end
-
-overlap(a, b) = a[1] < b[2] && b[1] < a[2]
-
-function overlaps_any(a_intervals, b_intervals)
-    for a in a_intervals, b in b_intervals
-        overlap(a, b) && return true
+function overlaps_outage(session, gate_id, outages)
+    windows = field(outages, gate_id, Any[])
+    s = Float64(field(session, "start", 0.0))
+    e = Float64(field(session, "end", 0.0))
+    for window in windows
+        length(window) == 2 || continue
+        if intervals_overlap(s, e, Float64(window[1]), Float64(window[2]))
+            return true
+        end
     end
     return false
 end
 
-function compatible(flight, gate)
-    wingspan = as_float(field(flight, "wingspan", nothing), "flight.wingspan")
-    max_wingspan = as_float(field(gate, "max_wingspan", nothing), "gate.max_wingspan")
-    wingspan <= max_wingspan || return false
-
-    if as_bool(field(flight, "jetbridge_required", false)) &&
-       !as_bool(field(gate, "jetbridge", false))
-        return false
+function gate_cost(session, gate, index::Int)
+    ac_class = as_string(field(session, "widthClass", nothing))
+    gate_class = as_string(field(gate, "widthClass", nothing))
+    cost = ac_class == gate_class ? 0.0 : NEXT_LARGER_CLASS_PENALTY
+    kind = as_string(field(gate, "kind", "gate"))
+    remote_allowed = as_bool(field(session, "remoteAllowed", false))
+    turnback = as_bool(field(session, "turnback", false))
+    if kind == "remote"
+        cost += turnback ? TURNBACK_REMOTE_PENALTY : 0.0
+    elseif remote_allowed && !turnback
+        # For non-turnback emergencies, prefer a remote position where feasible
+        # so ordinary passenger gates remain available.
+        cost += EMERGENCY_GATE_PENALTY
     end
-
-    category = as_int(field(flight, "category", nothing), "flight.category")
-    gate_type = as_int(field(gate, "gate_type", nothing), "gate.gate_type")
-
-    if category == CARGO
-        return gate_type == CARGO
-    elseif category == INTERNATIONAL
-        return gate_type == INTERNATIONAL
-    elseif category == DOMESTIC
-        return gate_type in (DOMESTIC, INTERNATIONAL)
-    end
-
-    error("Unknown flight category $category (expected 0, 1, or 2).")
+    # Stable deterministic tie-break without materially changing the objective.
+    return cost + index * 0.001
 end
 
-function gate_cost(flight, gate)
-    cost = as_float(field(gate, "dist", 0.0), "gate.dist")
-
-    category = as_int(field(flight, "category", nothing), "flight.category")
-    gate_type = as_int(field(gate, "gate_type", nothing), "gate.gate_type")
-
-    if category == DOMESTIC && gate_type == INTERNATIONAL
-        cost += DOMESTIC_ON_INTERNATIONAL_PENALTY
+function candidate_gates(session, gates, outages)
+    result = Tuple{String,Int}[]
+    ac_class = as_string(field(session, "widthClass", nothing))
+    remote_allowed = as_bool(field(session, "remoteAllowed", false))
+    for (index, gate) in enumerate(gates)
+        gate_id = as_string(field(gate, "id", ""))
+        isempty(gate_id) && continue
+        kind = as_string(field(gate, "kind", "gate"))
+        kind == "remote" && !remote_allowed && continue
+        gate_class = as_string(field(gate, "widthClass", nothing))
+        width_compatible(ac_class, gate_class) || continue
+        overlaps_outage(session, gate_id, outages) && continue
+        push!(result, (gate_id, index))
     end
-
-    return cost
+    return result
 end
 
-function booking_flight_id(booking)
-    return string(field(booking, "flight_id", ""))
-end
-
-function main()
-    input_text = read(stdin, String)
-    observation = JSON.parse(input_text)
-
-    gates = field(observation, "gates", Dict{String,Any}())
-    outages = field(observation, "gate_outages", Dict{String,Any}())
-    waiting = field(observation, "waiting_flights", Dict{String,Any}())
-    changed = field(observation, "changed_flights", Dict{String,Any}())
-    gate_assignments = field(observation, "gate_assignments", Dict{String,Any}())
-
-    # Build the decision set: all waiting flights plus all changed flights.
-    # A changed flight uses its NEW flight view and remembers its current gate.
-    flights = Dict{String,Dict{String,Any}}()
-    old_gate = Dict{String,Union{Nothing,String}}()
-    is_waiting = Set{String}()
-
-    for (fid_raw, view) in waiting
-        fid = string(fid_raw)
-        flights[fid] = Dict{String,Any}(string(k) => v for (k, v) in view)
-        old_gate[fid] = nothing
-        push!(is_waiting, fid)
-    end
-
-    for (fid_raw, change) in changed
-        fid = string(fid_raw)
-        new_view = field(change, "new", nothing)
-        new_view isa AbstractDict ||
-            error("changed_flights[$fid] is missing its 'new' flight view.")
-
-        flights[fid] = Dict{String,Any}(string(k) => v for (k, v) in new_view)
-        current = field(change, "gate_id", nothing)
-        old_gate[fid] = current === nothing ? nothing : string(current)
-    end
-
-    decision_ids = collect(keys(flights))
-    sort!(decision_ids)
-
-    # Fixed occupancy consists of bookings belonging to flights outside the
-    # decision set. Changed flights' old bookings are intentionally removed.
-    fixed_by_gate = Dict{String,Vector{Vector{Tuple{Float64,Float64}}}}()
-    for (gid_raw, bookings) in gate_assignments
-        gid = string(gid_raw)
-        fixed_by_gate[gid] = Vector{Vector{Tuple{Float64,Float64}}}()
-        for booking in bookings
-            fid = booking_flight_id(booking)
-            fid in decision_ids && continue
-            ints = Tuple{Float64,Float64}[]
-            for item in field(booking, "intervals", [])
-                push!(ints, (Float64(item[1]), Float64(item[2])))
-            end
-            push!(fixed_by_gate[gid], ints)
-        end
-    end
-
-    # Normalize outage intervals.
-    outage_by_gate = Dict{String,Vector{Tuple{Float64,Float64}}}()
-    for (gid_raw, windows) in outages
-        gid = string(gid_raw)
-        outage_by_gate[gid] = Tuple{Float64,Float64}[
-            (Float64(w[1]), Float64(w[2])) for w in windows
-        ]
-    end
-
-    # Candidate gates satisfy aircraft constraints, outage constraints, and
-    # do not conflict with any unchanged booking already occupying the gate.
-    gate_ids = sort!(string.(collect(keys(gates))))
-    candidates = Dict{String,Vector{String}}()
-    flight_intervals = Dict{String,Vector{Tuple{Float64,Float64}}}()
-
-    for fid in decision_ids
-        flight = flights[fid]
-        flight_intervals[fid] = intervals_of(flight, fid)
-        candidates[fid] = String[]
-
-        for gid in gate_ids
-            gate = gates[gid]
-            compatible(flight, gate) || continue
-
-            down_windows = get(outage_by_gate, gid, Tuple{Float64,Float64}[])
-            overlaps_any(flight_intervals[fid], down_windows) && continue
-
-            fixed_bookings = get(fixed_by_gate, gid, Vector{Vector{Tuple{Float64,Float64}}}())
-            any(book -> overlaps_any(flight_intervals[fid], book), fixed_bookings) && continue
-
-            push!(candidates[fid], gid)
-        end
-    end
-
-    # Empty decision set is a valid no-op tick.
-    if isempty(decision_ids)
-        JSON.print(stdout, Dict("assignments" => Any[], "reassignments" => Any[]))
+function solve_initial(payload)
+    sessions = field(payload, "sessions", Any[])
+    gates = field(payload, "gates", Any[])
+    outages = field(payload, "outages", Dict{String,Any}())
+    n = length(sessions)
+    if n == 0
+        JSON.print(stdout, Dict("assignments" => Any[], "unassigned" => Any[]))
         return
+    end
+
+    session_ids = [as_string(field(s, "id", "")) for s in sessions]
+    length(unique(session_ids)) == length(session_ids) || error("Duplicate parking-session IDs.")
+    candidates = Dict{Int,Vector{Tuple{String,Int}}}()
+    for i in 1:n
+        candidates[i] = candidate_gates(sessions[i], gates, outages)
     end
 
     model = Model(Gurobi.Optimizer)
     set_optimizer_attribute(model, "OutputFlag", 0)
-    set_optimizer_attribute(model, "TimeLimit", 8.0)
+    set_optimizer_attribute(model, "TimeLimit", SOLVER_TIME_LIMIT)
+    set_optimizer_attribute(model, "MIPGap", 0.02)
+    set_optimizer_attribute(model, "Threads", 1)
 
-    x = Dict{Tuple{String,String},VariableRef}()
-    u = Dict{String,VariableRef}()
-
-    for fid in decision_ids
-        for gid in candidates[fid]
-            x[(fid, gid)] = @variable(model, binary=true)
+    x = Dict{Tuple{Int,String},VariableRef}()
+    unassigned = Dict{Int,VariableRef}()
+    for i in 1:n
+        expr = AffExpr(0.0)
+        for (gate_id, _) in candidates[i]
+            x[(i, gate_id)] = @variable(model, binary=true)
+            add_to_expression!(expr, 1.0, x[(i, gate_id)])
         end
-        u[fid] = @variable(model, binary=true)
-
-        assign_expr = AffExpr(0.0)
-        for gid in candidates[fid]
-            add_to_expression!(assign_expr, 1.0, x[(fid, gid)])
-        end
-        @constraint(model, assign_expr + u[fid] == 1)
+        unassigned[i] = @variable(model, binary=true)
+        add_to_expression!(expr, 1.0, unassigned[i])
+        @constraint(model, expr == 1.0)
     end
 
-    # Decision flights cannot overlap one another on the same gate.
-    for gid in gate_ids
-        possible = [fid for fid in decision_ids if gid in candidates[fid]]
-        for i in 1:length(possible)
-            for j in (i + 1):length(possible)
-                f1, f2 = possible[i], possible[j]
-                if overlaps_any(flight_intervals[f1], flight_intervals[f2])
-                    @constraint(model, x[(f1, gid)] + x[(f2, gid)] <= 1)
+    # A physical position cannot host overlapping parking sessions.
+    gate_ids = String[]
+    for i in 1:n, (gate_id, _) in candidates[i]
+        gate_id in gate_ids || push!(gate_ids, gate_id)
+    end
+    for gate_id in gate_ids
+        possible = [i for i in 1:n if any(c[1] == gate_id for c in candidates[i])]
+        for a in 1:(length(possible) - 1)
+            for b in (a + 1):length(possible)
+                i, j = possible[a], possible[b]
+                si, sj = sessions[i], sessions[j]
+                if intervals_overlap(
+                    Float64(field(si, "start", 0.0)), Float64(field(si, "end", 0.0)),
+                    Float64(field(sj, "start", 0.0)), Float64(field(sj, "end", 0.0))
+                )
+                    @constraint(model, x[(i, gate_id)] + x[(j, gate_id)] <= 1)
                 end
             end
         end
     end
 
-    # Objective: assign flights, avoid moves, avoid premium-gate use, and
-    # prefer shorter walking distances.
     objective = AffExpr(0.0)
-
-    for fid in decision_ids
-        flight = flights[fid]
-        priority = as_bool(field(flight, "priority", false))
-        unassigned_penalty = priority ?
-            EMERGENCY_UNASSIGNED_PENALTY : UNASSIGNED_PENALTY
-        add_to_expression!(objective, unassigned_penalty, u[fid])
-
-        for gid in candidates[fid]
-            cost = gate_cost(flight, gates[gid])
-            previous_gate = old_gate[fid]
-            if previous_gate !== nothing && gid != previous_gate
-                cost += REASSIGNMENT_PENALTY
-            end
-            add_to_expression!(objective, cost, x[(fid, gid)])
+    for i in 1:n
+        priority = as_bool(field(sessions[i], "priority", false))
+        penalty = priority ? PRIORITY_UNASSIGNED_PENALTY : UNASSIGNED_PENALTY
+        add_to_expression!(objective, penalty, unassigned[i])
+        for (gate_id, index) in candidates[i]
+            gate = gates[index]
+            add_to_expression!(objective, gate_cost(sessions[i], gate, index), x[(i, gate_id)])
         end
     end
-
     @objective(model, Min, objective)
     optimize!(model)
 
-    if !has_values(model)
-        error("Gurobi returned no feasible solution (status: $(termination_status(model))).")
-    end
-
+    has_values(model) || error("Gurobi returned no feasible solution: $(termination_status(model))")
     assignments = Vector{Vector{String}}()
-    reassignments = Vector{Vector{String}}()
-
-    for fid in decision_ids
-        chosen_gate = nothing
-        for gid in candidates[fid]
-            if value(x[(fid, gid)]) > 0.5
-                chosen_gate = gid
+    unassigned_ids = String[]
+    for i in 1:n
+        selected = nothing
+        for (gate_id, _) in candidates[i]
+            if value(x[(i, gate_id)]) > 0.5
+                selected = gate_id
                 break
             end
         end
-
-        chosen_gate === nothing && continue
-
-        if old_gate[fid] === nothing
-            push!(assignments, [fid, chosen_gate])
-        elseif chosen_gate != old_gate[fid]
-            push!(reassignments, [fid, chosen_gate])
+        if selected === nothing
+            push!(unassigned_ids, session_ids[i])
+        else
+            push!(assignments, [session_ids[i], selected])
         end
-        # A changed flight that remains at its existing gate needs no action.
     end
-
     JSON.print(stdout, Dict(
         "assignments" => assignments,
-        "reassignments" => reassignments
+        "unassigned" => unassigned_ids,
+        "objective" => objective_value(model),
+        "termination_status" => string(termination_status(model)),
     ))
+end
+
+function solve_repair(payload)
+    sessions = field(payload, "sessions", Any[])
+    gates = field(payload, "gates", Any[])
+    outages = field(payload, "outages", Dict{String,Any}())
+    old_assignments_raw = field(payload, "assignments", Dict{String,Any}())
+    changed_raw = field(payload, "changed", Any[])
+    changed = Set(as_string(x) for x in changed_raw)
+    by_id = Dict(as_string(field(s, "id", "")) => s for s in sessions)
+    old_assignments = Dict{String,String}(as_string(k) => as_string(v) for (k, v) in old_assignments_raw)
+
+    # Fixed bookings are every still-valid assignment outside the repair set.
+    occupied = Dict{String,Vector{Tuple{Float64,Float64}}}()
+    for (sid, gate_id) in old_assignments
+        sid in changed && continue
+        haskey(by_id, sid) || continue
+        s = by_id[sid]
+        push!(get!(occupied, gate_id, Tuple{Float64,Float64}[]),
+              (Float64(field(s, "start", 0.0)), Float64(field(s, "end", 0.0))))
+    end
+
+    decision = [sid for sid in changed if haskey(by_id, sid)]
+    candidate_map = Dict{String,Vector{Tuple{String,Int}}}()
+    for sid in decision
+        candidate_map[sid] = candidate_gates(by_id[sid], gates, outages)
+    end
+    sort!(decision, by = sid -> (
+        as_bool(field(by_id[sid], "priority", false)) ? 0 : 1,
+        length(candidate_map[sid]),
+        haskey(old_assignments, sid) ? 0 : 1,
+        sid,
+    ))
+
+    assignments = Vector{Vector{String}}()
+    reassignments = Vector{Vector{String}}()
+    unassigned = String[]
+    for sid in decision
+        session = by_id[sid]
+        old_gate = get(old_assignments, sid, nothing)
+        candidates = copy(candidate_map[sid])
+        sort!(candidates, by = item -> (
+            old_gate !== nothing && item[1] == old_gate ? 0 : 1,
+            gate_cost(session, gates[item[2]], item[2]),
+            item[1],
+        ))
+        selected = nothing
+        s_start = Float64(field(session, "start", 0.0))
+        s_end = Float64(field(session, "end", 0.0))
+        for (gate_id, _) in candidates
+            conflicts = any(
+                intervals_overlap(s_start, s_end, booking[1], booking[2])
+                for booking in get(occupied, gate_id, Tuple{Float64,Float64}[])
+            )
+            conflicts && continue
+            selected = gate_id
+            push!(get!(occupied, gate_id, Tuple{Float64,Float64}[]), (s_start, s_end))
+            break
+        end
+        if selected === nothing
+            push!(unassigned, sid)
+        elseif old_gate === nothing
+            push!(assignments, [sid, selected])
+        elseif selected != old_gate
+            push!(reassignments, [sid, selected])
+        end
+    end
+    JSON.print(stdout, Dict(
+        "assignments" => assignments,
+        "reassignments" => reassignments,
+        "unassigned" => unassigned,
+    ))
+end
+
+function main()
+    input_text = read(stdin, String)
+    isempty(strip(input_text)) && error("No solver payload received on stdin.")
+    payload = JSON.parse(input_text)
+    mode = as_string(field(payload, "mode", "initial"))
+    if mode == "initial"
+        solve_initial(payload)
+    elseif mode == "repair"
+        solve_repair(payload)
+    else
+        error("Unknown solver mode: $mode")
+    end
 end
 
 try
     main()
 catch err
-    # Keep stdout reserved for machine-readable JSON.
     showerror(stderr, err, catch_backtrace())
     println(stderr)
     exit(1)
